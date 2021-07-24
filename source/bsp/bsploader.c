@@ -36,8 +36,6 @@ b32 load_bsp(char *filename, bsp_map_t *map)
     gs_byte_buffer_t buffer = gs_byte_buffer_new();
     gs_byte_buffer_read_from_file(&buffer, filename);
 
-    map = gs_malloc_init(bsp_map_t);
-
     // read header
     if (!_load_bsp_header(&buffer, &map->header))
         return _load_bsp_fail(&buffer, "failed to read header");

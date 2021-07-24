@@ -33,6 +33,6 @@ cl /w /MP -Zi /DEBUG:FULL /Fe%name%.exe %src_all% %inc% ^
 %os_libs%
 
 rem Copy assets
-robocopy ..\assets .\assets /E
+if %ERRORLEVEL% EQU 0 robocopy ..\assets .\assets /E
 
 popd

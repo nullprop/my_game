@@ -25,6 +25,8 @@ void fps_camera_update(fps_camera_t *cam);
 
 fps_camera_t fps = {0};
 
+bsp_map_t *bsp_map = NULL;
+
 void app_init()
 {
     // Construct camera
@@ -34,10 +36,8 @@ void app_init()
     // Lock mouse at start by default
     gs_platform_lock_mouse(gs_platform_main_window(), true);
 
-    bsp_map_t* map;
-    load_bsp("assets/maps/q3dm1.bsp", map);
-    free_bsp(map);
-    gs_println("map freed");
+    bsp_map = gs_malloc_init(bsp_map_t);
+    load_bsp("assets/maps/q3dm1.bsp", bsp_map);
 
     render_ctx_init();
 }
@@ -106,9 +106,15 @@ void fps_camera_update(fps_camera_t *fps)
     }
 }
 
+void app_shutdown()
+{
+    free_bsp(bsp_map);
+}
+
 gs_app_desc_t gs_main(int32_t argc, char **argv)
 {
     return (gs_app_desc_t){
         .init = app_init,
-        .update = app_update};
+        .update = app_update,
+        .shutdown = app_shutdown};
 }
