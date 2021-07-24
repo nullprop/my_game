@@ -1,13 +1,18 @@
 /*================================================================
-    * Copyright: 2021 Lauri Räsänen
     * bsp/bsploader.c
+    *
+    * Copyright (c) 2021 Lauri Räsänen
+    * Copyright (c) 2018 Krzysztof Kondrak
+    *
+    * See README.md for license.
+    * ================================
 
     Handles BSP map loading from file.
     NOTE: only supports version 46.
 =================================================================*/
 
 #include <gs/gs.h>
-#include "types.h"
+#include "bsptypes.h"
 
 // shorthand util for failing during BSP load
 b32 _load_bsp_fail(gs_byte_buffer_t *buffer, char *msg)

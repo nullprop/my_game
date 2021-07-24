@@ -18,17 +18,19 @@ Some source code in this release is not covered by the BSD 3-Clause License:
 
 ---
 
-MIT LICENSE EXAMPLE, DESCRIPTION HERE
+BSP loading and rendering based on work by Krzysztof Kondrak.
+[https://github.com/kondrak/quake_bsp_vulkan](https://github.com/kondrak/quake_bsp_vulkan)
 
 ```
-lines   file(s)
-*       PATH/TO/FILE.c
+file(s):
+  source/bsp/bsploader.c
+  source/bsp/bspmap.c
 ```
 
 ```
 MIT License
 
-Copyright (c) 2021 Jane Doe
+Copyright (c) 2018 Krzysztof Kondrak
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,6 +1,8 @@
 /*================================================================
-    * Copyright: 2021 Lauri Räsänen
     * main.c
+    *
+    * Copyright (c) 2021 Lauri Räsänen
+    * ================================
 
     The main entry point of my_game.
 =================================================================*/
@@ -10,7 +12,6 @@
 
 #include "graphics/rendercontext.c"
 #include "data.c"
-#include "bsp/types.h"
 #include "bsp/bsploader.c"
 
 typedef struct fps_camera_t

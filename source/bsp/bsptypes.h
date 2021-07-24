@@ -1,6 +1,8 @@
 /*================================================================
-    * Copyright: 2021 Lauri Räsänen
-    * bsp/types.h
+    * bsp/bsptypes.h
+    *
+    * Copyright (c) 2021 Lauri Räsänen
+    * ================================
 
     BSP data types.
 
