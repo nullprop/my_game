@@ -10,9 +10,9 @@
 #define GS_IMPL
 #include <gs/gs.h>
 
-#include "graphics/rendercontext.c"
-#include "data.c"
 #include "bsp/bsp_loader.c"
+#include "data.c"
+#include "graphics/rendercontext.c"
 
 typedef struct fps_camera_t
 {

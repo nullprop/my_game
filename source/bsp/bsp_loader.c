@@ -12,6 +12,7 @@
 =================================================================*/
 
 #include <gs/gs.h>
+
 #include "bsp_types.h"
 
 // shorthand util for failing during BSP load
@@ -104,7 +105,7 @@ b32 load_bsp(char *filename, bsp_map_t *map)
     map->valid = true;
     gs_byte_buffer_free(&buffer);
     gs_println("load_bsp() done loading '%s'", filename);
-    
+
     return true;
 }
 
