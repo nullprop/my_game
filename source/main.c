@@ -12,7 +12,7 @@
 
 #include "graphics/rendercontext.c"
 #include "data.c"
-#include "bsp/bsploader.c"
+#include "bsp/bsp_loader.c"
 
 typedef struct fps_camera_t
 {
@@ -59,6 +59,11 @@ void app_update()
     if (gs_platform_mouse_locked())
     {
         fps_camera_update(&fps);
+    }
+
+    if (bsp_map->valid)
+    {
+        bsp_map_update(bsp_map);
     }
 
     render_ctx_update();

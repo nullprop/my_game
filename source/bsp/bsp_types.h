@@ -1,5 +1,5 @@
 /*================================================================
-    * bsp/bsptypes.h
+    * bsp/bsp_types.h
     *
     * Copyright (c) 2021 Lauri Räsänen
     * ================================
@@ -234,6 +234,23 @@ typedef struct bsp_visdata_lump_t
     byte *vecs;
 } bsp_visdata_lump_t;
 
+typedef struct bsp_quadratic_patch_t
+{
+    int32_t tesselation;
+    bsp_vert_lump_t control_points[9];
+    gs_dyn_array vertices;
+    gs_dyn_array indices;
+} bsp_quadratic_patch_t;
+
+typedef struct bsp_patch_t
+{
+    int32_t texture_idx;
+    int32_t lightmap_idx;
+    int32_t width;
+    int32_t height;
+    gs_dyn_array quadratic_patches;
+} bsp_patch_t;
+
 typedef struct bsp_header_t
 {
     char magic[4];
@@ -243,8 +260,9 @@ typedef struct bsp_header_t
 
 typedef struct bsp_map_t
 {
-    bsp_header_t header;
+    /*==== File data ====*/
 
+    bsp_header_t header;
     bsp_entity_lump_t entities;
 
     struct
@@ -338,7 +356,13 @@ typedef struct bsp_map_t
     } lightvols;
 
     bsp_visdata_lump_t visdata;
+
+    /*==== Runtime data ====*/
+
+    bool32_t valid;
     bsp_stats_t stats;
+    gs_dyn_array patches;
+
 } bsp_map_t;
 
 #endif // BSP_TYPES_H

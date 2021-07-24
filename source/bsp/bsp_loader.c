@@ -1,5 +1,5 @@
 /*================================================================
-    * bsp/bsploader.c
+    * bsp/bsp_loader.c
     *
     * Copyright (c) 2021 Lauri Räsänen
     * Copyright (c) 2018 Krzysztof Kondrak
@@ -12,7 +12,7 @@
 =================================================================*/
 
 #include <gs/gs.h>
-#include "bsptypes.h"
+#include "bsp_types.h"
 
 // shorthand util for failing during BSP load
 b32 _load_bsp_fail(gs_byte_buffer_t *buffer, char *msg)
@@ -101,8 +101,10 @@ b32 load_bsp(char *filename, bsp_map_t *map)
     if (!_load_visdata_lump(&buffer, map))
         return _load_bsp_fail(&buffer, "failed to read visdata lump");
 
+    map->valid = true;
     gs_byte_buffer_free(&buffer);
     gs_println("load_bsp() done loading '%s'", filename);
+    
     return true;
 }
 
