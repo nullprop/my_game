@@ -1,0 +1,6 @@
+[submodule "source/inc/gunslinger"]
+	path = source/inc/gunslinger
+	url = https://github.com/MrFrenik/gunslinger
+[submodule "third_party/include/gs"]
+	path = third_party/include/gs
+	url = https://github.com/MrFrenik/gunslinger

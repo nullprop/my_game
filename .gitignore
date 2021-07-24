@@ -1,0 +1,8 @@
+# builds
+bin/
+
+# visual studio
+.vs/
+
+# assets
+assets/
