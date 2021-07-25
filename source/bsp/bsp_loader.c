@@ -121,7 +121,7 @@ b32 _load_lump(gs_byte_buffer_t *buffer, bsp_map_t *map, void *container, bsp_lu
     int32_t size = map->header.dir_entries[type].length;
 
     int32_t *count = (int32_t)container;
-    char **data = (char *)container + sizeof(int32_t);
+    void **data = (unsigned long long)container + sizeof(int32_t);
 
     *count = size / lump_size;
     *data = gs_malloc(size);
@@ -155,51 +155,4 @@ b32 _load_visdata_lump(gs_byte_buffer_t *buffer, bsp_map_t *map)
     gs_byte_buffer_read_bulk(buffer, &map->visdata.vecs, size);
 
     return true;
-}
-
-void free_bsp(bsp_map_t *map)
-{
-    if (map == NULL)
-    {
-        return;
-    }
-
-    gs_free(map->entities.ents);
-    gs_free(map->textures.data);
-    gs_free(map->planes.data);
-    gs_free(map->nodes.data);
-    gs_free(map->leaves.data);
-    gs_free(map->leaf_faces.data);
-    gs_free(map->leaf_brushes.data);
-    gs_free(map->models.data);
-    gs_free(map->brushes.data);
-    gs_free(map->brush_sides.data);
-    gs_free(map->vertices.data);
-    gs_free(map->mesh_verts.data);
-    gs_free(map->effects.data);
-    gs_free(map->faces.data);
-    gs_free(map->lightmaps.data);
-    gs_free(map->lightvols.data);
-    gs_free(map->visdata.vecs);
-
-    map->entities.ents = NULL;
-    map->textures.data = NULL;
-    map->planes.data = NULL;
-    map->nodes.data = NULL;
-    map->leaves.data = NULL;
-    map->leaf_faces.data = NULL;
-    map->leaf_brushes.data = NULL;
-    map->models.data = NULL;
-    map->brushes.data = NULL;
-    map->brush_sides.data = NULL;
-    map->vertices.data = NULL;
-    map->mesh_verts.data = NULL;
-    map->effects.data = NULL;
-    map->faces.data = NULL;
-    map->lightmaps.data = NULL;
-    map->lightvols.data = NULL;
-    map->visdata.vecs = NULL;
-
-    gs_free(map);
-    map = NULL;
 }

@@ -11,6 +11,7 @@
 #include <gs/gs.h>
 
 #include "bsp/bsp_loader.c"
+#include "bsp/bsp_map.c"
 #include "data.c"
 #include "graphics/rendercontext.c"
 
@@ -38,6 +39,15 @@ void app_init()
 
     bsp_map = gs_malloc_init(bsp_map_t);
     load_bsp("assets/maps/q3dm1.bsp", bsp_map);
+
+    if (bsp_map->valid)
+    {
+        bsp_map_init(bsp_map);
+        gs_println("map stats:");
+        gs_println("  vertices: %d", bsp_map->stats.total_vertices);
+        gs_println("  faces: %d", bsp_map->stats.total_faces);
+        gs_println("  patches: %d", bsp_map->stats.total_patches);
+    }
 
     render_ctx_init();
 }
@@ -113,7 +123,7 @@ void fps_camera_update(fps_camera_t *fps)
 
 void app_shutdown()
 {
-    free_bsp(bsp_map);
+    bsp_map_free(bsp_map);
 }
 
 gs_app_desc_t gs_main(int32_t argc, char **argv)

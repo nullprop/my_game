@@ -38,7 +38,7 @@ bsp_vert_lump_t bsp_vert_lump_add(bsp_vert_lump_t a, bsp_vert_lump_t b)
 // Tesselate quadratic patch to wanted level
 void bsp_quadratic_patch_tesselate(bsp_quadratic_patch_t *patch)
 {
-    gs_dyn_array_resize_impl(&patch->vertices, sizeof(bsp_vert_lump_t), (patch->tesselation + 1) * (patch->tesselation + 1));
+    gs_dyn_array_reserve(patch->vertices, (patch->tesselation + 1) * (patch->tesselation + 1));
 
     // Sample (tesselation + 1)^2 points
     // for our vertices from the bezier patch.
@@ -85,24 +85,37 @@ void bsp_quadratic_patch_tesselate(bsp_quadratic_patch_t *patch)
     }
 
     // Triangulate
-    gs_dyn_array_resize_impl(&patch->indices, sizeof(uint16_t), patch->tesselation * patch->tesselation * 6);
+    gs_dyn_array_reserve(patch->indices, patch->tesselation * patch->tesselation * 6);
     for (size_t row = 0; row < patch->tesselation; row++)
     {
         for (size_t col = 0; col < patch->tesselation; col++)
         {
-            uint16_t temp1 = (row + 1) * (patch->tesselation + 1) + col;
-            uint16_t temp2 = (row + 0) * (patch->tesselation + 1) + col;
-            uint16_t temp3 = (row + 1) * (patch->tesselation + 1) + col + 1;
-            gs_dyn_array_push_data(&patch->indices, &temp1, sizeof(uint16_t));
-            gs_dyn_array_push_data(&patch->indices, &temp2, sizeof(uint16_t));
-            gs_dyn_array_push_data(&patch->indices, &temp3, sizeof(uint16_t));
+            gs_dyn_array_push(patch->indices, (row + 1) * (patch->tesselation + 1) + col);
+            gs_dyn_array_push(patch->indices, (row + 0) * (patch->tesselation + 1) + col);
+            gs_dyn_array_push(patch->indices, (row + 1) * (patch->tesselation + 1) + col + 1);
 
-            temp1 = (row + 1) * (patch->tesselation + 1) + col + 1;
-            temp2 = (row + 0) * (patch->tesselation + 1) + col;
-            temp3 = (row + 0) * (patch->tesselation + 1) + col + 1;
-            gs_dyn_array_push_data(&patch->indices, &temp1, sizeof(uint16_t));
-            gs_dyn_array_push_data(&patch->indices, &temp2, sizeof(uint16_t));
-            gs_dyn_array_push_data(&patch->indices, &temp3, sizeof(uint16_t));
+            gs_dyn_array_push(patch->indices, (row + 1) * (patch->tesselation + 1) + col + 1);
+            gs_dyn_array_push(patch->indices, (row + 0) * (patch->tesselation + 1) + col);
+            gs_dyn_array_push(patch->indices, (row + 0) * (patch->tesselation + 1) + col + 1);
         }
     }
+}
+
+void bsp_quadratic_patch_free(bsp_quadratic_patch_t *patch)
+{
+    gs_dyn_array_free(patch->vertices);
+    patch->vertices = NULL;
+    gs_dyn_array_free(patch->indices);
+    patch->indices = NULL;
+}
+
+void bsp_patch_free(bsp_patch_t *patch)
+{
+    for (size_t i = 0; i < gs_dyn_array_size(patch->quadratic_patches); i++)
+    {
+        bsp_quadratic_patch_free(&patch->quadratic_patches[i]);
+    }
+
+    gs_dyn_array_free(patch->quadratic_patches);
+    patch->quadratic_patches = NULL;
 }

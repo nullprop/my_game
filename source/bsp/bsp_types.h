@@ -84,9 +84,20 @@ typedef struct bsp_stats_t
 
 typedef struct bsp_face_renderable_t
 {
-    bsp_face_type type;
+    int32_t type;
     int32_t index;
 } bsp_face_renderable_t;
+
+/*
+typedef struct bsp_leaf_renderable_t
+{
+    int32_t vis_cluster;
+    int32_t first_face;
+    int32_t num_faces;
+    gs_vec3 mins;
+    gs_vec3 maxs;
+} bsp_leaf_renderable_t;
+*/
 
 typedef struct bsp_dir_entry_t
 {
@@ -103,7 +114,7 @@ typedef struct bsp_texture_lump_t
 {
     char name[64];
     int32_t flags;
-    bsp_content contents;
+    int32_t contents;
 } bsp_texture_lump_t;
 
 typedef struct bsp_plane_lump_t
@@ -132,9 +143,9 @@ typedef struct bsp_leaf_lump_t
     int32_t mins[3];
     int32_t maxs[3];
     int32_t first_leaf_face;
-    int32_t num_leaf_face;
+    int32_t num_leaf_faces;
     int32_t first_leaf_brush;
-    int32_t num_leaf_brush;
+    int32_t num_leaf_brushes;
 } bsp_leaf_lump_t;
 
 typedef struct bsp_leaf_face_lump_t
@@ -175,10 +186,8 @@ typedef struct bsp_vert_lump_t
     gs_vec3 position;
     gs_vec2 tex_coord;
     gs_vec2 lm_coord;
-    gs_vec2 normal;
+    gs_vec3 normal;
     gs_color_t color;
-
-    // TODO: + and * operators
 } bsp_vert_lump_t;
 
 typedef struct bsp_mesh_vert_lump_t
@@ -197,7 +206,7 @@ typedef struct bsp_face_lump_t
 {
     int32_t texture;
     int32_t effect;
-    bsp_face_type type;
+    int32_t type;
     int32_t first_vertex;
     int32_t num_vertices;
     int32_t first_index;
@@ -208,7 +217,7 @@ typedef struct bsp_face_lump_t
     //gs_vec2i lm_origin;
     int32_t lm_start[2];
     int32_t lm_size[2];
-    int32_t lm_origin[2];
+    int32_t lm_origin[3];
     gs_vec3 lm_vecs[2];
     gs_vec3 normal;
     //gs_vec2i size;
@@ -238,8 +247,8 @@ typedef struct bsp_quadratic_patch_t
 {
     int32_t tesselation;
     bsp_vert_lump_t control_points[9];
-    gs_dyn_array vertices;
-    gs_dyn_array indices;
+    gs_dyn_array(bsp_vert_lump_t) vertices;
+    gs_dyn_array(uint16_t) indices;
 } bsp_quadratic_patch_t;
 
 typedef struct bsp_patch_t
@@ -248,7 +257,7 @@ typedef struct bsp_patch_t
     int32_t lightmap_idx;
     int32_t width;
     int32_t height;
-    gs_dyn_array quadratic_patches;
+    gs_dyn_array(bsp_quadratic_patch_t) quadratic_patches;
 } bsp_patch_t;
 
 typedef struct bsp_header_t
@@ -361,8 +370,9 @@ typedef struct bsp_map_t
 
     bool32_t valid;
     bsp_stats_t stats;
-    gs_dyn_array patches;
-
+    gs_dyn_array(bsp_patch_t) patches;
+    gs_dyn_array(bsp_face_renderable_t) visible_faces;
+    gs_dyn_array(bsp_face_renderable_t) render_faces;
 } bsp_map_t;
 
 #endif // BSP_TYPES_H
