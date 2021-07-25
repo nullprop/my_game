@@ -7,5 +7,5 @@
     ...
 =================================================================*/
 
-#define CAM_SPEED 5
+#define CAM_SPEED 320.0f
 #define SENSITIVITY 0.2f

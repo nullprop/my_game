@@ -9,6 +9,8 @@
 
 #define GS_IMPL
 #include <gs/gs.h>
+#define GS_IMMEDIATE_DRAW_IMPL
+#include <gs/util/gs_idraw.h>
 
 #include "bsp/bsp_loader.c"
 #include "bsp/bsp_map.c"
@@ -33,6 +35,7 @@ void app_init()
     // Construct camera
     fps.cam = gs_camera_perspective();
     fps.cam.transform.position = gs_v3(0.f, 0.f, 0.f);
+    fps.cam.fov = 90.0f;
 
     // Lock mouse at start by default
     gs_platform_lock_mouse(gs_platform_main_window(), true);
@@ -74,6 +77,7 @@ void app_update()
     if (bsp_map->valid)
     {
         bsp_map_update(bsp_map);
+        bsp_map_render(bsp_map, render_ctx_get_gsi(), &fps.cam);
     }
 
     render_ctx_update();
@@ -84,7 +88,7 @@ void fps_camera_update(fps_camera_t *fps)
     gs_platform_t *platform = gs_engine_subsystem(platform);
 
     gs_vec2 dp = gs_vec2_scale(gs_platform_mouse_deltav(), SENSITIVITY);
-    const float mod = gs_platform_key_down(GS_KEYCODE_LEFT_SHIFT) ? 2.f : 1.f;
+    const float mod = gs_platform_key_down(GS_KEYCODE_LEFT_SHIFT) ? 5.f : 1.f;
     float dt = platform->time.delta;
     float old_pitch = fps->pitch;
 
@@ -93,6 +97,9 @@ void fps_camera_update(fps_camera_t *fps)
 
     // Rotate camera
     gs_camera_offset_orientation(&fps->cam, -dp.x, old_pitch - fps->pitch);
+    //gs_quat x = gs_quat_angle_axis(gs_deg2rad(-dp.x), gs_v3(0.f, 0.f, 1.f));           // Absolute up
+    //gs_quat y = gs_quat_angle_axis(gs_deg2rad(old_pitch), gs_camera_right(&fps->cam)); // Relative right
+    //fps->cam.transform.rotation = gs_quat_mul(gs_quat_mul(x, y), fps->cam.transform.rotation);
 
     gs_vec3 vel = {0};
     if (gs_platform_key_down(GS_KEYCODE_W))
@@ -104,21 +111,7 @@ void fps_camera_update(fps_camera_t *fps)
     if (gs_platform_key_down(GS_KEYCODE_D))
         vel = gs_vec3_add(vel, gs_camera_right(&fps->cam));
 
-    // For a non-flying first person camera, need to lock the y movement velocity
-    vel.y = 0.f;
-
     fps->cam.transform.position = gs_vec3_add(fps->cam.transform.position, gs_vec3_scale(gs_vec3_norm(vel), dt * CAM_SPEED * mod));
-
-    // If moved, then we'll "bob" the camera some
-    if (gs_vec3_len(vel) != 0.f)
-    {
-        fps->bob_time += dt * 8.f;
-        float sb = sin(fps->bob_time);
-        float bob_amt = (sb * 0.5f + 0.5f) * 0.1f * mod;
-        float rot_amt = sb * 0.0004f * mod;
-        fps->cam.transform.position.y = 2.f + bob_amt;
-        fps->cam.transform.rotation = gs_quat_mul(fps->cam.transform.rotation, gs_quat_angle_axis(rot_amt, GS_ZAXIS));
-    }
 }
 
 void app_shutdown()

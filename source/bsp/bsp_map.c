@@ -10,6 +10,8 @@
     BSP rendering.
 =================================================================*/
 
+#include <gs/util/gs_idraw.h>
+
 #include "bsp_patch.c"
 #include "bsp_types.h"
 
@@ -103,8 +105,40 @@ void bsp_map_update(bsp_map_t *map)
 {
 }
 
-void bsp_map_render(bsp_map_t *map)
+void bsp_map_render(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camera_t *cam)
 {
+    gsi_camera(gsi, cam);
+    gsi_depth_enabled(gsi, true);
+    //gsi_face_cull_enabled(gsi, true);
+
+    for (size_t i = 0; i < map->faces.count; i++)
+    {
+        if (map->faces.data[i].type == BSP_FACE_TYPE_PATCH)
+        {
+            continue;
+        }
+
+        int32_t first_index = map->faces.data[i].first_index;
+        int32_t first_vertex = map->faces.data[i].first_vertex;
+
+        for (size_t j = 0; j < map->faces.data[i].num_indices - 2; j += 3)
+        {
+            int32_t offset1 = map->indices.data[first_index + j + 0].offset;
+            int32_t offset2 = map->indices.data[first_index + j + 1].offset;
+            int32_t offset3 = map->indices.data[first_index + j + 2].offset;
+
+            gsi_trianglevx(
+                gsi,
+                map->vertices.data[first_vertex + offset1].position,
+                map->vertices.data[first_vertex + offset2].position,
+                map->vertices.data[first_vertex + offset3].position,
+                map->vertices.data[first_vertex + offset1].tex_coord,
+                map->vertices.data[first_vertex + offset1].tex_coord,
+                map->vertices.data[first_vertex + offset1].tex_coord,
+                map->vertices.data[first_vertex + offset1].color,
+                GS_GRAPHICS_PRIMITIVE_TRIANGLES);
+        }
+    }
 }
 
 void bsp_map_free(bsp_map_t *map)
@@ -137,7 +171,7 @@ void bsp_map_free(bsp_map_t *map)
     gs_free(map->brushes.data);
     gs_free(map->brush_sides.data);
     gs_free(map->vertices.data);
-    gs_free(map->mesh_verts.data);
+    gs_free(map->indices.data);
     gs_free(map->effects.data);
     gs_free(map->faces.data);
     gs_free(map->lightmaps.data);
@@ -155,7 +189,7 @@ void bsp_map_free(bsp_map_t *map)
     map->brushes.data = NULL;
     map->brush_sides.data = NULL;
     map->vertices.data = NULL;
-    map->mesh_verts.data = NULL;
+    map->indices.data = NULL;
     map->effects.data = NULL;
     map->faces.data = NULL;
     map->lightmaps.data = NULL;

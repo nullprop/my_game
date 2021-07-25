@@ -8,17 +8,35 @@
 =================================================================*/
 
 #include <gs/gs.h>
+#include <gs/util/gs_idraw.h>
 
-gs_command_buffer_t cb = {0};
+static gs_command_buffer_t *render_ctx_cb = NULL;
+static gs_immediate_draw_t *render_ctx_gsi = NULL;
 
 void render_ctx_init()
 {
+    render_ctx_cb = gs_malloc_init(gs_command_buffer_t);
+    render_ctx_gsi = gs_malloc_init(gs_immediate_draw_t);
+
     // Construct new command buffer
-    cb = gs_command_buffer_new();
+    *render_ctx_cb = gs_command_buffer_new();
+    *render_ctx_gsi = gs_immediate_draw_new();
 }
 
 void render_ctx_update()
 {
+    gsi_render_pass_submit(render_ctx_gsi, render_ctx_cb, gs_color(255, 0, 0, 255));
+
     // Submit command buffer (syncs to GPU, MUST be done on main thread where you have your GPU context created)
-    gs_graphics_submit_command_buffer(&cb);
+    gs_graphics_submit_command_buffer(render_ctx_cb);
+}
+
+gs_command_buffer_t *render_ctx_get_cb()
+{
+    return render_ctx_cb;
+}
+
+gs_immediate_draw_t *render_ctx_get_gsi()
+{
+    return render_ctx_gsi;
 }

@@ -60,7 +60,7 @@ typedef enum bsp_lump_types
     BSP_LUMP_TYPE_BRUSHES,
     BSP_LUMP_TYPE_BRUSH_SIDES,
     BSP_LUMP_TYPE_VERTICES,
-    BSP_LUMP_TYPE_MESH_VERTICES,
+    BSP_LUMP_TYPE_INDICES,
     BSP_LUMP_TYPE_EFFECTS,
     BSP_LUMP_TYPE_FACES,
     BSP_LUMP_TYPE_LIGHTMAPS,
@@ -190,10 +190,10 @@ typedef struct bsp_vert_lump_t
     gs_color_t color;
 } bsp_vert_lump_t;
 
-typedef struct bsp_mesh_vert_lump_t
+typedef struct bsp_index_lump_t
 {
     int32_t offset;
-} bsp_mesh_vert_lump_t;
+} bsp_index_lump_t;
 
 typedef struct bsp_effect_lump_t
 {
@@ -337,8 +337,8 @@ typedef struct bsp_map_t
     struct
     {
         uint32_t count;
-        bsp_mesh_vert_lump_t *data;
-    } mesh_verts;
+        bsp_index_lump_t *data;
+    } indices;
 
     struct
     {

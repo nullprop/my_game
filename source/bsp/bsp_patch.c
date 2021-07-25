@@ -16,9 +16,9 @@
 bsp_vert_lump_t bsp_vert_lump_mul(bsp_vert_lump_t lump, float32_t mul)
 {
     bsp_vert_lump_t result = {
-        .position = gs_vec3_mul(lump.position, gs_v3(mul, mul, mul)),
-        .tex_coord = gs_vec2_mul(lump.tex_coord, gs_v2(mul, mul)),
-        .lm_coord = gs_vec2_mul(lump.lm_coord, gs_v2(mul, mul)),
+        .position = gs_vec3_scale(lump.position, mul),
+        .tex_coord = gs_vec2_scale(lump.tex_coord, mul),
+        .lm_coord = gs_vec2_scale(lump.lm_coord, mul),
         .normal = lump.normal,
         .color = lump.color};
     return result;
