@@ -5,3 +5,4 @@ AllowShortIfStatementsOnASingleLine: true
 AllowShortBlocksOnASingleLine: true
 IndentCaseLabels: false
 ColumnLimit: 0
+# DanglingParenthesis: true # https://reviews.llvm.org/D33029
