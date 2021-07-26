@@ -226,21 +226,21 @@ typedef struct bsp_face_lump_t
 
 typedef struct bsp_lightmap_lump_t
 {
-    byte map[128 * 128 * 3];
+    char map[128 * 128 * 3];
 } bsp_lightmap_lump_t;
 
 typedef struct bsp_lightvol_lump_t
 {
-    byte ambient[3];
-    byte directional[3];
-    byte dir[2];
+    char ambient[3];
+    char directional[3];
+    char dir[2];
 } bsp_lightvol_lump_t;
 
 typedef struct bsp_visdata_lump_t
 {
     int32_t num_vecs;
     int32_t size_vecs;
-    byte *vecs;
+    char *vecs;
 } bsp_visdata_lump_t;
 
 typedef struct bsp_quadratic_patch_t
