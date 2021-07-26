@@ -5,4 +5,5 @@ bin/
 .vs/
 
 # assets
-assets/
+assets/*
+!assets/splash_messages.txt
