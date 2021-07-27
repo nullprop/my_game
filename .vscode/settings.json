@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "bsptypes.h": "c"
+        "bsptypes.h": "c",
+        "xstring": "c",
+        "xutility": "c"
     }
 }

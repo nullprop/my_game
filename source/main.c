@@ -14,12 +14,13 @@
 
 #include "bsp/bsp_loader.c"
 #include "bsp/bsp_map.c"
-#include "data.c"
 #include "graphics/rendercontext.c"
 
 typedef struct fps_camera_t
 {
     float pitch;
+    float roll;
+    float yaw;
     float bob_time;
     gs_camera_t cam;
 } fps_camera_t;
@@ -41,7 +42,7 @@ void app_init()
     gs_platform_lock_mouse(gs_platform_main_window(), true);
 
     bsp_map = gs_malloc_init(bsp_map_t);
-    load_bsp("assets/maps/q3dm1.bsp", bsp_map);
+    load_bsp("maps/q3dm1.bsp", bsp_map);
 
     if (bsp_map->valid)
     {
@@ -50,6 +51,7 @@ void app_init()
         gs_println("  vertices: %d", bsp_map->stats.total_vertices);
         gs_println("  faces: %d", bsp_map->stats.total_faces);
         gs_println("  patches: %d", bsp_map->stats.total_patches);
+        gs_println("  textures: %d/%d", bsp_map->stats.loaded_textures, bsp_map->stats.total_textures);
     }
 
     render_ctx_init();
@@ -87,13 +89,15 @@ void fps_camera_update(fps_camera_t *fps)
 {
     gs_platform_t *platform = gs_engine_subsystem(platform);
 
-    gs_vec2 dp = gs_vec2_scale(gs_platform_mouse_deltav(), SENSITIVITY);
-    const float mod = gs_platform_key_down(GS_KEYCODE_LEFT_SHIFT) ? 5.f : 1.f;
+    gs_vec2 dp = gs_vec2_scale(gs_platform_mouse_deltav(), 0.22f);
+    const float mod = gs_platform_key_down(GS_KEYCODE_LEFT_SHIFT) ? 5.0f : 1.0f;
     float dt = platform->time.delta;
     float old_pitch = fps->pitch;
+    float old_yaw = fps->yaw;
 
     // Keep track of previous amount to clamp the camera's orientation
-    fps->pitch = gs_clamp(old_pitch + dp.y, -90.f, 90.f);
+    fps->pitch = gs_clamp(old_pitch + dp.y, -90.0f, 90.0f);
+    fps->yaw = fmodf(old_yaw - dp.x, 360.0f);
 
     // Rotate camera
     gs_camera_offset_orientation(&fps->cam, -dp.x, old_pitch - fps->pitch);
@@ -108,7 +112,7 @@ void fps_camera_update(fps_camera_t *fps)
     if (gs_platform_key_down(GS_KEYCODE_D))
         vel = gs_vec3_add(vel, gs_camera_right(&fps->cam));
 
-    fps->cam.transform.position = gs_vec3_add(fps->cam.transform.position, gs_vec3_scale(gs_vec3_norm(vel), dt * CAM_SPEED * mod));
+    fps->cam.transform.position = gs_vec3_add(fps->cam.transform.position, gs_vec3_scale(gs_vec3_norm(vel), dt * 320.0f * mod));
 }
 
 void app_shutdown()

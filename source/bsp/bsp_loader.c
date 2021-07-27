@@ -103,7 +103,6 @@ b32 load_bsp(char *filename, bsp_map_t *map)
         return _load_bsp_fail(&buffer, "failed to read visdata lump");
 
     // Flip coordinates to Y up
-    // TODO: flip gunslinger to use Z up
     for (size_t i = 0; i < map->planes.count; i++)
     {
         map->planes.data[i].normal = gs_v3(

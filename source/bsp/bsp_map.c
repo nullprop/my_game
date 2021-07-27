@@ -87,6 +87,92 @@ void _bsp_load_entities(bsp_map_t *map)
 
 void _bsp_load_textures(bsp_map_t *map)
 {
+    int32_t num_textures = map->header.dir_entries[BSP_LUMP_TYPE_TEXTURES].length / sizeof(bsp_texture_lump_t);
+
+    map->stats.total_textures = num_textures;
+
+    map->texture_handles.count = num_textures;
+    map->texture_handles.data = gs_malloc(sizeof(bsp_texture_handle_t) * num_textures);
+    for (size_t i = 0; i < num_textures; i++)
+    {
+        map->texture_handles.data[i].data = NULL;
+    }
+
+    char extensions[2][5] = {
+        ".jpg",
+        ".tga",
+    };
+
+    for (size_t i = 0; i < map->faces.count; i++)
+    {
+        int32_t texture_index = map->faces.data[i].texture;
+
+        if (texture_index < 0)
+        {
+            continue;
+        }
+
+        // Don't attempt to load the same texture multiple times if already loaded
+        if (map->texture_handles.data[texture_index].data != NULL)
+        {
+            continue;
+        }
+
+        // Don't attempt to load the same texture multiple times if failed
+        if (map->texture_handles.data[texture_index].load_attempts > 0)
+        {
+            map->faces.data[i].texture = -1;
+            continue;
+        }
+
+        map->texture_handles.data[texture_index].name = map->textures.data[texture_index].name;
+
+        bool32_t success = false;
+        size_t malloc_sz = strlen(map->textures.data[texture_index].name) + 5;
+        char *filename = gs_malloc(malloc_sz);
+        memset(filename, 0, malloc_sz);
+        strcat(filename, map->textures.data[texture_index].name);
+        strcat(filename, extensions[0]);
+
+        for (size_t j = 0; j < 2; j++)
+        {
+            if (j > 0)
+            {
+                strcpy(filename + strlen(filename) - 4, extensions[j]);
+            }
+
+            map->texture_handles.data[texture_index].load_attempts++;
+
+            if (gs_util_file_exists(filename))
+            {
+                success = gs_util_load_texture_data_from_file(
+                    filename,
+                    &map->texture_handles.data[texture_index].width,
+                    &map->texture_handles.data[texture_index].height,
+                    &map->texture_handles.data[texture_index].num_comps,
+                    &map->texture_handles.data[texture_index].data,
+                    true);
+            }
+            else if (j == 1)
+            {
+                gs_println("Warning: could not load texture: %s, file not found", map->textures.data[texture_index].name);
+            }
+
+            if (success)
+            {
+                map->stats.loaded_textures++;
+                break;
+            }
+        }
+
+        if (!success)
+        {
+            map->texture_handles.data[texture_index].data == NULL;
+            map->faces.data[i].texture = -1;
+        }
+
+        gs_free(filename);
+    }
 }
 
 void _bsp_load_lightmaps(bsp_map_t *map)
@@ -159,6 +245,14 @@ void bsp_map_free(bsp_map_t *map)
     map->patches = NULL;
     map->visible_faces = NULL;
     map->render_faces = NULL;
+
+    for (size_t i = 0; i < map->texture_handles.count; i++)
+    {
+        gs_free(map->texture_handles.data[i].data);
+        map->texture_handles.data[i].data = NULL;
+    }
+    gs_free(map->texture_handles.data);
+    map->texture_handles.data = NULL;
 
     gs_free(map->entities.ents);
     gs_free(map->textures.data);

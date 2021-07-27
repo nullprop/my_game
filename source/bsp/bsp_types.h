@@ -80,6 +80,9 @@ typedef struct bsp_stats_t
     int32_t total_patches;
     int32_t visible_faces;
     int32_t visible_patches;
+    int32_t total_textures;
+    int32_t loaded_textures;
+    int32_t models;
 } bsp_stats_t;
 
 typedef struct bsp_face_renderable_t
@@ -98,6 +101,16 @@ typedef struct bsp_leaf_renderable_t
     gs_vec3 maxs;
 } bsp_leaf_renderable_t;
 */
+
+typedef struct bsp_texture_handle_t
+{
+    char* name;
+    char* data;
+    int32_t width;
+    int32_t height;
+    int32_t num_comps;
+    int32_t load_attempts;
+} bsp_texture_handle_t;
 
 typedef struct bsp_dir_entry_t
 {
@@ -373,6 +386,12 @@ typedef struct bsp_map_t
     gs_dyn_array(bsp_patch_t) patches;
     gs_dyn_array(bsp_face_renderable_t) visible_faces;
     gs_dyn_array(bsp_face_renderable_t) render_faces;
+
+    struct
+    {
+        uint32_t count;
+        bsp_texture_handle_t *data;
+    } texture_handles;
 } bsp_map_t;
 
 #endif // BSP_TYPES_H
