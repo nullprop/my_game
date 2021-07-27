@@ -97,9 +97,6 @@ void fps_camera_update(fps_camera_t *fps)
 
     // Rotate camera
     gs_camera_offset_orientation(&fps->cam, -dp.x, old_pitch - fps->pitch);
-    //gs_quat x = gs_quat_angle_axis(gs_deg2rad(-dp.x), gs_v3(0.f, 0.f, 1.f));           // Absolute up
-    //gs_quat y = gs_quat_angle_axis(gs_deg2rad(old_pitch), gs_camera_right(&fps->cam)); // Relative right
-    //fps->cam.transform.rotation = gs_quat_mul(gs_quat_mul(x, y), fps->cam.transform.rotation);
 
     gs_vec3 vel = {0};
     if (gs_platform_key_down(GS_KEYCODE_W))

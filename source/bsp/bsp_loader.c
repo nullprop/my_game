@@ -102,6 +102,77 @@ b32 load_bsp(char *filename, bsp_map_t *map)
     if (!_load_visdata_lump(&buffer, map))
         return _load_bsp_fail(&buffer, "failed to read visdata lump");
 
+    // Flip coordinates to Y up
+    // TODO: flip gunslinger to use Z up
+    for (size_t i = 0; i < map->planes.count; i++)
+    {
+        map->planes.data[i].normal = gs_v3(
+            map->planes.data[i].normal.x,
+            map->planes.data[i].normal.z,
+            map->planes.data[i].normal.y);
+    }
+    for (size_t i = 0; i < map->models.count; i++)
+    {
+        map->models.data[i].mins = gs_v3(
+            map->models.data[i].mins.x,
+            map->models.data[i].mins.z,
+            map->models.data[i].mins.y);
+        map->models.data[i].maxs = gs_v3(
+            map->models.data[i].maxs.x,
+            map->models.data[i].maxs.z,
+            map->models.data[i].maxs.y);
+    }
+    for (size_t i = 0; i < map->vertices.count; i++)
+    {
+        map->vertices.data[i].position = gs_v3(
+            map->vertices.data[i].position.x,
+            map->vertices.data[i].position.z,
+            map->vertices.data[i].position.y);
+        map->vertices.data[i].normal = gs_v3(
+            map->vertices.data[i].normal.x,
+            map->vertices.data[i].normal.z,
+            map->vertices.data[i].normal.y);
+    }
+    for (size_t i = 0; i < map->faces.count; i++)
+    {
+        map->faces.data[i].normal = gs_v3(
+            map->faces.data[i].normal.x,
+            map->faces.data[i].normal.z,
+            map->faces.data[i].normal.y);
+        map->faces.data[i].lm_vecs[0] = gs_v3(
+            map->faces.data[i].lm_vecs[0].x,
+            map->faces.data[i].lm_vecs[0].z,
+            map->faces.data[i].lm_vecs[0].y);
+        map->faces.data[i].lm_vecs[1] = gs_v3(
+            map->faces.data[i].lm_vecs[1].x,
+            map->faces.data[i].lm_vecs[1].z,
+            map->faces.data[i].lm_vecs[1].y);
+
+        int32 temp = map->faces.data[i].lm_origin[1];
+        map->faces.data[i].lm_origin[1] = map->faces.data[i].lm_origin[1];
+        map->faces.data[i].lm_origin[2] = temp;
+    }
+    for (size_t i = 0; i < map->nodes.count; i++)
+    {
+        int32 temp = map->nodes.data[i].mins[1];
+        map->nodes.data[i].mins[1] = map->nodes.data[i].mins[1];
+        map->nodes.data[i].mins[2] = temp;
+
+        temp = map->nodes.data[i].maxs[1];
+        map->nodes.data[i].maxs[1] = map->nodes.data[i].maxs[1];
+        map->nodes.data[i].maxs[2] = temp;
+    }
+    for (size_t i = 0; i < map->leaves.count; i++)
+    {
+        int32 temp = map->leaves.data[i].mins[1];
+        map->leaves.data[i].mins[1] = map->leaves.data[i].mins[1];
+        map->leaves.data[i].mins[2] = temp;
+
+        temp = map->leaves.data[i].maxs[1];
+        map->leaves.data[i].maxs[1] = map->leaves.data[i].maxs[1];
+        map->leaves.data[i].maxs[2] = temp;
+    }
+
     map->valid = true;
     gs_byte_buffer_free(&buffer);
     gs_println("load_bsp() done loading '%s'", filename);
