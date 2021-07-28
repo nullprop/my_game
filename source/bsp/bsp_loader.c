@@ -34,20 +34,26 @@ b32 load_bsp(char *filename, bsp_map_t *map)
         return false;
     }
 
+    gs_println("1");
     gs_byte_buffer_t buffer = gs_byte_buffer_new();
     gs_byte_buffer_read_from_file(&buffer, filename);
 
+    gs_println("2");
     // read header
     if (!_load_bsp_header(&buffer, &map->header))
         return _load_bsp_fail(&buffer, "failed to read header");
 
+    gs_println("3");
     // validate header
     if (!gs_string_compare_equal_n(map->header.magic, "IBSP", 4) || map->header.version != 46)
         return _load_bsp_fail(&buffer, "invalid header");
 
+    gs_println("4");
     // read entities lump
     if (!_load_entities_lump(&buffer, map))
         return _load_bsp_fail(&buffer, "failed to read entity lumps");
+
+    gs_println("ents: %s", map->entities.ents);
 
     // generic lumps
     void *containers[] = {
@@ -85,11 +91,13 @@ b32 load_bsp(char *filename, bsp_map_t *map)
         sizeof(bsp_lightvol_lump_t),
     };
 
+    gs_println("5");
     // read generics
     uint32_t start = BSP_LUMP_TYPE_TEXTURES;
     uint32_t end = BSP_LUMP_TYPE_LIGHTVOLS;
     for (size_t i = start; i <= end; i++)
     {
+        gs_println("load generic: %d", i);
         if (!_load_lump(&buffer, map, containers[i - start], i, sizes[i - start]))
         {
             gs_println("load_bsp() failed: failed to read lump %d", i);
@@ -98,18 +106,28 @@ b32 load_bsp(char *filename, bsp_map_t *map)
         }
     }
 
+    gs_println("texture address0 %p", &map->textures);
+    gs_println("texture address1 %p", map->textures.data);
+    gs_println("texture address2 %p", (uintptr_t)map->textures.data);
+
+    gs_println("6");
     // read visdata lump
     if (!_load_visdata_lump(&buffer, map))
         return _load_bsp_fail(&buffer, "failed to read visdata lump");
 
+    gs_println("7");
+    gs_println("p count: %zu", map->planes.count);
     // Flip coordinates to Y up
     for (size_t i = 0; i < map->planes.count; i++)
     {
+        gs_println("plane %d", i);
+        gs_println("x: %f, y: %f, z: %f", map->planes.data[i].normal.x, map->planes.data[i].normal.y, map->planes.data[i].normal.z);
         map->planes.data[i].normal = gs_v3(
             map->planes.data[i].normal.x,
             map->planes.data[i].normal.z,
             map->planes.data[i].normal.y);
     }
+    gs_println("8");
     for (size_t i = 0; i < map->models.count; i++)
     {
         map->models.data[i].mins = gs_v3(
@@ -121,6 +139,7 @@ b32 load_bsp(char *filename, bsp_map_t *map)
             map->models.data[i].maxs.z,
             map->models.data[i].maxs.y);
     }
+    gs_println("9");
     for (size_t i = 0; i < map->vertices.count; i++)
     {
         map->vertices.data[i].position = gs_v3(
@@ -132,6 +151,7 @@ b32 load_bsp(char *filename, bsp_map_t *map)
             map->vertices.data[i].normal.z,
             map->vertices.data[i].normal.y);
     }
+    gs_println("10");
     for (size_t i = 0; i < map->faces.count; i++)
     {
         map->faces.data[i].normal = gs_v3(
@@ -147,13 +167,14 @@ b32 load_bsp(char *filename, bsp_map_t *map)
             map->faces.data[i].lm_vecs[1].z,
             map->faces.data[i].lm_vecs[1].y);
 
-        int32 temp = map->faces.data[i].lm_origin[1];
+        int32_t temp = map->faces.data[i].lm_origin[1];
         map->faces.data[i].lm_origin[1] = map->faces.data[i].lm_origin[1];
         map->faces.data[i].lm_origin[2] = temp;
     }
+    gs_println("11");
     for (size_t i = 0; i < map->nodes.count; i++)
     {
-        int32 temp = map->nodes.data[i].mins[1];
+        int32_t temp = map->nodes.data[i].mins[1];
         map->nodes.data[i].mins[1] = map->nodes.data[i].mins[1];
         map->nodes.data[i].mins[2] = temp;
 
@@ -161,9 +182,10 @@ b32 load_bsp(char *filename, bsp_map_t *map)
         map->nodes.data[i].maxs[1] = map->nodes.data[i].maxs[1];
         map->nodes.data[i].maxs[2] = temp;
     }
+    gs_println("12");
     for (size_t i = 0; i < map->leaves.count; i++)
     {
-        int32 temp = map->leaves.data[i].mins[1];
+        int32_t temp = map->leaves.data[i].mins[1];
         map->leaves.data[i].mins[1] = map->leaves.data[i].mins[1];
         map->leaves.data[i].mins[2] = temp;
 
@@ -172,6 +194,7 @@ b32 load_bsp(char *filename, bsp_map_t *map)
         map->leaves.data[i].maxs[2] = temp;
     }
 
+    gs_println("8");
     map->valid = true;
     gs_byte_buffer_free(&buffer);
     gs_println("load_bsp() done loading '%s'", filename);
@@ -188,16 +211,30 @@ b32 _load_bsp_header(gs_byte_buffer_t *buffer, bsp_header_t *header)
 
 b32 _load_lump(gs_byte_buffer_t *buffer, bsp_map_t *map, void *container, bsp_lump_types type, uint32_t lump_size)
 {
-    int32_t size = map->header.dir_entries[type].length;
+    uint32_t size = map->header.dir_entries[type].length;
+    gs_println("generic size: %zu", size);
+    gs_println("generic lump_size: %zu", lump_size);
 
-    int32_t *count = (int32_t)container;
-    void **data = (unsigned long long)container + sizeof(int32_t);
+    uint32_t *count = (uint32_t *)container;
+    void **data = (void **)((char *)container + sizeof(uint32_t));
+    
+    gs_println("before malloc");
+    gs_println("data addr2: %p", *data);
+    gs_println("map->textures.data: %p", map->textures.data);
 
     *count = size / lump_size;
-    *data = gs_malloc(size);
+    *data = calloc(*count, lump_size);
+    gs_println("after malloc");
+    gs_println("data addr2: %p", *data);
+    gs_println("map->textures.data: %p", map->textures.data);
 
     buffer->position = map->header.dir_entries[type].offset;
     gs_byte_buffer_read_bulk(buffer, data, size);
+
+
+    gs_println("after read");
+    gs_println("data addr2: %p", *data);
+    gs_println("map->textures.data: %p", map->textures.data);
 
     return true;
 }

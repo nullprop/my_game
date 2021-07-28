@@ -39,7 +39,7 @@ void app_init()
     fps.cam.fov = 90.0f;
 
     // Lock mouse at start by default
-    gs_platform_lock_mouse(gs_platform_main_window(), true);
+    //gs_platform_lock_mouse(gs_platform_main_window(), true);
 
     bsp_map = gs_malloc_init(bsp_map_t);
     load_bsp("maps/q3dm1.bsp", bsp_map);

@@ -8,7 +8,7 @@ proj_name=App
 proj_root_dir=$(pwd)/../
 
 flags=(
-	-std=gnu99 -w -ldl -lGL -lX11 -pthread -lXi
+	-std=gnu99 -w -ldl -lGL -lX11 -pthread -lXi -g
 )
 
 # Include directories
@@ -23,6 +23,8 @@ src=(
 
 # Build
 echo gcc -O0 ${inc[*]} ${src[*]} ${flags[*]} -lm -o ${proj_name}
-gcc -O3 ${inc[*]} ${src[*]} ${flags[*]} -lm -o ${proj_name}
+gcc -O0 ${inc[*]} ${src[*]} ${flags[*]} -lm -o ${proj_name}
 
 cd ..
+
+cp assets/* bin/ -r

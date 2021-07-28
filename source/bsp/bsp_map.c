@@ -133,6 +133,7 @@ void _bsp_load_textures(bsp_map_t *map)
         memset(filename, 0, malloc_sz);
         strcat(filename, map->textures.data[texture_index].name);
         strcat(filename, extensions[0]);
+        gs_println("file: %s", filename);
 
         for (size_t j = 0; j < 2; j++)
         {
