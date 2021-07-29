@@ -32,7 +32,11 @@ cl /w /MP -Zi /DEBUG:FULL /Fe%name%.exe %src_all% %inc% ^
 /EHsc /link /SUBSYSTEM:CONSOLE /NODEFAULTLIB:msvcrt.lib /NODEFAULTLIB:LIBCMT ^
 %os_libs%
 
-rem Copy assets
-if %ERRORLEVEL% EQU 0 robocopy ..\assets .\ /E
-
 popd
+
+if %ERRORLEVEL% EQU 0 (
+    rem Copy assets
+    echo.
+    echo Copying assets:
+    robocopy .\assets .\bin /E /NFL /NDL /NJH /NP
+)

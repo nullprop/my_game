@@ -8,7 +8,7 @@ proj_name=App
 proj_root_dir=$(pwd)/../
 
 flags=(
-	-std=gnu99 -w
+	-std=gnu99 -w -g
 )
 
 # Include directories
@@ -37,5 +37,4 @@ gcc -O0 ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -lm -o ${proj_name}
 
 cd ..
 
-
-
+cp ./assets/* ./bin -r
