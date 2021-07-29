@@ -50,23 +50,40 @@ b32 load_bsp(char *filename, bsp_map_t *map)
         return _load_bsp_fail(&buffer, "failed to read entity lumps");
 
     // generic lumps
-    void *containers[] = {
-        &map->textures,
-        &map->planes,
-        &map->nodes,
-        &map->leaves,
-        &map->leaf_faces,
-        &map->leaf_brushes,
-        &map->models,
-        &map->brushes,
-        &map->brush_sides,
-        &map->vertices,
-        &map->indices,
-        &map->effects,
-        &map->faces,
-        &map->lightmaps,
-        &map->lightvols};
-
+    uint32_t *counts[] = {
+        &map->textures.count,
+        &map->planes.count,
+        &map->nodes.count,
+        &map->leaves.count,
+        &map->leaf_faces.count,
+        &map->leaf_brushes.count,
+        &map->models.count,
+        &map->brushes.count,
+        &map->brush_sides.count,
+        &map->vertices.count,
+        &map->indices.count,
+        &map->effects.count,
+        &map->faces.count,
+        &map->lightmaps.count,
+        &map->lightvols.count,
+    };
+    void **datas[] = {
+        &map->textures.data,
+        &map->planes.data,
+        &map->nodes.data,
+        &map->leaves.data,
+        &map->leaf_faces.data,
+        &map->leaf_brushes.data,
+        &map->models.data,
+        &map->brushes.data,
+        &map->brush_sides.data,
+        &map->vertices.data,
+        &map->indices.data,
+        &map->effects.data,
+        &map->faces.data,
+        &map->lightmaps.data,
+        &map->lightvols.data,
+    };
     uint32_t sizes[] = {
         sizeof(bsp_texture_lump_t),
         sizeof(bsp_plane_lump_t),
@@ -90,7 +107,7 @@ b32 load_bsp(char *filename, bsp_map_t *map)
     uint32_t end = BSP_LUMP_TYPE_LIGHTVOLS;
     for (size_t i = start; i <= end; i++)
     {
-        if (!_load_lump(&buffer, map, containers[i - start], i, sizes[i - start]))
+        if (!_load_lump(&buffer, map, counts[i - start], datas[i - start], i, sizes[i - start]))
         {
             gs_byte_buffer_free(&buffer);
             return false;
@@ -185,29 +202,15 @@ b32 _load_bsp_header(gs_byte_buffer_t *buffer, bsp_header_t *header)
     return true;
 }
 
-b32 _load_lump(gs_byte_buffer_t *buffer, bsp_map_t *map, void *container, bsp_lump_types type, uint32_t lump_size)
+b32 _load_lump(gs_byte_buffer_t *buffer, bsp_map_t *map, uint32_t *count, void **data, bsp_lump_types type, uint32_t lump_size)
 {
     uint32_t size = map->header.dir_entries[type].length;
 
-    uint32_t *count = (uint32_t *)container;
-    void **data = (void **)((char *)container + sizeof(uint32_t));
-    
-    gs_println("before malloc");
-    gs_println("data addr2: %p", *data);
-    gs_println("map->textures.data: %p", map->textures.data);
-
     *count = size / lump_size;
-    *data = calloc(*count, lump_size);
-    gs_println("after malloc");
-    gs_println("data addr2: %p", *data);
-    gs_println("map->textures.data: %p", map->textures.data);
+    *data = gs_malloc(size);
 
     buffer->position = map->header.dir_entries[type].offset;
     gs_byte_buffer_read_bulk(buffer, data, size);
-
-    gs_println("after read");
-    gs_println("data addr2: %p", *data);
-    gs_println("map->textures.data: %p", map->textures.data);
 
     return true;
 }
