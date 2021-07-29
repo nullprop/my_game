@@ -35,6 +35,12 @@ bsp_vert_lump_t bsp_vert_lump_add(bsp_vert_lump_t a, bsp_vert_lump_t b)
     return result;
 }
 
+// Get count of indices in quadratic patch
+uint32_t bsp_quadratic_patch_index_count(bsp_quadratic_patch_t *patch)
+{
+    return patch->tesselation * patch->tesselation * 6;
+}
+
 // Tesselate quadratic patch to wanted level
 void bsp_quadratic_patch_tesselate(bsp_quadratic_patch_t *patch)
 {
@@ -85,7 +91,7 @@ void bsp_quadratic_patch_tesselate(bsp_quadratic_patch_t *patch)
     }
 
     // Triangulate
-    gs_dyn_array_reserve(patch->indices, patch->tesselation * patch->tesselation * 6);
+    gs_dyn_array_reserve(patch->indices, bsp_quadratic_patch_index_count(patch));
     for (size_t row = 0; row < patch->tesselation; row++)
     {
         for (size_t col = 0; col < patch->tesselation; col++)

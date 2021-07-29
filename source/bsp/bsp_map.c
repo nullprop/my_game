@@ -51,16 +51,20 @@ void bsp_map_init(bsp_map_t *map)
     {
         bsp_face_renderable_t face = {
             .type = map->faces.data[i].type,
-            .index = i};
+        };
 
         if (face.type == BSP_FACE_TYPE_PATCH)
         {
             _bsp_create_patch(map, map->faces.data[i]);
+            // index to map->patches
+            face.index = patch_array_idx;
             patch_array_idx++;
         }
         else
         {
             gs_dyn_array_push(face_data, map->faces.data[i]);
+            // index to map->faces
+            face.index = i;
             face_array_idx++;
         }
 
@@ -185,6 +189,51 @@ void _bsp_load_lightvols(bsp_map_t *map)
 
 void _bsp_create_patch(bsp_map_t *map, bsp_face_lump_t face)
 {
+    bsp_patch_t patch = {
+        .width = face.size[0],
+        .height = face.size[1],
+        .lightmap_idx = face.lm_index,
+        .texture_idx = face.texture,
+    };
+
+    uint32_t num_patches_x = (patch.width - 1) >> 1;
+    uint32_t num_patches_y = (patch.height - 1) >> 1;
+
+    gs_dyn_array_reserve(patch.quadratic_patches, num_patches_x * num_patches_y);
+    // not using push, increment size ourselves
+    gs_dyn_array_head(patch.quadratic_patches)->size = num_patches_x * num_patches_y;
+
+    for (size_t x = 0; x < num_patches_x; x++)
+    {
+        for (size_t y = 0; y < num_patches_y; y++)
+        {
+            uint32_t patch_idx = y * num_patches_x + x;
+
+            bsp_quadratic_patch_t quadratic = {
+                .tesselation = 10,
+            };
+
+            // Get the 9 vertices used as control points for this quadratic patch.
+            for (size_t row = 0; row < 3; row++)
+            {
+                for (size_t col = 0; col < 3; col++)
+                {
+                    uint32_t control_point_idx = row * 3 + col;
+                    // I understood this index when I wrote it but didn't add comments...
+                    // Let's just hope I never have to debug this.
+                    //                    offset               ???                             ???
+                    uint32_t vertex_idx = face.first_vertex + (2 * y * patch.width + 2 * x) + (row * patch.width + col);
+                    quadratic.control_points[control_point_idx] = map->vertices.data[vertex_idx];
+                }
+            }
+
+            gs_dyn_array_set_data_i(&patch.quadratic_patches, &quadratic, sizeof(bsp_quadratic_patch_t), patch_idx);
+            bsp_quadratic_patch_tesselate(&patch.quadratic_patches[patch_idx]);
+        }
+    }
+
+    uint32_t temp = gs_dyn_array_size(patch.quadratic_patches);
+    gs_dyn_array_push(map->patches, patch);
 }
 
 void bsp_map_update(bsp_map_t *map)
@@ -197,32 +246,59 @@ void bsp_map_render(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camera_t *cam)
     gsi_depth_enabled(gsi, true);
     //gsi_face_cull_enabled(gsi, true);
 
-    for (size_t i = 0; i < map->faces.count; i++)
+    for (size_t i = 0; i < gs_dyn_array_size(map->render_faces); i++)
     {
-        if (map->faces.data[i].type == BSP_FACE_TYPE_PATCH)
+        int32_t index = map->render_faces[i].index;
+
+        if (map->render_faces[i].type == BSP_FACE_TYPE_PATCH)
         {
-            continue;
+            bsp_patch_t patch = map->patches[index];
+            for (size_t j = 0; j < gs_dyn_array_size(patch.quadratic_patches); j++)
+            {
+                bsp_quadratic_patch_t quadratic = patch.quadratic_patches[j];
+
+                for (size_t k = 0; k < bsp_quadratic_patch_index_count(&quadratic) - 2; k += 3)
+                {
+                    uint16_t index1 = quadratic.indices[k + 0];
+                    uint16_t index2 = quadratic.indices[k + 1];
+                    uint16_t index3 = quadratic.indices[k + 2];
+
+                    gsi_trianglevx(
+                        gsi,
+                        quadratic.vertices[index1].position,
+                        quadratic.vertices[index2].position,
+                        quadratic.vertices[index3].position,
+                        quadratic.vertices[index1].tex_coord,
+                        quadratic.vertices[index1].tex_coord,
+                        quadratic.vertices[index1].tex_coord,
+                        quadratic.vertices[index1].color,
+                        GS_GRAPHICS_PRIMITIVE_TRIANGLES);
+                }
+            }
         }
-
-        int32_t first_index = map->faces.data[i].first_index;
-        int32_t first_vertex = map->faces.data[i].first_vertex;
-
-        for (size_t j = 0; j < map->faces.data[i].num_indices - 2; j += 3)
+        else
         {
-            int32_t offset1 = map->indices.data[first_index + j + 0].offset;
-            int32_t offset2 = map->indices.data[first_index + j + 1].offset;
-            int32_t offset3 = map->indices.data[first_index + j + 2].offset;
+            bsp_face_lump_t face = map->faces.data[index];
+            int32_t first_index = face.first_index;
+            int32_t first_vertex = face.first_vertex;
 
-            gsi_trianglevx(
-                gsi,
-                map->vertices.data[first_vertex + offset1].position,
-                map->vertices.data[first_vertex + offset2].position,
-                map->vertices.data[first_vertex + offset3].position,
-                map->vertices.data[first_vertex + offset1].tex_coord,
-                map->vertices.data[first_vertex + offset1].tex_coord,
-                map->vertices.data[first_vertex + offset1].tex_coord,
-                map->vertices.data[first_vertex + offset1].color,
-                GS_GRAPHICS_PRIMITIVE_TRIANGLES);
+            for (size_t j = 0; j < face.num_indices - 2; j += 3)
+            {
+                int32_t offset1 = map->indices.data[first_index + j + 0].offset;
+                int32_t offset2 = map->indices.data[first_index + j + 1].offset;
+                int32_t offset3 = map->indices.data[first_index + j + 2].offset;
+
+                gsi_trianglevx(
+                    gsi,
+                    map->vertices.data[first_vertex + offset1].position,
+                    map->vertices.data[first_vertex + offset2].position,
+                    map->vertices.data[first_vertex + offset3].position,
+                    map->vertices.data[first_vertex + offset1].tex_coord,
+                    map->vertices.data[first_vertex + offset1].tex_coord,
+                    map->vertices.data[first_vertex + offset1].tex_coord,
+                    map->vertices.data[first_vertex + offset1].color,
+                    GS_GRAPHICS_PRIMITIVE_TRIANGLES);
+            }
         }
     }
 }
