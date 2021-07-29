@@ -70,23 +70,28 @@ void app_update()
     {
         uint32_t main_window = gs_platform_main_window();
 
+        // TODO: monitor size should probably be in the api
+        GLFWvidmode *vid_mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
         bool32_t want_fullscreen = !gs_platform_window_fullscreen(main_window);
         gs_platform_set_window_fullscreen(main_window, want_fullscreen);
 
         if (!want_fullscreen)
         {
+            gs_platform_set_window_size(main_window, 1280, 720);
+
             // Going back to windowed mode,
             // restore window to center of screen.
-
             gs_vec2 window_size = gs_platform_window_sizev(main_window);
-            // TODO: monitor size should probably be in the api
-            void* window = gs_platform_raw_window_handle(main_window);
-            GLFWvidmode* vid_mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
             gs_vec2 monitor_size = gs_v2(vid_mode->width, vid_mode->height);
 
             // Set position
             gs_vec2 top_left = gs_vec2_scale(gs_vec2_sub(monitor_size, window_size), 0.5f);
             gs_platform_set_window_positionv(main_window, top_left);
+        }
+        else
+        {
+            gs_platform_set_window_size(main_window, vid_mode->width, vid_mode->height);
         }
     }
 
