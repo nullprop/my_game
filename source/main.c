@@ -30,6 +30,8 @@ void fps_camera_update(fps_camera_t *cam);
 fps_camera_t fps = {0};
 
 bsp_map_t *bsp_map = NULL;
+gs_immediate_draw_t *gsi = NULL;
+float last_deltas[3];
 
 void app_init()
 {
@@ -55,6 +57,7 @@ void app_init()
     }
 
     render_ctx_init();
+    gsi = render_ctx_get_gsi();
 }
 
 void app_update()
@@ -79,8 +82,20 @@ void app_update()
     if (bsp_map->valid)
     {
         bsp_map_update(bsp_map);
-        bsp_map_render(bsp_map, render_ctx_get_gsi(), &fps.cam);
+        bsp_map_render(bsp_map, gsi, &fps.cam);
     }
+
+    // avg frametime over 3 frames
+    last_deltas[0] = last_deltas[1];
+    last_deltas[1] = last_deltas[2];
+    last_deltas[2] = gs_platform_delta_time();
+    float avg_delta = (last_deltas[0] + last_deltas[1] + last_deltas[2]) / 3.0f;
+
+    // draw fps
+    char fps_s[64];
+    sprintf(&fps_s[0], "fps: %d", (int)gs_round(1.0f / avg_delta));
+    gsi_camera2D(gsi);
+    gsi_text(gsi, 5, 15, &fps_s[0], NULL, false, 255, 255, 255, 255);
 
     render_ctx_update();
 }
@@ -118,6 +133,7 @@ void fps_camera_update(fps_camera_t *fps)
 void app_shutdown()
 {
     bsp_map_free(bsp_map);
+    render_ctx_free();
 }
 
 gs_app_desc_t gs_main(int32_t argc, char **argv)
@@ -125,5 +141,8 @@ gs_app_desc_t gs_main(int32_t argc, char **argv)
     return (gs_app_desc_t){
         .init = app_init,
         .update = app_update,
-        .shutdown = app_shutdown};
+        .shutdown = app_shutdown,
+        .enable_vsync = false,
+        .frame_rate = 500.0f,
+    };
 }

@@ -31,6 +31,18 @@ void render_ctx_update()
     gs_graphics_submit_command_buffer(render_ctx_cb);
 }
 
+void render_ctx_free()
+{
+    gs_immediate_draw_free(render_ctx_gsi);
+    gs_command_buffer_free(render_ctx_cb);
+
+    free(render_ctx_gsi);
+    free(render_ctx_cb);
+
+    render_ctx_gsi = NULL;
+    render_ctx_cb = NULL;
+}
+
 gs_command_buffer_t *render_ctx_get_cb()
 {
     return render_ctx_cb;
