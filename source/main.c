@@ -38,7 +38,8 @@ void app_init()
     // Construct camera
     fps.cam = gs_camera_perspective();
     fps.cam.transform.position = gs_v3(0.f, 0.f, 0.f);
-    fps.cam.fov = 90.0f;
+    fps.cam.fov = 110.0f;
+    fps.cam.far_plane = 2000.0f;
 
     // Lock mouse at start by default
     //gs_platform_lock_mouse(gs_platform_main_window(), true);
@@ -74,9 +75,16 @@ void app_update()
 
         if (!want_fullscreen)
         {
-            // Restore window to center of screen
+            // Going back to windowed mode,
+            // restore window to center of screen.
+
             gs_vec2 window_size = gs_platform_window_sizev(main_window);
-            gs_vec2 monitor_size = gs_v2(1920, 1080); // TODO
+            // TODO: monitor size should probably be in the api
+            void* window = gs_platform_raw_window_handle(main_window);
+            GLFWvidmode* vid_mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+            gs_vec2 monitor_size = gs_v2(vid_mode->width, vid_mode->height);
+
+            // Set position
             gs_vec2 top_left = gs_vec2_scale(gs_vec2_sub(monitor_size, window_size), 0.5f);
             gs_platform_set_window_positionv(main_window, top_left);
         }
@@ -159,8 +167,8 @@ gs_app_desc_t gs_main(int32_t argc, char **argv)
         .init = app_init,
         .update = app_update,
         .shutdown = app_shutdown,
-        .enable_vsync = false,
-        .frame_rate = 500.0f,
+        //.enable_vsync = true,
+        .frame_rate = 120.0f,
         .window_width = 1280,
         .window_height = 720,
         //.window_flags = GS_WINDOW_FLAGS_FULLSCREEN,
