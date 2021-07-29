@@ -65,6 +65,23 @@ void app_update()
     if (gs_platform_key_pressed(GS_KEYCODE_ESC))
         gs_engine_quit();
 
+    if (gs_platform_key_pressed(GS_KEYCODE_F1))
+    {
+        uint32_t main_window = gs_platform_main_window();
+
+        bool32_t want_fullscreen = !gs_platform_window_fullscreen(main_window);
+        gs_platform_set_window_fullscreen(main_window, want_fullscreen);
+
+        if (!want_fullscreen)
+        {
+            // Restore window to center of screen
+            gs_vec2 window_size = gs_platform_window_sizev(main_window);
+            gs_vec2 monitor_size = gs_v2(1920, 1080); // TODO
+            gs_vec2 top_left = gs_vec2_scale(gs_vec2_sub(monitor_size, window_size), 0.5f);
+            gs_platform_set_window_positionv(main_window, top_left);
+        }
+    }
+
     // If click, then lock again (in case lost)
     if (gs_platform_mouse_pressed(GS_MOUSE_LBUTTON) && !gs_platform_mouse_locked())
     {
@@ -144,5 +161,8 @@ gs_app_desc_t gs_main(int32_t argc, char **argv)
         .shutdown = app_shutdown,
         .enable_vsync = false,
         .frame_rate = 500.0f,
+        .window_width = 1280,
+        .window_height = 720,
+        //.window_flags = GS_WINDOW_FLAGS_FULLSCREEN,
     };
 }
