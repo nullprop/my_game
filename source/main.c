@@ -34,6 +34,11 @@ bsp_map_t *bsp_map = NULL;
 
 void app_init()
 {
+    // Orient coordinate system
+    gs_absolute_up = gs_v3(0, 0, 1.0f);
+    gs_absolute_forward = gs_v3(0, 1.0f, 0);
+    gs_absolute_right = gs_v3(1.0f, 0, 0);
+
     render_ctx_init();
     render_ctx_use_immediate_mode = true;
 
