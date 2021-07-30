@@ -187,7 +187,7 @@ void _bsp_load_textures(bsp_map_t *map)
                         .min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
                         .mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
                     },
-                    true,
+                    false,
                     false);
             }
             else if (j == 1)
@@ -381,9 +381,9 @@ void bsp_map_render(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camera_t *cam)
                         quadratic.vertices[index1].tex_coord,
                         quadratic.vertices[index2].tex_coord,
                         quadratic.vertices[index3].tex_coord,
-                        quadratic.vertices[index1].color,
-                        quadratic.vertices[index2].color,
-                        quadratic.vertices[index3].color,
+                        GS_COLOR_WHITE,
+                        GS_COLOR_WHITE,
+                        GS_COLOR_WHITE,
                         GS_GRAPHICS_PRIMITIVE_TRIANGLES);
                 }
             }
@@ -409,17 +409,21 @@ void bsp_map_render(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camera_t *cam)
                 int32_t offset2 = map->indices.data[first_index + j + 1].offset;
                 int32_t offset3 = map->indices.data[first_index + j + 2].offset;
 
+                bsp_vert_lump_t vert1 = map->vertices.data[first_vertex + offset1];
+                bsp_vert_lump_t vert2 = map->vertices.data[first_vertex + offset2];
+                bsp_vert_lump_t vert3 = map->vertices.data[first_vertex + offset3];
+
                 gsi_trianglevxmc(
                     gsi,
-                    map->vertices.data[first_vertex + offset1].position,
-                    map->vertices.data[first_vertex + offset2].position,
-                    map->vertices.data[first_vertex + offset3].position,
-                    map->vertices.data[first_vertex + offset1].tex_coord,
-                    map->vertices.data[first_vertex + offset2].tex_coord,
-                    map->vertices.data[first_vertex + offset3].tex_coord,
-                    map->vertices.data[first_vertex + offset1].color,
-                    map->vertices.data[first_vertex + offset2].color,
-                    map->vertices.data[first_vertex + offset3].color,
+                    vert1.position,
+                    vert2.position,
+                    vert3.position,
+                    vert1.tex_coord,
+                    vert2.tex_coord,
+                    vert3.tex_coord,
+                    GS_COLOR_WHITE,
+                    GS_COLOR_WHITE,
+                    GS_COLOR_WHITE,
                     GS_GRAPHICS_PRIMITIVE_TRIANGLES);
             }
         }
