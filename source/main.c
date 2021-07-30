@@ -31,13 +31,11 @@ void fps_camera_update(fps_camera_t *cam);
 fps_camera_t fps = {0};
 
 bsp_map_t *bsp_map = NULL;
-gs_immediate_draw_t *gsi = NULL;
-float last_deltas[3];
 
 void app_init()
 {
     render_ctx_init();
-    gsi = render_ctx_get_gsi();
+    render_ctx_use_immediate_mode = true;
 
     // Construct camera
     fps.cam = gs_camera_perspective();
@@ -114,21 +112,15 @@ void app_update()
     if (bsp_map->valid)
     {
         bsp_map_update(bsp_map);
-        bsp_map_render(bsp_map, gsi, &fps.cam);
+        bsp_map_render(bsp_map, &render_ctx_gsi, &fps.cam);
     }
-
-    // avg frametime over 3 frames
-    last_deltas[0] = last_deltas[1];
-    last_deltas[1] = last_deltas[2];
-    last_deltas[2] = gs_platform_delta_time();
-    float avg_delta = (last_deltas[0] + last_deltas[1] + last_deltas[2]) / 3.0f;
 
     // draw fps
     char fps_s[64];
-    sprintf(&fps_s[0], "fps: %d", (int)gs_round(1.0f / avg_delta));
-    gsi_camera2D(gsi);
-    gsi_text(gsi, 5, 15, &fps_s[0], NULL, false, 255, 255, 255, 255);
-
+    sprintf(&fps_s[0], "fps: %d", (int)gs_round(1.0f / gs_platform_delta_time()));
+    gsi_camera2D(&render_ctx_gsi);
+    gsi_text(&render_ctx_gsi, 5, 15, &fps_s[0], NULL, false, 255, 255, 255, 255);
+   
     render_ctx_update();
 }
 

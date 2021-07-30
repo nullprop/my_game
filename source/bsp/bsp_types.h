@@ -102,16 +102,6 @@ typedef struct bsp_leaf_renderable_t
 } bsp_leaf_renderable_t;
 */
 
-typedef struct bsp_texture_handle_t
-{
-    char* name;
-    char* data;
-    int32_t width;
-    int32_t height;
-    int32_t num_comps;
-    int32_t load_attempts;
-} bsp_texture_handle_t;
-
 typedef struct bsp_dir_entry_t
 {
     int32_t offset;
@@ -390,8 +380,10 @@ typedef struct bsp_map_t
     struct
     {
         uint32_t count;
-        bsp_texture_handle_t *data;
-    } texture_handles;
+        gs_asset_texture_t *data;
+    } texture_assets;
+
+    gs_handle(gs_graphics_texture_t) missing_texture;
 } bsp_map_t;
 
 #endif // BSP_TYPES_H
