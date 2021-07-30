@@ -2,6 +2,7 @@
     "files.associations": {
         "bsptypes.h": "c",
         "xstring": "c",
-        "xutility": "c"
+        "xutility": "c",
+        "gs.h": "c"
     }
 }

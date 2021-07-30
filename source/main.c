@@ -15,6 +15,7 @@
 #include "bsp/bsp_loader.c"
 #include "bsp/bsp_map.c"
 #include "graphics/rendercontext.c"
+#include "util/config.c"
 
 typedef struct fps_camera_t
 {
@@ -35,6 +36,9 @@ float last_deltas[3];
 
 void app_init()
 {
+    render_ctx_init();
+    gsi = render_ctx_get_gsi();
+
     // Construct camera
     fps.cam = gs_camera_perspective();
     fps.cam.transform.position = gs_v3(0.f, 0.f, 0.f);
@@ -56,9 +60,6 @@ void app_init()
         gs_println("  patches: %d", bsp_map->stats.total_patches);
         gs_println("  textures: %d/%d", bsp_map->stats.loaded_textures, bsp_map->stats.total_textures);
     }
-
-    render_ctx_init();
-    gsi = render_ctx_get_gsi();
 }
 
 void app_update()
@@ -91,6 +92,7 @@ void app_update()
         }
         else
         {
+            // Set to fullscreen res
             gs_platform_set_window_size(main_window, vid_mode->width, vid_mode->height);
         }
     }
@@ -164,18 +166,21 @@ void app_shutdown()
 {
     bsp_map_free(bsp_map);
     render_ctx_free();
+    mg_config_free();
 }
 
 gs_app_desc_t gs_main(int32_t argc, char **argv)
 {
+    // Load config first so we can use resolution, etc.
+    mg_config_init();
+
     return (gs_app_desc_t){
         .init = app_init,
         .update = app_update,
         .shutdown = app_shutdown,
-        //.enable_vsync = true,
-        .frame_rate = 120.0f,
-        .window_width = 1280,
-        .window_height = 720,
-        //.window_flags = GS_WINDOW_FLAGS_FULLSCREEN,
+        .window_width = mg_config->video.width,
+        .window_height = mg_config->video.height,
+        .enable_vsync = mg_config->video.vsync,
+        .frame_rate = mg_config->video.max_fps,
     };
 }
