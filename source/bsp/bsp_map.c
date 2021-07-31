@@ -10,6 +10,7 @@
     BSP rendering.
 =================================================================*/
 
+#include "../util/math.c"
 #include "bsp_patch.c"
 #include "bsp_shaders.h"
 #include "bsp_types.h"
@@ -28,6 +29,9 @@ void _bsp_load_lightmaps(bsp_map_t *map);
 void _bsp_load_lightvols(bsp_map_t *map);
 void _bsp_create_patch(bsp_map_t *map, bsp_face_lump_t face);
 void _bsp_create_index_buffer(bsp_map_t *map);
+int32_t _bsp_find_camera_leaf(bsp_map_t *map, gs_vec3 view_position);
+void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf);
+bool32_t _bsp_cluster_visible(bsp_map_t *map, int32_t view_cluster, int32_t test_cluster);
 
 void bsp_map_init(bsp_map_t *map)
 {
@@ -140,7 +144,7 @@ void bsp_map_init(bsp_map_t *map)
 
     // Static stats
     map->stats.total_vertices = map->vertices.count;
-    map->stats.total_faces = map->faces.count;
+    map->stats.total_faces = face_array_idx;
     map->stats.total_patches = patch_array_idx;
 }
 
@@ -335,9 +339,10 @@ void _bsp_map_create_index_buffer(bsp_map_t *map)
         });
 }
 
-void bsp_map_update(bsp_map_t *map)
+void bsp_map_update(bsp_map_t *map, gs_vec3 view_position)
 {
-    // TODO
+    int32_t leaf = _bsp_find_camera_leaf(map, view_position);
+    _bsp_calculate_visible_faces(map, leaf);
 }
 
 void bsp_map_render(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camera_t *cam)
@@ -346,11 +351,11 @@ void bsp_map_render(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camera_t *cam)
     gsi_depth_enabled(gsi, true);
     //gsi_face_cull_enabled(gsi, true);
 
-    for (size_t i = 0; i < gs_dyn_array_size(map->render_faces); i++)
+    for (size_t i = 0; i < gs_dyn_array_size(map->visible_faces); i++)
     {
-        int32_t index = map->render_faces[i].index;
+        int32_t index = map->visible_faces[i].index;
 
-        if (map->render_faces[i].type == BSP_FACE_TYPE_PATCH)
+        if (map->visible_faces[i].type == BSP_FACE_TYPE_PATCH)
         {
             bsp_patch_t patch = map->patches[index];
 
@@ -564,4 +569,90 @@ void bsp_map_free(bsp_map_t *map)
 
     gs_free(map);
     map = NULL;
+}
+
+int32_t _bsp_find_camera_leaf(bsp_map_t *map, gs_vec3 view_position)
+{
+    int32_t leaf_index = 0;
+
+    while (leaf_index >= 0)
+    {
+        bsp_plane_lump_t plane = map->planes.data[map->nodes.data[leaf_index].first_plane];
+
+        // children[0] - front node; children[1] - back node
+        if (point_in_front_of_plane(plane.normal, plane.dist, view_position))
+        {
+            leaf_index = map->nodes.data[leaf_index].children[0];
+        }
+        else
+        {
+            leaf_index = map->nodes.data[leaf_index].children[1];
+        }
+    }
+
+    return ~leaf_index;
+}
+
+void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
+{
+    gs_dyn_array_clear(map->visible_faces);
+    uint32_t visible_patches = 0;
+    uint32_t visible_faces = 0;
+    int32_t leaf_cluster = map->leaves.data[leaf].cluster;
+
+    for (size_t i = 0; i < map->leaves.count; i++)
+    {
+        bsp_leaf_lump_t lump = map->leaves.data[i];
+
+        if (!_bsp_cluster_visible(map, leaf_cluster, lump.cluster))
+        {
+            continue;
+        }
+
+        // TODO
+        // Frustum culling using lump.mins and lump.maxs
+
+        // Add faces in this leaf to visible set
+        for (size_t j = 0; j < lump.num_leaf_faces; j++)
+        {
+            int32_t idx = map->leaf_faces.data[lump.first_leaf_face + j].face;
+            bsp_face_renderable_t face = map->render_faces[idx];
+
+            // TODO billboards
+            if (face.type != BSP_FACE_TYPE_BILLBOARD)
+            {
+                gs_dyn_array_push(map->visible_faces, face);
+            }
+
+            if (face.type == BSP_FACE_TYPE_PATCH)
+            {
+                visible_patches++;
+            }
+            else
+            {
+                visible_faces++;
+            }
+        }
+    }
+
+    map->stats.visible_faces = visible_faces;
+    map->stats.visible_patches = visible_patches;
+}
+
+bool32_t _bsp_cluster_visible(bsp_map_t *map, int32_t view_cluster, int32_t test_cluster)
+{
+    if (test_cluster < 0)
+    {
+        // Outside the map or invalid
+        return false;
+    }
+
+    if (map->visdata.num_vecs == 0 || view_cluster < 0)
+    {
+        return true;
+    }
+
+    // black magic
+    int32_t idx = view_cluster * map->visdata.size_vecs + (test_cluster >> 3);
+    return (map->visdata.vecs[idx] & (1 << (test_cluster & 7))) != 0;
 }

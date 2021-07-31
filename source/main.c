@@ -32,12 +32,25 @@ fps_camera_t fps = {0};
 
 bsp_map_t *bsp_map = NULL;
 
-void app_init()
+void z_up()
 {
     // Orient coordinate system
     gs_absolute_up = gs_v3(0, 0, 1.0f);
     gs_absolute_forward = gs_v3(0, 1.0f, 0);
     gs_absolute_right = gs_v3(1.0f, 0, 0);
+}
+
+void y_up()
+{
+    // Orient coordinate system
+    gs_absolute_up = gs_v3(0, 1.0f, 0);
+    gs_absolute_forward = gs_v3(0, 0, -1.0f);
+    gs_absolute_right = gs_v3(1.0f, 0, 0);
+}
+
+void app_init()
+{
+    z_up();
 
     render_ctx_init();
     render_ctx_use_immediate_mode = true;
@@ -49,7 +62,7 @@ void app_init()
     fps.cam.far_plane = 2000.0f;
 
     // Lock mouse at start by default
-    gs_platform_lock_mouse(gs_platform_main_window(), true);
+    //gs_platform_lock_mouse(gs_platform_main_window(), true);
     if (glfwRawMouseMotionSupported())
     {
         glfwSetInputMode(gs_platform_raw_window_handle(gs_platform_main_window()), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
@@ -124,15 +137,31 @@ void app_update()
 
     if (bsp_map->valid)
     {
-        bsp_map_update(bsp_map);
+        bsp_map_update(bsp_map, fps.cam.transform.position);
         bsp_map_render(bsp_map, &render_ctx_gsi, &fps.cam);
     }
 
     // draw fps
-    char fps_s[64];
-    sprintf(&fps_s[0], "fps: %d", (int)gs_round(1.0f / gs_platform_delta_time()));
+    y_up();
+    char temp[64];
+    sprintf(temp, "fps: %d", (int)gs_round(1.0f / gs_platform_delta_time()));
     gsi_camera2D(&render_ctx_gsi);
-    gsi_text(&render_ctx_gsi, 5, 15, &fps_s[0], NULL, false, 255, 255, 255, 255);
+    gsi_text(&render_ctx_gsi, 5, 15, temp, NULL, false, 255, 255, 255, 255);
+
+    // draw map stats
+    gsi_text(&render_ctx_gsi, 5, 30, "map:", NULL, false, 255, 255, 255, 255);
+    sprintf(temp, "vertices: %zu", bsp_map->stats.total_vertices);
+    gsi_text(&render_ctx_gsi, 10, 45, temp, NULL, false, 255, 255, 255, 255);
+    sprintf(temp, "faces: %zu/%zu", bsp_map->stats.visible_faces, bsp_map->stats.total_faces);
+    gsi_text(&render_ctx_gsi, 10, 60, temp, NULL, false, 255, 255, 255, 255);
+    sprintf(temp, "patches: %zu/%zu", bsp_map->stats.visible_patches, bsp_map->stats.total_patches);
+    gsi_text(&render_ctx_gsi, 10, 75, temp, NULL, false, 255, 255, 255, 255);
+    sprintf(temp, "textures: %zu/%zu", bsp_map->stats.loaded_textures, bsp_map->stats.total_textures);
+    gsi_text(&render_ctx_gsi, 10, 90, temp, NULL, false, 255, 255, 255, 255);
+    sprintf(temp, "models: %zu", bsp_map->stats.models);
+    gsi_text(&render_ctx_gsi, 10, 105, temp, NULL, false, 255, 255, 255, 255);
+
+    z_up();
 
     render_ctx_update();
 }
