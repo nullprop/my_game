@@ -40,6 +40,8 @@ void bsp_map_init(bsp_map_t *map)
         return;
     }
 
+    map->previous_leaf = uint32_max;
+
     // Init dynamic arrays
     gs_dyn_array_reserve(map->render_faces, map->faces.count);
     gs_dyn_array_reserve(map->visible_faces, map->faces.count);
@@ -350,10 +352,19 @@ void _bsp_map_create_index_buffer(bsp_map_t *map)
 void bsp_map_update(bsp_map_t *map, gs_vec3 view_position)
 {
     int32_t leaf = _bsp_find_camera_leaf(map, view_position);
+    if (leaf == map->previous_leaf)
+    {
+        // Don't calculate visible faces if no change in leaf
+        // TODO: will need to change with frustum culling;
+        // make a potentially visible set?
+        return;
+    }
+
     _bsp_calculate_visible_faces(map, leaf);
+    map->previous_leaf = leaf;
 }
 
-void bsp_map_render(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camera_t *cam)
+void bsp_map_render_immediate(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camera_t *cam)
 {
     gsi_camera(gsi, cam);
     gsi_depth_enabled(gsi, true);
@@ -441,10 +452,10 @@ void bsp_map_render(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camera_t *cam)
             }
         }
     }
+}
 
-    // Let's not worry about retained mode for now
-    return;
-
+void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
+{
     // Framebuffer size
     const gs_vec2 fbs = gs_platform_framebuffer_sizev(gs_platform_main_window());
 

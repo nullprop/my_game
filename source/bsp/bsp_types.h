@@ -381,6 +381,8 @@ typedef struct bsp_map_t
     } texture_assets;
 
     gs_handle(gs_graphics_texture_t) missing_texture;
+
+    int32_t previous_leaf;
 } bsp_map_t;
 
 #endif // BSP_TYPES_H
