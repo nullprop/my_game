@@ -149,7 +149,8 @@ void app_update()
     gsi_text(&render_ctx_gsi, 5, 15, temp, NULL, false, 255, 255, 255, 255);
 
     // draw map stats
-    gsi_text(&render_ctx_gsi, 5, 30, "map:", NULL, false, 255, 255, 255, 255);
+    sprintf(temp, "map: %s", bsp_map->name);
+    gsi_text(&render_ctx_gsi, 5, 30, temp, NULL, false, 255, 255, 255, 255);
     sprintf(temp, "vertices: %zu", bsp_map->stats.total_vertices);
     gsi_text(&render_ctx_gsi, 10, 45, temp, NULL, false, 255, 255, 255, 255);
     sprintf(temp, "faces: %zu/%zu", bsp_map->stats.visible_faces, bsp_map->stats.total_faces);

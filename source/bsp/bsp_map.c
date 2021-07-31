@@ -627,7 +627,7 @@ void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
             int32_t idx = map->leaf_faces.data[lump.first_leaf_face + j].face;
             bsp_face_renderable_t face = map->render_faces[idx];
 
-            // Don't same face multiple times
+            // Don't add same face multiple times
             // TODO: this probably has terrible perf,
             // use a good set implementation...
             cont = 0;

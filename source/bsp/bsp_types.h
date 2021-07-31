@@ -367,6 +367,7 @@ typedef struct bsp_map_t
 
     /*==== Runtime data ====*/
 
+    char* name;
     bool32_t valid;
     bsp_stats_t stats;
     gs_dyn_array(bsp_patch_t) patches;
