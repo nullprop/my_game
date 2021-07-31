@@ -49,7 +49,11 @@ void app_init()
     fps.cam.far_plane = 2000.0f;
 
     // Lock mouse at start by default
-    //gs_platform_lock_mouse(gs_platform_main_window(), true);
+    gs_platform_lock_mouse(gs_platform_main_window(), true);
+    if (glfwRawMouseMotionSupported())
+    {
+        glfwSetInputMode(gs_platform_raw_window_handle(gs_platform_main_window()), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    }
 
     bsp_map = gs_malloc_init(bsp_map_t);
     load_bsp("maps/q3dm1.bsp", bsp_map);
@@ -106,6 +110,10 @@ void app_update()
         fps.cam.transform.rotation = gs_quat_default();
         fps.pitch = 0.f;
         gs_platform_lock_mouse(gs_platform_main_window(), true);
+        if (glfwRawMouseMotionSupported())
+        {
+            glfwSetInputMode(gs_platform_raw_window_handle(gs_platform_main_window()), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+        }
     }
 
     // Update camera
@@ -175,6 +183,7 @@ gs_app_desc_t gs_main(int32_t argc, char **argv)
         .init = app_init,
         .update = app_update,
         .shutdown = app_shutdown,
+        .window_flags = mg_config->video.fullscreen ? GS_WINDOW_FLAGS_FULLSCREEN : 0,
         .window_width = mg_config->video.width,
         .window_height = mg_config->video.height,
         .enable_vsync = mg_config->video.vsync,
