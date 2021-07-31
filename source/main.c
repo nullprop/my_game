@@ -160,6 +160,8 @@ void app_update()
     gsi_text(&render_ctx_gsi, 10, 90, temp, NULL, false, 255, 255, 255, 255);
     sprintf(temp, "models: %zu", bsp_map->stats.models);
     gsi_text(&render_ctx_gsi, 10, 105, temp, NULL, false, 255, 255, 255, 255);
+    sprintf(temp, "leaf: %zu", bsp_map->stats.current_leaf);
+    gsi_text(&render_ctx_gsi, 10, 120, temp, NULL, false, 255, 255, 255, 255);
 
     z_up();
 

@@ -197,7 +197,7 @@ void _mg_config_set_default()
     mg_config->video.fullscreen = false;
     mg_config->video.width = 800;
     mg_config->video.height = 600;
-    mg_config->video.max_fps = 60;
+    mg_config->video.max_fps = 120;
     mg_config->video.vsync = false;
 
     // Audio

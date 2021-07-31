@@ -42,8 +42,16 @@ void bsp_map_init(bsp_map_t *map)
 
     // Init dynamic arrays
     gs_dyn_array_reserve(map->render_faces, map->faces.count);
-    gs_dyn_array_reserve(map->visible_faces, 1);
-    gs_dyn_array_reserve(map->patches, 1);
+    gs_dyn_array_reserve(map->visible_faces, map->faces.count);
+    uint32_t patch_count;
+    for (size_t i = 0; i < map->faces.count; i++)
+    {
+        if (map->faces.data[i].type == BSP_FACE_TYPE_PATCH)
+        {
+            patch_count++;
+        }
+    }
+    gs_dyn_array_reserve(map->patches, patch_count);
 
     // Load stuff
     _bsp_load_entities(map);
@@ -77,6 +85,11 @@ void bsp_map_init(bsp_map_t *map)
 
         gs_dyn_array_push(map->render_faces, face);
     }
+
+    // Static stats
+    map->stats.total_vertices = map->vertices.count;
+    map->stats.total_faces = face_array_idx;
+    map->stats.total_patches = patch_array_idx;
 
     // Command buffer
     bsp_graphics_cb = gs_command_buffer_new();
@@ -141,11 +154,6 @@ void bsp_map_init(bsp_map_t *map)
                 .size = sizeof(vattrs),
             },
         });
-
-    // Static stats
-    map->stats.total_vertices = map->vertices.count;
-    map->stats.total_faces = face_array_idx;
-    map->stats.total_patches = patch_array_idx;
 }
 
 void _bsp_load_entities(bsp_map_t *map)
@@ -598,13 +606,14 @@ void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
     gs_dyn_array_clear(map->visible_faces);
     uint32_t visible_patches = 0;
     uint32_t visible_faces = 0;
-    int32_t leaf_cluster = map->leaves.data[leaf].cluster;
+    int32_t view_cluster = map->leaves.data[leaf].cluster;
+    bool32_t cont;
 
     for (size_t i = 0; i < map->leaves.count; i++)
     {
         bsp_leaf_lump_t lump = map->leaves.data[i];
 
-        if (!_bsp_cluster_visible(map, leaf_cluster, lump.cluster))
+        if (!_bsp_cluster_visible(map, view_cluster, lump.cluster))
         {
             continue;
         }
@@ -618,11 +627,27 @@ void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
             int32_t idx = map->leaf_faces.data[lump.first_leaf_face + j].face;
             bsp_face_renderable_t face = map->render_faces[idx];
 
-            // TODO billboards
-            if (face.type != BSP_FACE_TYPE_BILLBOARD)
+            // Don't same face multiple times
+            // TODO: this probably has terrible perf,
+            // use a good set implementation...
+            cont = 0;
+            for (size_t k = 0; k < gs_dyn_array_size(map->visible_faces); k++)
             {
-                gs_dyn_array_push(map->visible_faces, face);
+                if (map->visible_faces[k].index == face.index && map->visible_faces[k].type == face.type)
+                {
+                    cont = true;
+                    break;
+                }
             }
+            if (cont) continue;
+
+            // TODO billboards
+            if (face.type == BSP_FACE_TYPE_BILLBOARD)
+            {
+                continue;
+            }
+
+            gs_dyn_array_push(map->visible_faces, face);
 
             if (face.type == BSP_FACE_TYPE_PATCH)
             {
@@ -637,6 +662,7 @@ void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
 
     map->stats.visible_faces = visible_faces;
     map->stats.visible_patches = visible_patches;
+    map->stats.current_leaf = leaf;
 }
 
 bool32_t _bsp_cluster_visible(bsp_map_t *map, int32_t view_cluster, int32_t test_cluster)
