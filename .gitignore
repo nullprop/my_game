@@ -6,4 +6,4 @@ bin/
 
 # assets
 assets/*
-!assets/splash_messages.txt
+!assets/cfg
