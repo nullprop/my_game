@@ -82,7 +82,7 @@ void app_update()
 
         if (!want_fullscreen)
         {
-            gs_platform_set_window_size(main_window, 1280, 720);
+            gs_platform_set_window_size(main_window, 800, 600);
 
             // Going back to windowed mode,
             // restore window to center of screen.
@@ -125,7 +125,7 @@ void app_update()
     sprintf(&fps_s[0], "fps: %d", (int)gs_round(1.0f / gs_platform_delta_time()));
     gsi_camera2D(&render_ctx_gsi);
     gsi_text(&render_ctx_gsi, 5, 15, &fps_s[0], NULL, false, 255, 255, 255, 255);
-   
+
     render_ctx_update();
 }
 
