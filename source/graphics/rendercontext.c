@@ -25,7 +25,7 @@ void render_ctx_update()
 {
     if (render_ctx_use_immediate_mode)
     {
-        gsi_render_pass_submit(&render_ctx_gsi, &render_ctx_cb, gs_color(0, 0, 0, 255));
+        gsi_render_pass_submit(&render_ctx_gsi, &render_ctx_cb, gs_color(0, 0, 0, 0));
     }
 
     // Submit command buffer (syncs to GPU, MUST be done on main thread where you have your GPU context created)

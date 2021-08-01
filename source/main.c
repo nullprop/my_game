@@ -138,8 +138,8 @@ void app_update()
     if (bsp_map->valid)
     {
         bsp_map_update(bsp_map, fps.cam.transform.position);
-        bsp_map_render_immediate(bsp_map, &render_ctx_gsi, &fps.cam);
-        //bsp_map_render(bsp_map, &fps.cam);
+        //bsp_map_render_immediate(bsp_map, &render_ctx_gsi, &fps.cam);
+        bsp_map_render(bsp_map, &fps.cam);
     }
 
     // draw fps
