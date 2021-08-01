@@ -369,7 +369,7 @@ typedef struct bsp_map_t
 
     /*==== Runtime data ====*/
 
-    char* name;
+    char *name;
     bool32_t valid;
     bsp_stats_t stats;
     gs_dyn_array(bsp_patch_t) patches;
@@ -382,7 +382,14 @@ typedef struct bsp_map_t
         gs_asset_texture_t *data;
     } texture_assets;
 
+    struct
+    {
+        uint32_t count;
+        gs_handle(gs_graphics_texture_t) * data;
+    } lightmap_textures;
+
     gs_handle(gs_graphics_texture_t) missing_texture;
+    gs_handle(gs_graphics_texture_t) missing_lm_texture;
 
     int32_t previous_leaf;
 } bsp_map_t;

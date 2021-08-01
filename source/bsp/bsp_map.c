@@ -22,6 +22,7 @@ static gs_handle(gs_graphics_pipeline_t) bsp_graphics_pipe = {0};
 static gs_handle(gs_graphics_shader_t) bsp_graphics_shader = {0};
 static gs_handle(gs_graphics_uniform_t) bsp_graphics_u_proj = {0};
 static gs_handle(gs_graphics_uniform_t) bsp_graphics_u_tex = {0};
+static gs_handle(gs_graphics_uniform_t) bsp_graphics_u_lm = {0};
 static gs_dyn_array(uint32_t) bsp_graphics_index_arr;
 static gs_dyn_array(bsp_vert_lump_t) bsp_graphics_vert_arr;
 
@@ -127,6 +128,14 @@ void bsp_map_init(bsp_map_t *map)
     bsp_graphics_u_tex = gs_graphics_uniform_create(
         &(gs_graphics_uniform_desc_t){
             .name = "u_tex",
+            .layout = &(gs_graphics_uniform_layout_desc_t){
+                .type = GS_GRAPHICS_UNIFORM_SAMPLER2D,
+            },
+            .stage = GS_GRAPHICS_SHADER_STAGE_FRAGMENT,
+        });
+    bsp_graphics_u_lm = gs_graphics_uniform_create(
+        &(gs_graphics_uniform_desc_t){
+            .name = "u_lm",
             .layout = &(gs_graphics_uniform_layout_desc_t){
                 .type = GS_GRAPHICS_UNIFORM_SAMPLER2D,
             },
@@ -259,6 +268,30 @@ void _bsp_load_textures(bsp_map_t *map)
 
 void _bsp_load_lightmaps(bsp_map_t *map)
 {
+    gs_color_t gray = gs_color(100, 100, 100, 255);
+    map->missing_lm_texture = gs_graphics_texture_create(
+        &(gs_graphics_texture_desc_t){
+            .width = 1,
+            .height = 1,
+            .format = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
+            .min_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
+            .mag_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
+            .data = &gray});
+
+    map->lightmap_textures.data = gs_malloc(map->lightmaps.count * sizeof(gs_handle(gs_graphics_texture_t)));
+    map->lightmap_textures.count = map->lightmaps.count;
+
+    for (size_t i = 0; i < map->lightmaps.count; i++)
+    {
+        map->lightmap_textures.data[i] = gs_graphics_texture_create(
+            &(gs_graphics_texture_desc_t){
+                .width = 128,
+                .height = 128,
+                .format = GS_GRAPHICS_TEXTURE_FORMAT_RGB8,
+                .min_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
+                .mag_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
+                .data = map->lightmaps.data[i].map});
+    }
 }
 
 void _bsp_load_lightvols(bsp_map_t *map)
@@ -547,16 +580,21 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
     gs_graphics_apply_bindings(&bsp_graphics_cb, &binds);
 
     // Draw faces
-    // FIXME
     int32_t texture_index;
+    int32_t lm_index;
     bsp_face_renderable_t *container = map->visible_faces;
     for (size_t i = 0; i < gs_dyn_array_size(container); i++)
     {
         texture_index = map->faces.data[container[i].index].texture;
+        lm_index = map->faces.data[container[i].index].lm_index;
 
         if (!gs_handle_is_valid(map->texture_assets.data[texture_index].hndl))
         {
             texture_index = -1;
+        }
+        if (!gs_handle_is_valid(map->lightmap_textures.data[lm_index]))
+        {
+            lm_index = -1;
         }
 
         // Face specific uniforms
@@ -566,6 +604,12 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
                 .uniform = bsp_graphics_u_tex,
                 .data = texture_index >= 0 ? &map->texture_assets.data[texture_index].hndl : &map->missing_texture,
                 .binding = 0, // FRAGMENT
+            },
+            // LIGHTMAP
+            {
+                .uniform = bsp_graphics_u_lm,
+                .data = lm_index >= 0 ? &map->lightmap_textures.data[lm_index] : &map->missing_lm_texture,
+                .binding = 1, // FRAGMENT
             },
         };
         // Bind uniforms
@@ -577,15 +621,18 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
         };
         gs_graphics_apply_bindings(&bsp_graphics_cb, &face_binds);
 
+        // FIXME
         // Draw face
+        /*
         gs_graphics_draw(&bsp_graphics_cb, &(gs_graphics_draw_desc_t){
                                                .start = container[i].first_ibo_index,
                                                .count = container[i].num_ibo_indices,
                                            });
+        */
     }
 
     // Draw all for now...
-    //gs_graphics_draw(&bsp_graphics_cb, &(gs_graphics_draw_desc_t){.start = 0, .count = gs_dyn_array_size(bsp_graphics_index_arr)});
+    gs_graphics_draw(&bsp_graphics_cb, &(gs_graphics_draw_desc_t){.start = 0, .count = gs_dyn_array_size(bsp_graphics_index_arr)});
 
     gs_graphics_end_render_pass(&bsp_graphics_cb);
 
