@@ -90,6 +90,8 @@ typedef struct bsp_face_renderable_t
 {
     int32_t type;
     int32_t index;
+    uint32_t first_ibo_index;
+    uint32_t num_ibo_indices;
 } bsp_face_renderable_t;
 
 /*
