@@ -10,21 +10,22 @@ const char *bsp_shader_vert_src =
     "layout(location = 2) in vec2 a_lm_coord;\n"
     "layout(location = 3) in vec3 a_normal;\n"
     "layout(location = 4) in vec4 a_color;\n"
-    "out vec4 color;\n"
+    "out vec2 uv;\n"
     "uniform mat4 u_proj;\n"
     "void main()\n"
     "{\n"
     "   gl_Position = u_proj * vec4(a_pos, 1.0);\n"
-    "   color = a_color;\n"
+    "   uv = a_tex_coord;\n"
     "}";
 
 const char *bsp_shader_frag_src =
     GS_VERSION_STR
-    "in vec4 color;\n"
+    "in vec2 uv;\n"
     "out vec4 frag_color;\n"
+    "uniform sampler2D u_tex;\n"
     "void main()\n"
     "{\n"
-    "   frag_color = color;\n"
+    "   frag_color = texture(u_tex, uv);\n"
     "}";
 
 #endif // BSP_SHADERS_H

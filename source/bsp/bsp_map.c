@@ -21,6 +21,7 @@ static gs_handle(gs_graphics_index_buffer_t) bsp_graphics_ibo = {0};
 static gs_handle(gs_graphics_pipeline_t) bsp_graphics_pipe = {0};
 static gs_handle(gs_graphics_shader_t) bsp_graphics_shader = {0};
 static gs_handle(gs_graphics_uniform_t) bsp_graphics_u_proj = {0};
+static gs_handle(gs_graphics_uniform_t) bsp_graphics_u_tex = {0};
 static gs_dyn_array(uint32_t) bsp_graphics_index_arr;
 static gs_dyn_array(bsp_vert_lump_t) bsp_graphics_vert_arr;
 
@@ -121,6 +122,15 @@ void bsp_map_init(bsp_map_t *map)
             .layout = &(gs_graphics_uniform_layout_desc_t){
                 .type = GS_GRAPHICS_UNIFORM_MAT4,
             },
+            .stage = GS_GRAPHICS_SHADER_STAGE_VERTEX,
+        });
+    bsp_graphics_u_tex = gs_graphics_uniform_create(
+        &(gs_graphics_uniform_desc_t){
+            .name = "u_tex",
+            .layout = &(gs_graphics_uniform_layout_desc_t){
+                .type = GS_GRAPHICS_UNIFORM_SAMPLER2D,
+            },
+            .stage = GS_GRAPHICS_SHADER_STAGE_FRAGMENT,
         });
 
     // Pipeline vertex attributes
@@ -321,9 +331,6 @@ void _bsp_map_create_buffers(bsp_map_t *map)
             int32_t first_index = face.first_index;
             int32_t first_vertex = face.first_vertex;
 
-            map->render_faces[i].first_ibo_index = gs_dyn_array_size(bsp_graphics_index_arr);
-            map->render_faces[i].num_ibo_indices = face.num_indices;
-
             for (size_t j = 0; j < face.num_indices; j++)
             {
                 gs_dyn_array_push(bsp_graphics_index_arr, first_vertex + map->indices.data[first_index + j].offset);
@@ -337,24 +344,26 @@ void _bsp_map_create_buffers(bsp_map_t *map)
     {
         if (map->render_faces[i].type == BSP_FACE_TYPE_PATCH)
         {
-            map->render_faces[i].first_ibo_index = gs_dyn_array_size(bsp_graphics_index_arr);
-            map->render_faces[i].num_ibo_indices = 0;
-
             bsp_patch_t patch = map->patches[map->render_faces[i].index];
+            map->render_faces[i].first_ibo_index = gs_dyn_array_size(bsp_graphics_index_arr);
+
             for (size_t j = 0; j < gs_dyn_array_size(patch.quadratic_patches); j++)
             {
                 bsp_quadratic_patch_t quadratic = patch.quadratic_patches[j];
                 index_offset = gs_dyn_array_size(bsp_graphics_vert_arr);
+
                 for (size_t k = 0; k < gs_dyn_array_size(quadratic.vertices); k++)
                 {
                     gs_dyn_array_push(bsp_graphics_vert_arr, quadratic.vertices[k]);
                 }
+
                 for (size_t k = 0; k < gs_dyn_array_size(quadratic.indices); k++)
                 {
                     gs_dyn_array_push(bsp_graphics_index_arr, quadratic.indices[k] + index_offset);
                 }
-                map->render_faces[i].num_ibo_indices += gs_dyn_array_size(quadratic.indices);
             }
+
+            map->render_faces[i].num_ibo_indices = gs_dyn_array_size(bsp_graphics_index_arr) - map->render_faces[i].first_ibo_index;
         }
     }
 
@@ -363,6 +372,7 @@ void _bsp_map_create_buffers(bsp_map_t *map)
         &(gs_graphics_index_buffer_desc_t){
             .data = bsp_graphics_index_arr,
             .size = sizeof(uint32_t) * gs_dyn_array_size(bsp_graphics_index_arr),
+            .usage = GS_GRAPHICS_BUFFER_USAGE_STATIC,
         });
 
     // Vertex buffer
@@ -370,6 +380,7 @@ void _bsp_map_create_buffers(bsp_map_t *map)
         &(gs_graphics_vertex_buffer_desc_t){
             .data = bsp_graphics_vert_arr,
             .size = sizeof(bsp_vert_lump_t) * gs_dyn_array_size(bsp_graphics_vert_arr),
+            .usage = GS_GRAPHICS_BUFFER_USAGE_STATIC,
         });
 }
 
@@ -490,8 +501,17 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
         },
     };
 
-    // Uniforms
+    // Uniforms that don't chang per face
     gs_mat4 u_proj = gs_camera_get_view_projection(cam, (s32)fb.x, (s32)fb.y);
+
+    // Uniform binds
+    gs_graphics_bind_uniform_desc_t uniforms[] = {
+        {
+            .uniform = bsp_graphics_u_proj,
+            .data = &u_proj,
+            .binding = 0, // VERTEX
+        },
+    };
 
     // Vertex buffer binds
     gs_graphics_bind_vertex_buffer_desc_t vbos[] = {
@@ -501,15 +521,6 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
     // Index buffer binds
     gs_graphics_bind_index_buffer_desc_t ibos[] = {
         {.buffer = bsp_graphics_ibo},
-    };
-
-    // Uniform binds
-    gs_graphics_bind_uniform_desc_t uniforms[] = {
-        {
-            .uniform = bsp_graphics_u_proj,
-            .data = &u_proj,
-            .binding = 0,
-        },
     };
 
     // Construct binds
@@ -534,17 +545,48 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
     gs_graphics_clear(&bsp_graphics_cb, &clear);
     gs_graphics_bind_pipeline(&bsp_graphics_cb, bsp_graphics_pipe);
     gs_graphics_apply_bindings(&bsp_graphics_cb, &binds);
+
+    // Draw faces
     // FIXME
-    /*
-    for (size_t i = 0; i < gs_dyn_array_size(map->visible_faces); i++)
+    int32_t texture_index;
+    bsp_face_renderable_t *container = map->visible_faces;
+    for (size_t i = 0; i < gs_dyn_array_size(container); i++)
     {
+        texture_index = map->faces.data[container[i].index].texture;
+
+        if (!gs_handle_is_valid(map->texture_assets.data[texture_index].hndl))
+        {
+            texture_index = -1;
+        }
+
+        // Face specific uniforms
+        gs_graphics_bind_uniform_desc_t face_uniforms[] = {
+            // TEXTURE
+            {
+                .uniform = bsp_graphics_u_tex,
+                .data = texture_index >= 0 ? &map->texture_assets.data[texture_index].hndl : &map->missing_texture,
+                .binding = 0, // FRAGMENT
+            },
+        };
+        // Bind uniforms
+        gs_graphics_bind_desc_t face_binds = {
+            .uniforms = {
+                .desc = face_uniforms,
+                .size = sizeof(face_uniforms),
+            },
+        };
+        gs_graphics_apply_bindings(&bsp_graphics_cb, &face_binds);
+
+        // Draw face
         gs_graphics_draw(&bsp_graphics_cb, &(gs_graphics_draw_desc_t){
-                                               .start = map->visible_faces[i].first_ibo_index,
-                                               .count = map->visible_faces[i].num_ibo_indices,
+                                               .start = container[i].first_ibo_index,
+                                               .count = container[i].num_ibo_indices,
                                            });
     }
-    */
-    gs_graphics_draw(&bsp_graphics_cb, &(gs_graphics_draw_desc_t){.start = 0, .count = gs_dyn_array_size(bsp_graphics_index_arr)});
+
+    // Draw all for now...
+    //gs_graphics_draw(&bsp_graphics_cb, &(gs_graphics_draw_desc_t){.start = 0, .count = gs_dyn_array_size(bsp_graphics_index_arr)});
+
     gs_graphics_end_render_pass(&bsp_graphics_cb);
 
     // Submit command buffer

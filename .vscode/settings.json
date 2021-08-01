@@ -3,6 +3,7 @@
         "bsptypes.h": "c",
         "xstring": "c",
         "xutility": "c",
-        "gs.h": "c"
+        "gs.h": "c",
+        "*.m": "c"
     }
 }
