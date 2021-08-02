@@ -74,11 +74,6 @@ void app_init()
     if (bsp_map->valid)
     {
         bsp_map_init(bsp_map);
-        gs_println("map stats:");
-        gs_println("  vertices: %d", bsp_map->stats.total_vertices);
-        gs_println("  faces: %d", bsp_map->stats.total_faces);
-        gs_println("  patches: %d", bsp_map->stats.total_patches);
-        gs_println("  textures: %d/%d", bsp_map->stats.loaded_textures, bsp_map->stats.total_textures);
     }
 }
 
@@ -152,18 +147,14 @@ void app_update()
     // draw map stats
     sprintf(temp, "map: %s", bsp_map->name);
     gsi_text(&render_ctx_gsi, 5, 30, temp, NULL, false, 255, 255, 255, 255);
-    sprintf(temp, "vertices: %zu", bsp_map->stats.total_vertices);
+    sprintf(temp, "tris: %zu/%zu", bsp_map->stats.visible_indices / 3, bsp_map->stats.total_indices / 3);
     gsi_text(&render_ctx_gsi, 10, 45, temp, NULL, false, 255, 255, 255, 255);
     sprintf(temp, "faces: %zu/%zu", bsp_map->stats.visible_faces, bsp_map->stats.total_faces);
     gsi_text(&render_ctx_gsi, 10, 60, temp, NULL, false, 255, 255, 255, 255);
     sprintf(temp, "patches: %zu/%zu", bsp_map->stats.visible_patches, bsp_map->stats.total_patches);
     gsi_text(&render_ctx_gsi, 10, 75, temp, NULL, false, 255, 255, 255, 255);
-    sprintf(temp, "textures: %zu/%zu", bsp_map->stats.loaded_textures, bsp_map->stats.total_textures);
-    gsi_text(&render_ctx_gsi, 10, 90, temp, NULL, false, 255, 255, 255, 255);
-    sprintf(temp, "models: %zu", bsp_map->stats.models);
-    gsi_text(&render_ctx_gsi, 10, 105, temp, NULL, false, 255, 255, 255, 255);
     sprintf(temp, "leaf: %zu", bsp_map->stats.current_leaf);
-    gsi_text(&render_ctx_gsi, 10, 120, temp, NULL, false, 255, 255, 255, 255);
+    gsi_text(&render_ctx_gsi, 10, 90, temp, NULL, false, 255, 255, 255, 255);
 
     z_up();
 

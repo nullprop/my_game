@@ -91,11 +91,6 @@ void bsp_map_init(bsp_map_t *map)
         gs_dyn_array_push(map->render_faces, face);
     }
 
-    // Static stats
-    map->stats.total_vertices = map->vertices.count;
-    map->stats.total_faces = face_array_idx;
-    map->stats.total_patches = patch_array_idx;
-
     // Command buffer
     bsp_graphics_cb = gs_command_buffer_new();
 
@@ -170,6 +165,12 @@ void bsp_map_init(bsp_map_t *map)
                 .size = sizeof(vattrs),
             },
         });
+
+    // Static stats
+    map->stats.total_vertices = gs_dyn_array_size(bsp_graphics_vert_arr); // inaccurate, has patch control verts
+    map->stats.total_indices = gs_dyn_array_size(bsp_graphics_index_arr);
+    map->stats.total_faces = face_array_idx;
+    map->stats.total_patches = patch_array_idx;
 }
 
 void _bsp_load_entities(bsp_map_t *map)
@@ -363,6 +364,9 @@ void _bsp_map_create_buffers(bsp_map_t *map)
             bsp_face_lump_t face = map->faces.data[map->render_faces[i].index];
             int32_t first_index = face.first_index;
             int32_t first_vertex = face.first_vertex;
+
+            map->render_faces[i].first_ibo_index = gs_dyn_array_size(bsp_graphics_index_arr);
+            map->render_faces[i].num_ibo_indices = face.num_indices;
 
             for (size_t j = 0; j < face.num_indices; j++)
             {
@@ -582,7 +586,7 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
     // Draw faces
     int32_t texture_index;
     int32_t lm_index;
-    bsp_face_renderable_t *container = map->visible_faces;
+    bsp_face_renderable_t *container = map->render_faces;
     for (size_t i = 0; i < gs_dyn_array_size(container); i++)
     {
         texture_index = map->faces.data[container[i].index].texture;
@@ -621,18 +625,12 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
         };
         gs_graphics_apply_bindings(&bsp_graphics_cb, &face_binds);
 
-        // FIXME
         // Draw face
-        /*
         gs_graphics_draw(&bsp_graphics_cb, &(gs_graphics_draw_desc_t){
-                                               .start = container[i].first_ibo_index,
-                                               .count = container[i].num_ibo_indices,
+                                               .start = (size_t)(intptr_t)(container[i].first_ibo_index * sizeof(uint32_t)),
+                                               .count = (size_t)container[i].num_ibo_indices,
                                            });
-        */
     }
-
-    // Draw all for now...
-    gs_graphics_draw(&bsp_graphics_cb, &(gs_graphics_draw_desc_t){.start = 0, .count = gs_dyn_array_size(bsp_graphics_index_arr)});
 
     gs_graphics_end_render_pass(&bsp_graphics_cb);
 
@@ -731,6 +729,8 @@ void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
     gs_dyn_array_clear(map->visible_faces);
     uint32_t visible_patches = 0;
     uint32_t visible_faces = 0;
+    uint32_t visible_vertices = 0;
+    uint32_t visible_indices = 0;
     int32_t view_cluster = map->leaves.data[leaf].cluster;
     bool32_t cont;
 
@@ -777,14 +777,24 @@ void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
             if (face.type == BSP_FACE_TYPE_PATCH)
             {
                 visible_patches++;
+                bsp_patch_t patch = map->patches[face.index];
+                for (size_t k = 0; k < gs_dyn_array_size(patch.quadratic_patches); k++)
+                {
+                    visible_vertices += gs_dyn_array_size(patch.quadratic_patches[k].vertices);
+                    visible_indices += gs_dyn_array_size(patch.quadratic_patches[k].indices);
+                }
             }
             else
             {
                 visible_faces++;
+                visible_vertices += map->faces.data[face.index].num_vertices;
+                visible_vertices += map->faces.data[face.index].num_indices;
             }
         }
     }
 
+    map->stats.visible_vertices = visible_vertices;
+    map->stats.visible_indices = visible_indices;
     map->stats.visible_faces = visible_faces;
     map->stats.visible_patches = visible_patches;
     map->stats.current_leaf = leaf;

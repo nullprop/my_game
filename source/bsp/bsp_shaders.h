@@ -39,6 +39,7 @@ const char *bsp_shader_frag_src =
     "   \n"
     "   frag_color = tex * lm * lm_strength;\n"
     "   frag_color.rgb = pow(frag_color.rgb, vec3(1.0/lm_gamma));\n"
+    "   frag_color.a = 1.0f;\n"
     "}";
 
 #endif // BSP_SHADERS_H

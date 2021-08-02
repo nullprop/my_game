@@ -76,8 +76,11 @@ typedef enum bsp_lump_types
 typedef struct bsp_stats_t
 {
     uint32_t total_vertices;
+    uint32_t total_indices;
     uint32_t total_faces;
     uint32_t total_patches;
+    uint32_t visible_vertices;
+    uint32_t visible_indices;
     uint32_t visible_faces;
     uint32_t visible_patches;
     uint32_t total_textures;
