@@ -10,7 +10,7 @@
 #ifndef MG_STRING_H
 #define MG_STRING_H
 
-char *get_filename_from_path(char *path)
+char *mg_get_filename_from_path(char *path)
 {
     char *filename = path;
     for (char *token = path; *token != '\0'; token++)
@@ -20,6 +20,14 @@ char *get_filename_from_path(char *path)
     }
 
     return filename;
+}
+
+char *mg_duplicate_string(char *str)
+{
+    uint32_t sz = gs_string_length(str) + 1;
+    char *dup = gs_malloc(sz);
+    memcpy(dup, str, sz);
+    return dup;
 }
 
 #endif // MG_STRING_H

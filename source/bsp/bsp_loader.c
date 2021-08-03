@@ -46,8 +46,8 @@ b32 load_bsp(char *filename, bsp_map_t *map)
     if (!gs_string_compare_equal_n(map->header.magic, "IBSP", 4) || map->header.version != 46)
         return _load_bsp_fail(&buffer, "invalid header");
 
-    // read entities lump
-    if (!_load_entities_lump(&buffer, map))
+    // read entity lump
+    if (!_load_entity_lump(&buffer, map))
         return _load_bsp_fail(&buffer, "failed to read entity lumps");
 
     // generic lumps
@@ -123,7 +123,7 @@ b32 load_bsp(char *filename, bsp_map_t *map)
     gs_byte_buffer_free(&buffer);
 
     // Get map name from filepath
-    char *name = get_filename_from_path(filename);
+    char *name = mg_get_filename_from_path(filename);
     map->name = gs_malloc(strlen(name) + 1);
     strcat(map->name, name);
 
@@ -152,14 +152,14 @@ b32 _load_lump(gs_byte_buffer_t *buffer, bsp_map_t *map, uint32_t *count, void *
     return true;
 }
 
-b32 _load_entities_lump(gs_byte_buffer_t *buffer, bsp_map_t *map)
+b32 _load_entity_lump(gs_byte_buffer_t *buffer, bsp_map_t *map)
 {
     int32_t size = map->header.dir_entries[BSP_LUMP_TYPE_ENTITIES].length;
 
-    map->entities.ents = gs_malloc(size);
+    map->entity_lump.ents = gs_malloc(size);
 
     buffer->position = map->header.dir_entries[BSP_LUMP_TYPE_ENTITIES].offset;
-    gs_byte_buffer_read_bulk(buffer, &map->entities.ents, size);
+    gs_byte_buffer_read_bulk(buffer, &map->entity_lump.ents, size);
 
     return true;
 }

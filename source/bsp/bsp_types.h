@@ -264,6 +264,12 @@ typedef struct bsp_patch_t
     gs_dyn_array(bsp_quadratic_patch_t) quadratic_patches;
 } bsp_patch_t;
 
+typedef struct bsp_entity_t
+{
+    char *content;
+    gs_slot_map(char *, char *) slot_map;
+} bsp_entity_t;
+
 typedef struct bsp_header_t
 {
     char magic[4];
@@ -276,7 +282,7 @@ typedef struct bsp_map_t
     /*==== File data ====*/
 
     bsp_header_t header;
-    bsp_entity_lump_t entities;
+    bsp_entity_lump_t entity_lump;
 
     struct
     {
@@ -395,6 +401,8 @@ typedef struct bsp_map_t
     gs_handle(gs_graphics_texture_t) missing_lm_texture;
 
     int32_t previous_leaf;
+
+    gs_dyn_array(bsp_entity_t) entities;
 } bsp_map_t;
 
 #endif // BSP_TYPES_H

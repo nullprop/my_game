@@ -11,6 +11,7 @@
 =================================================================*/
 
 #include "../util/math.c"
+#include "bsp_entity.c"
 #include "bsp_patch.c"
 #include "bsp_shaders.h"
 #include "bsp_types.h"
@@ -175,6 +176,23 @@ void bsp_map_init(bsp_map_t *map)
 
 void _bsp_load_entities(bsp_map_t *map)
 {
+    map->entities = gs_dyn_array_new(bsp_entity_t);
+
+    uint32_t sz = gs_string_length(map->entity_lump.ents + 1);
+    char *ents = gs_malloc(sz);
+    memcpy(ents, map->entity_lump.ents, sz);
+
+    char *ent = strtok(ents, "{");
+    while (ent)
+    {
+        if (gs_string_length(ent) < 1) continue;
+
+        gs_dyn_array_push(map->entities, bsp_entity_from_string(ent));
+
+        ent = strtok(0, "{");
+    }
+
+    gs_free(ents);
 }
 
 void _bsp_load_textures(bsp_map_t *map)
@@ -638,12 +656,67 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
     gs_graphics_submit_command_buffer(&bsp_graphics_cb);
 }
 
+gs_vec3 bsp_map_find_spawn_point(bsp_map_t *map, gs_vec3 *position, float32_t *yaw)
+{
+    gs_dyn_array(bsp_entity_t) spawns = gs_dyn_array_new(bsp_entity_t);
+
+    for (size_t i = 0; i < gs_dyn_array_size(map->entities); i++)
+    {
+        bsp_entity_t ent = map->entities[i];
+        char *classname = bsp_entity_get_value(&ent, "classname");
+        if (strcmp(classname, "info_player_deathmatch") == 0)
+        {
+            gs_dyn_array_push(spawns, ent);
+        }
+    }
+
+    if (gs_dyn_array_size(spawns) == 0)
+    {
+        gs_dyn_array_free(spawns);
+        return;
+    }
+
+    uint32_t spawn_index = rand_range(0, gs_dyn_array_size(spawns) - 1);
+
+    // Get position
+    char *temp = bsp_entity_get_value(&spawns[spawn_index], "origin");
+    gs_assert(temp != NULL);
+
+    char *vec3_str = mg_duplicate_string(temp);
+    char *num_str = strtok(vec3_str, " ");
+    uint32_t vec_index = 0;
+
+    while (num_str != NULL)
+    {
+        gs_assert(vec_index < 3);
+        position->xyz[vec_index] = strtol(num_str, (char **)NULL, 10);
+        vec_index++;
+        num_str = strtok(0, " ");
+    }
+    gs_assert(vec_index == 3);
+
+    // Get yaw
+    temp = bsp_entity_get_value(&spawns[spawn_index], "angle");
+    gs_assert(temp != NULL);
+    *yaw = strtof(temp, NULL);
+
+    gs_dyn_array_free(spawns);
+
+    return;
+}
+
 void bsp_map_free(bsp_map_t *map)
 {
     if (map == NULL)
     {
         return;
     }
+
+    for (size_t i = 0; i < gs_dyn_array_size(map->entities); i++)
+    {
+        bsp_entity_free(&map->entities[i]);
+    }
+    gs_dyn_array_free(map->entities);
 
     gs_dyn_array_free(bsp_graphics_index_arr);
 
@@ -662,7 +735,7 @@ void bsp_map_free(bsp_map_t *map)
     gs_free(map->texture_assets.data);
     map->texture_assets.data = NULL;
 
-    gs_free(map->entities.ents);
+    gs_free(map->entity_lump.ents);
     gs_free(map->textures.data);
     gs_free(map->planes.data);
     gs_free(map->nodes.data);
@@ -680,7 +753,7 @@ void bsp_map_free(bsp_map_t *map)
     gs_free(map->lightvols.data);
     gs_free(map->visdata.vecs);
 
-    map->entities.ents = NULL;
+    map->entity_lump.ents = NULL;
     map->textures.data = NULL;
     map->planes.data = NULL;
     map->nodes.data = NULL;

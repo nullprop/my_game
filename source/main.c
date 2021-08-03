@@ -74,6 +74,18 @@ void app_init()
     if (bsp_map->valid)
     {
         bsp_map_init(bsp_map);
+        app_spawn();
+    }
+}
+
+void app_spawn()
+{
+    if (bsp_map->valid)
+    {
+        fps.pitch = 0;
+        bsp_map_find_spawn_point(bsp_map, &fps.cam.transform.position, &fps.yaw);
+        fps.yaw -= 90;
+        fps.cam.transform.rotation = gs_quat_from_euler(fps.yaw, fps.pitch, fps.roll);
     }
 }
 
@@ -81,6 +93,9 @@ void app_update()
 {
     if (gs_platform_key_pressed(GS_KEYCODE_ESC))
         gs_engine_quit();
+
+    if (gs_platform_key_pressed(GS_KEYCODE_R))
+        app_spawn();
 
     if (gs_platform_key_pressed(GS_KEYCODE_F1))
     {
@@ -115,8 +130,6 @@ void app_update()
     // If click, then lock again (in case lost)
     if (gs_platform_mouse_pressed(GS_MOUSE_LBUTTON) && !gs_platform_mouse_locked())
     {
-        fps.cam.transform.rotation = gs_quat_default();
-        fps.pitch = 0.f;
         gs_platform_lock_mouse(gs_platform_main_window(), true);
         if (glfwRawMouseMotionSupported())
         {
@@ -155,7 +168,6 @@ void app_update()
     gsi_text(&render_ctx_gsi, 10, 75, temp, NULL, false, 255, 255, 255, 255);
     sprintf(temp, "leaf: %zu", bsp_map->stats.current_leaf);
     gsi_text(&render_ctx_gsi, 10, 90, temp, NULL, false, 255, 255, 255, 255);
-
     z_up();
 
     render_ctx_update();
