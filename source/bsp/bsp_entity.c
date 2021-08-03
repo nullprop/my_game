@@ -43,7 +43,8 @@ void bsp_entity_free(bsp_entity_t *ent)
         v = NULL;
     }
 
-    gs_slot_map_free(ent->slot_map);
+    // FIXME
+    //gs_slot_map_free(ent->slot_map);
     gs_free(ent->content);
 }
 

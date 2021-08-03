@@ -340,7 +340,7 @@ void _bsp_create_patch(bsp_map_t *map, bsp_face_lump_t face)
             uint32_t patch_idx = y * num_patches_x + x;
 
             bsp_quadratic_patch_t quadratic = {
-                .tesselation = 10,
+                .tesselation = 8,
             };
 
             // Get the 9 vertices used as control points for this quadratic patch.
