@@ -12,7 +12,7 @@
 
 #define GS_VERSION_STR "#version 330 core\n"
 
-const char *bsp_shader_vert_src =
+static const char *bsp_shader_vert_src =
     GS_VERSION_STR
     "layout(location = 0) in vec3 a_pos;\n"
     "layout(location = 1) in vec2 a_tex_coord;\n"
@@ -30,7 +30,7 @@ const char *bsp_shader_vert_src =
     "   lm_coord = a_lm_coord;\n"
     "}";
 
-const char *bsp_shader_frag_src =
+static const char *bsp_shader_frag_src =
     GS_VERSION_STR
     "in vec2 tex_coord;\n"
     "in vec2 lm_coord;\n"

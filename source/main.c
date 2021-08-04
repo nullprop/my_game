@@ -20,6 +20,7 @@
 
 bsp_map_t *bsp_map = NULL;
 mg_player_t *player = NULL;
+mg_config_t *config = NULL;
 
 void z_up()
 {
@@ -35,6 +36,17 @@ void y_up()
     gs_absolute_up = gs_v3(0, 1.0f, 0);
     gs_absolute_forward = gs_v3(0, 0, -1.0f);
     gs_absolute_right = gs_v3(1.0f, 0, 0);
+}
+
+void app_spawn()
+{
+    if (bsp_map->valid)
+    {
+        player->velocity = gs_v3(0, 0, 0);
+        player->camera.pitch = 0;
+        bsp_map_find_spawn_point(bsp_map, &player->transform.position, &player->yaw);
+        player->yaw -= 90;
+    }
 }
 
 void app_init()
@@ -62,17 +74,6 @@ void app_init()
     player = mg_player_new();
     player->map = bsp_map;
     app_spawn();
-}
-
-void app_spawn()
-{
-    if (bsp_map->valid)
-    {
-        player->velocity = gs_v3(0, 0, 0);
-        player->camera.pitch = 0;
-        bsp_map_find_spawn_point(bsp_map, &player->transform.position, &player->yaw);
-        player->yaw -= 90;
-    }
 }
 
 void app_update()
@@ -162,22 +163,22 @@ void app_shutdown()
     mg_player_free(player);
     bsp_map_free(bsp_map);
     render_ctx_free();
-    mg_config_free();
+    mg_config_free(config);
 }
 
 gs_app_desc_t gs_main(int32_t argc, char **argv)
 {
     // Load config first so we can use resolution, etc.
-    mg_config_init();
+    config = mg_config_init();
 
     return (gs_app_desc_t){
         .init = app_init,
         .update = app_update,
         .shutdown = app_shutdown,
-        .window_flags = mg_config->video.fullscreen ? GS_WINDOW_FLAGS_FULLSCREEN : 0,
-        .window_width = mg_config->video.width,
-        .window_height = mg_config->video.height,
-        .enable_vsync = mg_config->video.vsync,
-        .frame_rate = mg_config->video.max_fps,
+        .window_flags = config->video.fullscreen ? GS_WINDOW_FLAGS_FULLSCREEN : 0,
+        .window_width = config->video.width,
+        .window_height = config->video.height,
+        .enable_vsync = config->video.vsync,
+        .frame_rate = config->video.max_fps,
     };
 }

@@ -10,10 +10,14 @@ rem Include directories
 set inc=/I ..\third_party\include\
 
 rem Source files
-set src_main=..\source\*.c
+set src_dir=..\source
 
 rem All source together
-set src_all=%src_main%
+set src_all=%src_dir%\*.c ^
+%src_dir%\bsp\*.c ^
+%src_dir%\entities\*.c ^
+%src_dir%\graphics\*.c ^
+%src_dir%\util\*.c
 
 rem OS Libraries
 set os_libs= opengl32.lib kernel32.lib user32.lib ^

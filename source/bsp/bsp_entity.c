@@ -106,8 +106,8 @@ void bsp_entity_print(bsp_entity_t *ent)
 
 void _bsp_entity_load_keys(bsp_entity_t *ent)
 {
-    static const uint32_t KEY_MAX_SIZE = 128;
-    static const uint32_t VAL_MAX_SIZE = 128;
+#define KEY_MAX_SIZE 128
+#define VAL_MAX_SIZE 128
 
     char state = 0;
     char key[KEY_MAX_SIZE];

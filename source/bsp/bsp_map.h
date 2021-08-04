@@ -14,6 +14,7 @@
 #include <gs/util/gs_idraw.h>
 
 #include "../util/math.h"
+#include "../util/string.h"
 #include "bsp_entity.h"
 #include "bsp_patch.h"
 #include "bsp_shaders.h"

@@ -11,33 +11,36 @@
 
 #include "config.h"
 
-void mg_config_init()
+mg_config_t *mg_config_init()
 {
-    mg_config = gs_malloc(sizeof(mg_config_t));
+    mg_config_t *config = gs_malloc(sizeof(mg_config_t));
 
     // Always set defaults before loading
     // in case we add new config keys and use old file.
-    _mg_config_set_default();
+    _mg_config_set_default(config);
 
     // Load config if exists
     if (gs_util_file_exists("cfg/config.txt"))
     {
-        _mg_config_load("cfg/config.txt");
-        return;
+        _mg_config_load(config, "cfg/config.txt");
+    }
+    else
+    {
+        gs_println("WARN: missing cfg/config.txt, saving default");
+        _mg_config_save(config, "cfg/config.txt");
     }
 
-    gs_println("WARN: missing cfg/config.txt, saving default");
-    _mg_config_save("cfg/config.txt");
+    return config;
 }
 
-void mg_config_free()
+void mg_config_free(mg_config_t *config)
 {
-    gs_free(mg_config);
-    mg_config = NULL;
+    gs_free(config);
+    config = NULL;
 }
 
 // Load config from file
-void _mg_config_load(char *filepath)
+void _mg_config_load(mg_config_t *config, char *filepath)
 {
     gs_println("Loading config from '%s'", filepath);
 
@@ -123,11 +126,11 @@ void _mg_config_load(char *filepath)
             "vid_vsync",
         };
         int32_t *containers[NUM_KEYS] = {
-            &mg_config->video.fullscreen,
-            &mg_config->video.width,
-            &mg_config->video.height,
-            &mg_config->video.max_fps,
-            &mg_config->video.vsync,
+            &config->video.fullscreen,
+            &config->video.width,
+            &config->video.height,
+            &config->video.max_fps,
+            &config->video.vsync,
         };
         bool32_t found_key = false;
 
@@ -154,7 +157,7 @@ void _mg_config_load(char *filepath)
 // Save current config to filepath.
 // User formatting and replacing values is a hassle,
 // let's just overwrite the file with our format and comments.
-void _mg_config_save(char *filepath)
+void _mg_config_save(mg_config_t *config, char *filepath)
 {
     gs_println("Saving config to '%s'", filepath);
 
@@ -168,11 +171,11 @@ void _mg_config_save(char *filepath)
     char line[128];
 
     fprintf(file, "// Video\n");
-    fprintf(file, "vid_fullscreen %d\n", mg_config->video.fullscreen);
-    fprintf(file, "vid_width %d\n", mg_config->video.width);
-    fprintf(file, "vid_height %d\n", mg_config->video.height);
-    fprintf(file, "vid_max_fps %d\n", mg_config->video.max_fps);
-    fprintf(file, "vid_vsync %d\n", mg_config->video.vsync);
+    fprintf(file, "vid_fullscreen %d\n", config->video.fullscreen);
+    fprintf(file, "vid_width %d\n", config->video.width);
+    fprintf(file, "vid_height %d\n", config->video.height);
+    fprintf(file, "vid_max_fps %d\n", config->video.max_fps);
+    fprintf(file, "vid_vsync %d\n", config->video.vsync);
 
     fprintf(file, "\n");
     fprintf(file, "// Audio\n");
@@ -185,14 +188,14 @@ void _mg_config_save(char *filepath)
     gs_println("Config saved");
 }
 
-void _mg_config_set_default()
+void _mg_config_set_default(mg_config_t *config)
 {
     // Video
-    mg_config->video.fullscreen = false;
-    mg_config->video.width = 800;
-    mg_config->video.height = 600;
-    mg_config->video.max_fps = 120;
-    mg_config->video.vsync = false;
+    config->video.fullscreen = false;
+    config->video.width = 800;
+    config->video.height = 600;
+    config->video.max_fps = 120;
+    config->video.vsync = false;
 
     // Audio
 

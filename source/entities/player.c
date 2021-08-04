@@ -7,12 +7,10 @@
     ...
 =================================================================*/
 
-#include <gs/gs.h>
-
+#include "player.h"
 #include "../bsp/bsp_trace.h"
 #include "../util/math.h"
 #include "../util/transform.h"
-#include "player.h"
 
 mg_player_t *mg_player_new()
 {
