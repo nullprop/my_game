@@ -10,7 +10,7 @@
     BSP rendering.
 =================================================================*/
 
-#include "../util/math.c"
+#include "../util/math.h"
 #include "bsp_entity.c"
 #include "bsp_patch.c"
 #include "bsp_shaders.h"

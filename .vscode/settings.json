@@ -5,6 +5,7 @@
         "xutility": "c",
         "gs.h": "c",
         "*.m": "c",
-        "player.h": "c"
+        "player.h": "c",
+        "bsp_trace.h": "c"
     }
 }

@@ -19,6 +19,7 @@ inc=(
 # Source files
 src=(
 	../source/main.c
+	../source/bsp/bsp_trace.c
 )
 
 libs=(

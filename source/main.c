@@ -60,6 +60,7 @@ void app_init()
     }
 
     player = mg_player_new();
+    player->map = bsp_map;
     app_spawn();
 }
 
@@ -67,6 +68,7 @@ void app_spawn()
 {
     if (bsp_map->valid)
     {
+        player->velocity = gs_v3(0, 0, 0);
         player->camera.pitch = 0;
         bsp_map_find_spawn_point(bsp_map, &player->transform.position, &player->yaw);
         player->yaw -= 90;
