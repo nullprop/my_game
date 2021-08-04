@@ -4,6 +4,7 @@
         "xstring": "c",
         "xutility": "c",
         "gs.h": "c",
-        "*.m": "c"
+        "*.m": "c",
+        "player.h": "c"
     }
 }

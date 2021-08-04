@@ -14,23 +14,12 @@
 
 #include "bsp/bsp_loader.c"
 #include "bsp/bsp_map.c"
+#include "entities/player.c"
 #include "graphics/rendercontext.c"
 #include "util/config.c"
 
-typedef struct fps_camera_t
-{
-    float pitch;
-    float roll;
-    float yaw;
-    float bob_time;
-    gs_camera_t cam;
-} fps_camera_t;
-
-void fps_camera_update(fps_camera_t *cam);
-
-fps_camera_t fps = {0};
-
 bsp_map_t *bsp_map = NULL;
+mg_player_t *player = NULL;
 
 void z_up()
 {
@@ -55,12 +44,6 @@ void app_init()
     render_ctx_init();
     render_ctx_use_immediate_mode = true;
 
-    // Construct camera
-    fps.cam = gs_camera_perspective();
-    fps.cam.transform.position = gs_v3(0.f, 0.f, 0.f);
-    fps.cam.fov = 110.0f;
-    fps.cam.far_plane = 2000.0f;
-
     // Lock mouse at start by default
     //gs_platform_lock_mouse(gs_platform_main_window(), true);
     if (glfwRawMouseMotionSupported())
@@ -74,18 +57,19 @@ void app_init()
     if (bsp_map->valid)
     {
         bsp_map_init(bsp_map);
-        app_spawn();
     }
+
+    player = mg_player_new();
+    app_spawn();
 }
 
 void app_spawn()
 {
     if (bsp_map->valid)
     {
-        fps.pitch = 0;
-        bsp_map_find_spawn_point(bsp_map, &fps.cam.transform.position, &fps.yaw);
-        fps.yaw -= 90;
-        fps.cam.transform.rotation = gs_quat_from_euler(fps.yaw, fps.pitch, fps.roll);
+        player->camera.pitch = 0;
+        bsp_map_find_spawn_point(bsp_map, &player->transform.position, &player->yaw);
+        player->yaw -= 90;
     }
 }
 
@@ -137,17 +121,15 @@ void app_update()
         }
     }
 
-    // Update camera
-    if (gs_platform_mouse_locked())
-    {
-        fps_camera_update(&fps);
-    }
+    // Update player
+    mg_player_update(player);
 
+    // Update and render map
     if (bsp_map->valid)
     {
-        bsp_map_update(bsp_map, fps.cam.transform.position);
-        //bsp_map_render_immediate(bsp_map, &render_ctx_gsi, &fps.cam);
-        bsp_map_render(bsp_map, &fps.cam);
+        bsp_map_update(bsp_map, player->camera.cam.transform.position);
+        //bsp_map_render_immediate(bsp_map, &render_ctx_gsi, &player->camera.cam);
+        bsp_map_render(bsp_map, &player->camera.cam);
     }
 
     // draw fps
@@ -173,38 +155,9 @@ void app_update()
     render_ctx_update();
 }
 
-void fps_camera_update(fps_camera_t *fps)
-{
-    gs_platform_t *platform = gs_engine_subsystem(platform);
-
-    gs_vec2 dp = gs_vec2_scale(gs_platform_mouse_deltav(), 0.22f);
-    const float mod = gs_platform_key_down(GS_KEYCODE_LEFT_SHIFT) ? 5.0f : 1.0f;
-    float dt = platform->time.delta;
-    float old_pitch = fps->pitch;
-    float old_yaw = fps->yaw;
-
-    // Keep track of previous amount to clamp the camera's orientation
-    fps->pitch = gs_clamp(old_pitch + dp.y, -90.0f, 90.0f);
-    fps->yaw = fmodf(old_yaw - dp.x, 360.0f);
-
-    // Rotate camera
-    gs_camera_offset_orientation(&fps->cam, -dp.x, old_pitch - fps->pitch);
-
-    gs_vec3 vel = {0};
-    if (gs_platform_key_down(GS_KEYCODE_W))
-        vel = gs_vec3_add(vel, gs_camera_forward(&fps->cam));
-    if (gs_platform_key_down(GS_KEYCODE_S))
-        vel = gs_vec3_add(vel, gs_camera_backward(&fps->cam));
-    if (gs_platform_key_down(GS_KEYCODE_A))
-        vel = gs_vec3_add(vel, gs_camera_left(&fps->cam));
-    if (gs_platform_key_down(GS_KEYCODE_D))
-        vel = gs_vec3_add(vel, gs_camera_right(&fps->cam));
-
-    fps->cam.transform.position = gs_vec3_add(fps->cam.transform.position, gs_vec3_scale(gs_vec3_norm(vel), dt * 320.0f * mod));
-}
-
 void app_shutdown()
 {
+    mg_player_free(player);
     bsp_map_free(bsp_map);
     render_ctx_free();
     mg_config_free();
