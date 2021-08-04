@@ -26,4 +26,12 @@ typedef struct mg_config_t
     mg_config_video_t video;
 } mg_config_t;
 
+static mg_config_t *mg_config = NULL;
+
+void mg_config_init();
+void mg_config_free();
+void _mg_config_load(char *filepath);
+void _mg_config_save(char *filepath);
+void _mg_config_set_default();
+
 #endif // MG_CONFIG_H

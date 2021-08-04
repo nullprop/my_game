@@ -7,9 +7,7 @@
     ...
 =================================================================*/
 
-#include <gs/gs.h>
-
-#include "bsp_types.h"
+#include "bsp_entity.h"
 
 bsp_entity_t bsp_entity_from_string(char *content)
 {

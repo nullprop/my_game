@@ -234,8 +234,8 @@ void _mg_player_uncrouch(mg_player_t *player, float delta_time)
 
 void _mg_player_slidemove(mg_player_t *player, float delta_time)
 {
-    ushort current_iter = 0;
-    ushort max_iter = 50;
+    uint16_t current_iter = 0;
+    uint16_t max_iter = 50;
     gs_vec3 start;
     gs_vec3 end;
     bsp_trace_t *trace = &(bsp_trace_t){.map = player->map};

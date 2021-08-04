@@ -12,11 +12,11 @@
 #define GS_IMMEDIATE_DRAW_IMPL
 #include <gs/util/gs_idraw.h>
 
-#include "bsp/bsp_loader.c"
-#include "bsp/bsp_map.c"
-#include "entities/player.c"
-#include "graphics/rendercontext.c"
-#include "util/config.c"
+#include "bsp/bsp_loader.h"
+#include "bsp/bsp_map.h"
+#include "entities/player.h"
+#include "graphics/rendercontext.h"
+#include "util/config.h"
 
 bsp_map_t *bsp_map = NULL;
 mg_player_t *player = NULL;

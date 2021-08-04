@@ -10,30 +10,7 @@
     Handles BSP patch tesselation.
 =================================================================*/
 
-#include "bsp_types.h"
-
-// Helpers for vertex lump math
-bsp_vert_lump_t bsp_vert_lump_mul(bsp_vert_lump_t lump, float32_t mul)
-{
-    bsp_vert_lump_t result = {
-        .position = gs_vec3_scale(lump.position, mul),
-        .tex_coord = gs_vec2_scale(lump.tex_coord, mul),
-        .lm_coord = gs_vec2_scale(lump.lm_coord, mul),
-        .normal = lump.normal,
-        .color = lump.color};
-    return result;
-}
-
-bsp_vert_lump_t bsp_vert_lump_add(bsp_vert_lump_t a, bsp_vert_lump_t b)
-{
-    bsp_vert_lump_t result = {
-        .position = gs_vec3_add(a.position, b.position),
-        .tex_coord = gs_vec2_add(a.tex_coord, b.tex_coord),
-        .lm_coord = gs_vec2_add(a.lm_coord, b.lm_coord),
-        .normal = a.normal,
-        .color = a.color};
-    return result;
-}
+#include "bsp_patch.h"
 
 // Tesselate quadratic patch to wanted level
 void bsp_quadratic_patch_tesselate(bsp_quadratic_patch_t *patch)

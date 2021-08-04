@@ -15,7 +15,7 @@
 #define rand_range(MIN, MAX) \
     (rand() % (MAX - MIN + 1) + MIN)
 
-bool32_t point_in_front_of_plane(gs_vec3 plane_normal, float32_t plane_dist, gs_vec3 point)
+static inline bool32_t point_in_front_of_plane(gs_vec3 plane_normal, float32_t plane_dist, gs_vec3 point)
 {
     float32_t distance = gs_vec3_dot(point, plane_normal) - plane_dist;
 
@@ -25,7 +25,7 @@ bool32_t point_in_front_of_plane(gs_vec3 plane_normal, float32_t plane_dist, gs_
     return false;
 }
 
-gs_vec3 mg_clip_velocity(gs_vec3 velocity, gs_vec3 plane_normal, float overbounce)
+static inline gs_vec3 mg_clip_velocity(gs_vec3 velocity, gs_vec3 plane_normal, float overbounce)
 {
     float backoff = gs_vec3_dot(velocity, plane_normal);
 

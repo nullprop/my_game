@@ -11,10 +11,7 @@
     NOTE: only supports version 46.
 =================================================================*/
 
-#include <gs/gs.h>
-
-#include "../util/string.h"
-#include "bsp_types.h"
+#include "bsp_loader.h"
 
 // shorthand util for failing during BSP load
 b32 _load_bsp_fail(gs_byte_buffer_t *buffer, char *msg)

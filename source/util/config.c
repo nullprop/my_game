@@ -11,12 +11,6 @@
 
 #include "config.h"
 
-static mg_config_t *mg_config = NULL;
-
-void _mg_config_load(char *filepath);
-void _mg_config_save(char *filepath);
-void _mg_config_set_default();
-
 void mg_config_init()
 {
     mg_config = gs_malloc(sizeof(mg_config_t));
