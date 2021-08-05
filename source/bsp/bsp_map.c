@@ -11,6 +11,18 @@
 =================================================================*/
 
 #include "bsp_map.h"
+#include "../util/camera.h"
+
+static gs_command_buffer_t bsp_graphics_cb = {0};
+static gs_handle(gs_graphics_vertex_buffer_t) bsp_graphics_vbo = {0};
+static gs_handle(gs_graphics_index_buffer_t) bsp_graphics_ibo = {0};
+static gs_handle(gs_graphics_pipeline_t) bsp_graphics_pipe = {0};
+static gs_handle(gs_graphics_shader_t) bsp_graphics_shader = {0};
+static gs_handle(gs_graphics_uniform_t) bsp_graphics_u_proj = {0};
+static gs_handle(gs_graphics_uniform_t) bsp_graphics_u_tex = {0};
+static gs_handle(gs_graphics_uniform_t) bsp_graphics_u_lm = {0};
+static gs_dyn_array(uint32_t) bsp_graphics_index_arr;
+static gs_dyn_array(bsp_vert_lump_t) bsp_graphics_vert_arr;
 
 void bsp_map_init(bsp_map_t *map)
 {
@@ -532,7 +544,7 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
     };
 
     // Uniforms that don't chang per face
-    gs_mat4 u_proj = gs_camera_get_view_projection(cam, (s32)fb.x, (s32)fb.y);
+    gs_mat4 u_proj = mg_camera_get_view_projection(cam, (s32)fb.x, (s32)fb.y);
 
     // Uniform binds
     gs_graphics_bind_uniform_desc_t uniforms[] = {

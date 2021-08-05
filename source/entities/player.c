@@ -66,7 +66,7 @@ void mg_player_update(mg_player_t *player)
     }
     else
     {
-        player->velocity = gs_vec3_add(player->velocity, gs_vec3_scale(gs_absolute_up, -8.0f * dt));
+        player->velocity = gs_vec3_add(player->velocity, gs_vec3_scale(MG_AXIS_DOWN, 8.0f * dt));
     }
 
     // Crouching
@@ -103,7 +103,7 @@ void _mg_player_check_floor(mg_player_t *player)
     bsp_trace_box(
         trace,
         player->transform.position,
-        gs_vec3_sub(player->transform.position, gs_vec3_scale(gs_absolute_up, -2.0f)),
+        gs_vec3_sub(player->transform.position, gs_vec3_scale(MG_AXIS_DOWN, 2.0f)),
         player->mins,
         player->maxs);
 
@@ -129,7 +129,7 @@ void _mg_player_get_input(mg_player_t *player)
     // Rotate
     player->camera.pitch = gs_clamp(player->camera.pitch + dp.y, -90.0f, 90.0f);
     player->yaw = fmodf(player->yaw - dp.x, 360.0f);
-    player->transform.rotation = gs_quat_angle_axis(gs_deg2rad(player->yaw), gs_absolute_up);
+    player->transform.rotation = gs_quat_angle_axis(gs_deg2rad(player->yaw), MG_AXIS_UP);
 
     if (gs_platform_key_down(GS_KEYCODE_W))
         player->wish_move = gs_vec3_add(player->wish_move, mg_get_forward(player->transform.rotation));
@@ -155,8 +155,8 @@ void _mg_player_camera_update(mg_player_t *player)
         &(gs_vqs){
             .position = player->eye_pos,
             .rotation = gs_quat_mul(
-                gs_quat_angle_axis(gs_deg2rad(-player->camera.pitch), gs_absolute_right),
-                gs_quat_angle_axis(gs_deg2rad(player->camera.roll), gs_absolute_forward)),
+                gs_quat_angle_axis(gs_deg2rad(-player->camera.pitch), MG_AXIS_RIGHT),
+                gs_quat_angle_axis(gs_deg2rad(player->camera.roll), MG_AXIS_FORWARD)),
             .scale = gs_v3(1.0f, 1.0f, 1.0f),
         },
         &player->transform);
@@ -166,13 +166,14 @@ void _mg_player_friction(mg_player_t *player, float delta_time)
 {
     if (player->grounded == false) return;
 
-    if (gs_vec3_len2(player->velocity) < GS_EPSILON)
+    float vel2 = gs_vec3_len2(player->velocity);
+    if (vel2 < GS_EPSILON)
     {
         player->velocity = gs_v3(0, 0, 0);
         return;
     }
 
-    float vel = gs_vec3_len(player->velocity);
+    float vel = sqrtf(vel2);
     float loss = fmaxf(vel, MG_PLAYER_STOP_SPEED) * MG_PLAYER_FRICTION * delta_time;
     float fraction = fmaxf(0, vel - loss) / vel;
 
@@ -187,7 +188,7 @@ void _mg_player_accelerate(mg_player_t *player, float delta_time, float move_spe
 
     // The max amount to change by,
     // won't accelerate past move_speed.
-    float change = acceleration * move_speed * delta_time;
+    float change = move_speed - proj_vel;
     if (change <= 0) return;
 
     // The actual acceleration

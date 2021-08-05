@@ -21,22 +21,7 @@
 bsp_map_t *bsp_map = NULL;
 mg_player_t *player = NULL;
 mg_config_t *config = NULL;
-
-void z_up()
-{
-    // Orient coordinate system
-    gs_absolute_up = gs_v3(0, 0, 1.0f);
-    gs_absolute_forward = gs_v3(0, 1.0f, 0);
-    gs_absolute_right = gs_v3(1.0f, 0, 0);
-}
-
-void y_up()
-{
-    // Orient coordinate system
-    gs_absolute_up = gs_v3(0, 1.0f, 0);
-    gs_absolute_forward = gs_v3(0, 0, -1.0f);
-    gs_absolute_right = gs_v3(1.0f, 0, 0);
-}
+gs_immediate_draw_t *gsi = NULL;
 
 void app_spawn()
 {
@@ -49,12 +34,21 @@ void app_spawn()
     }
 }
 
+void on_window_resize(GLFWwindow *window, int width, int height)
+{
+    if (player != NULL)
+    {
+        player->camera.cam.aspect_ratio = width / height;
+    }
+}
+
 void app_init()
 {
-    z_up();
+    glfwSetWindowSizeCallback(gs_platform_raw_window_handle(gs_platform_main_window()), &on_window_resize);
 
     render_ctx_init();
-    render_ctx_use_immediate_mode = true;
+    render_ctx_set_use_immediate_mode(true);
+    gsi = render_ctx_get_gsi();
 
     // Lock mouse at start by default
     //gs_platform_lock_mouse(gs_platform_main_window(), true);
@@ -131,29 +125,27 @@ void app_update()
     if (bsp_map->valid)
     {
         bsp_map_update(bsp_map, player->camera.cam.transform.position);
-        //bsp_map_render_immediate(bsp_map, &render_ctx_gsi, &player->camera.cam);
+        //bsp_map_render_immediate(bsp_map, gsi, &player->camera.cam);
         bsp_map_render(bsp_map, &player->camera.cam);
     }
 
     // draw fps
-    y_up();
     char temp[64];
     sprintf(temp, "fps: %d", (int)gs_round(1.0f / gs_platform_delta_time()));
-    gsi_camera2D(&render_ctx_gsi);
-    gsi_text(&render_ctx_gsi, 5, 15, temp, NULL, false, 255, 255, 255, 255);
+    gsi_camera2D(gsi);
+    gsi_text(gsi, 5, 15, temp, NULL, false, 255, 255, 255, 255);
 
     // draw map stats
     sprintf(temp, "map: %s", bsp_map->name);
-    gsi_text(&render_ctx_gsi, 5, 30, temp, NULL, false, 255, 255, 255, 255);
+    gsi_text(gsi, 5, 30, temp, NULL, false, 255, 255, 255, 255);
     sprintf(temp, "tris: %zu/%zu", bsp_map->stats.visible_indices / 3, bsp_map->stats.total_indices / 3);
-    gsi_text(&render_ctx_gsi, 10, 45, temp, NULL, false, 255, 255, 255, 255);
+    gsi_text(gsi, 10, 45, temp, NULL, false, 255, 255, 255, 255);
     sprintf(temp, "faces: %zu/%zu", bsp_map->stats.visible_faces, bsp_map->stats.total_faces);
-    gsi_text(&render_ctx_gsi, 10, 60, temp, NULL, false, 255, 255, 255, 255);
+    gsi_text(gsi, 10, 60, temp, NULL, false, 255, 255, 255, 255);
     sprintf(temp, "patches: %zu/%zu", bsp_map->stats.visible_patches, bsp_map->stats.total_patches);
-    gsi_text(&render_ctx_gsi, 10, 75, temp, NULL, false, 255, 255, 255, 255);
+    gsi_text(gsi, 10, 75, temp, NULL, false, 255, 255, 255, 255);
     sprintf(temp, "leaf: %zu", bsp_map->stats.current_leaf);
-    gsi_text(&render_ctx_gsi, 10, 90, temp, NULL, false, 255, 255, 255, 255);
-    z_up();
+    gsi_text(gsi, 10, 90, temp, NULL, false, 255, 255, 255, 255);
 
     render_ctx_update();
 }

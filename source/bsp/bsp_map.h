@@ -20,17 +20,6 @@
 #include "bsp_shaders.h"
 #include "bsp_types.h"
 
-static gs_command_buffer_t bsp_graphics_cb = {0};
-static gs_handle(gs_graphics_vertex_buffer_t) bsp_graphics_vbo = {0};
-static gs_handle(gs_graphics_index_buffer_t) bsp_graphics_ibo = {0};
-static gs_handle(gs_graphics_pipeline_t) bsp_graphics_pipe = {0};
-static gs_handle(gs_graphics_shader_t) bsp_graphics_shader = {0};
-static gs_handle(gs_graphics_uniform_t) bsp_graphics_u_proj = {0};
-static gs_handle(gs_graphics_uniform_t) bsp_graphics_u_tex = {0};
-static gs_handle(gs_graphics_uniform_t) bsp_graphics_u_lm = {0};
-static gs_dyn_array(uint32_t) bsp_graphics_index_arr;
-static gs_dyn_array(bsp_vert_lump_t) bsp_graphics_vert_arr;
-
 void bsp_map_init(bsp_map_t *map);
 void _bsp_load_entities(bsp_map_t *map);
 void _bsp_load_textures(bsp_map_t *map);

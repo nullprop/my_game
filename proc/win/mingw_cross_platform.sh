@@ -21,7 +21,8 @@ inc=(
 
 # Source files
 src=(
-    ../source/main.c
+	../source/*.c
+	../source/**/*.c
 )
 
 libs=(

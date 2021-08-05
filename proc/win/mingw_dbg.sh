@@ -18,6 +18,7 @@ inc=(
 
 # Source files
 src=(
+	../source/*.c
 	../source/**/*.c
 )
 
