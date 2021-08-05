@@ -66,7 +66,7 @@ void mg_player_update(mg_player_t *player)
     }
     else
     {
-        player->velocity = gs_vec3_add(player->velocity, gs_vec3_scale(MG_AXIS_DOWN, 8.0f * dt));
+        player->velocity = gs_vec3_add(player->velocity, gs_vec3_scale(MG_AXIS_DOWN, 800.0f * dt));
     }
 
     // Crouching
@@ -144,9 +144,9 @@ void _mg_player_get_input(mg_player_t *player)
     player->wish_move = gs_vec3_norm(player->wish_move);
 
     if (gs_platform_key_down(GS_KEYCODE_SPACE))
-    {
         player->wish_jump = true;
-    }
+    if (gs_platform_key_down(GS_KEYCODE_LEFT_CONTROL))
+        player->wish_crouch = true;
 }
 
 void _mg_player_camera_update(mg_player_t *player)
@@ -238,6 +238,8 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
     gs_vec3 start;
     gs_vec3 end;
     bsp_trace_t *trace = &(bsp_trace_t){.map = player->map};
+    float32_t prev_frac;
+    gs_vec3 prev_normal;
 
     while (delta_time > 0)
     {
@@ -279,6 +281,18 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
             // Moved all the way
             break;
         }
+
+        if (current_iter > 1)
+        {
+            if (prev_frac == trace->fraction && gs_vec3_dot(prev_normal, trace->normal) > 1.0f - GS_EPSILON)
+            {
+                // Not going anywhere
+                break;
+            }
+        }
+
+        prev_frac = trace->fraction;
+        prev_normal = trace->normal;
 
         delta_time -= delta_time * trace->fraction;
 

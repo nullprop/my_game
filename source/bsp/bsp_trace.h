@@ -35,6 +35,8 @@ typedef struct bsp_trace_t
     gs_vec3 mins;
     gs_vec3 maxs;
     gs_vec3 extents;
+    int32_t contents;
+    int32_t surface_flags;
 } bsp_trace_t;
 
 void bsp_trace_ray(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end);

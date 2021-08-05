@@ -181,12 +181,13 @@ void _bsp_trace_check_brush(bsp_trace_t *trace, bsp_brush_lump_t brush, gs_vec3 
 {
     float32_t start_fraction = -1.0f;
     float end_fraction = 1.0f;
-    gs_vec3 normal = gs_v3(0, 0, 0);
     bool32_t starts_out;
     bool32_t ends_out;
 
     bsp_brush_side_lump_t brush_side;
+    bsp_brush_side_lump_t clip_brush_side;
     bsp_plane_lump_t plane;
+    bsp_plane_lump_t clip_plane;
     gs_vec3 offset = gs_v3(0, 0, 0);
     float32_t start_distance;
     float32_t end_distance;
@@ -226,7 +227,7 @@ void _bsp_trace_check_brush(bsp_trace_t *trace, bsp_brush_lump_t brush, gs_vec3 
             ends_out = true;
 
         // Make sure the trace isn't completely on one side of the plane
-        if (start_distance > 0 && end_distance > 0)
+        if (start_distance > 0 && (end_distance >= GS_EPSILON || end_distance > start_distance))
         {
             // Both are in front of the plane, outside of the brush
             return;
@@ -244,7 +245,8 @@ void _bsp_trace_check_brush(bsp_trace_t *trace, bsp_brush_lump_t brush, gs_vec3 
             if (fraction > start_fraction)
             {
                 start_fraction = fraction;
-                normal = plane.normal;
+                clip_plane = plane;
+                clip_brush_side = brush_side;
             }
         }
         else
@@ -261,12 +263,14 @@ void _bsp_trace_check_brush(bsp_trace_t *trace, bsp_brush_lump_t brush, gs_vec3 
     // TODO: What if we start inside but end outside a previous brush,
     // and start outside but end inside the current one?
     // start_solid will be true but all_solid will be false despite ending inside.
-    if (starts_out)
+    if (!starts_out)
     {
         trace->start_solid = true;
         if (!ends_out)
         {
             trace->all_solid = true;
+            trace->fraction = 0;
+            trace->contents = trace->map->textures.data[brush.texture].contents;
         }
         return;
     }
@@ -276,7 +280,9 @@ void _bsp_trace_check_brush(bsp_trace_t *trace, bsp_brush_lump_t brush, gs_vec3 
         if (start_fraction > -1.0f && start_fraction < trace->fraction)
         {
             trace->fraction = fmaxf(0.0f, start_fraction);
-            trace->normal = normal;
+            trace->normal = clip_plane.normal;
+            trace->contents = trace->map->textures.data[brush.texture].contents;
+            trace->surface_flags = trace->map->textures.data[clip_brush_side.texture].flags;
         }
     }
 }
