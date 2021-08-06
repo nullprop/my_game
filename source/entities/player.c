@@ -234,7 +234,7 @@ void _mg_player_uncrouch(mg_player_t *player, float delta_time)
 void _mg_player_slidemove(mg_player_t *player, float delta_time)
 {
     uint16_t current_iter = 0;
-    uint16_t max_iter = 50;
+    uint16_t max_iter = 10;
     gs_vec3 start;
     gs_vec3 end;
     bsp_trace_t *trace = &(bsp_trace_t){.map = player->map};
@@ -263,10 +263,23 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 
         if (trace->start_solid)
         {
-            // Stuck in a solid,
-            // move all the way and don't build up fall speed.
-            player->transform.position = end;
-            player->velocity.z = 0;
+            // Stuck in a solid, try to get out
+            if (trace->all_solid)
+            {
+                _mg_player_unstuck(player);
+            }
+            else
+            {
+                gs_println("WARN: player start solid but not stuck: [%f, %f, %f] -> [%f, %f, %f]",
+                           player->transform.position.x,
+                           player->transform.position.y,
+                           player->transform.position.z,
+                           trace->end.x,
+                           trace->end.y,
+                           trace->end.z);
+                player->transform.position = trace->end;
+                player->velocity = gs_v3(0, 0, 0);
+            }
             break;
         }
 
@@ -297,6 +310,69 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
         delta_time -= delta_time * trace->fraction;
 
         // Slide along the plane, modify velocity for next loop
-        mg_clip_velocity(player->velocity, trace->normal, 1.001f);
+        player->velocity = mg_clip_velocity(player->velocity, trace->normal, 1.001f);
+    }
+}
+
+void _mg_player_unstuck(mg_player_t *player)
+{
+    player->velocity = gs_v3(0, 0, 0);
+
+    // Directions to attempt to teleport to,
+    // in listed order.
+    gs_vec3 directions[6] = {
+        MG_AXIS_UP,
+        MG_AXIS_FORWARD,
+        MG_AXIS_RIGHT,
+        MG_AXIS_BACKWARD,
+        MG_AXIS_LEFT,
+        MG_AXIS_DOWN,
+    };
+
+    float distance;
+    float max_distance = 72.0f;
+    float increment = 1.0f;
+    uint32_t dir;
+    gs_vec3 start;
+    gs_vec3 end;
+    bsp_trace_t *trace = &(bsp_trace_t){.map = player->map};
+
+    while (true)
+    {
+        // Sweep player aabb by 1 unit
+        start = gs_vec3_add(player->transform.position, gs_vec3_scale(directions[dir], distance));
+        end = gs_vec3_add(start, directions[dir]);
+        bsp_trace_box(trace, start, end, player->mins, player->maxs);
+
+        if (!trace->all_solid)
+        {
+            // Trace doesn't end in a solid, let's use it
+            player->transform.position = trace->end;
+            gs_println("WARN: player stuck in solid at [%f, %f, %f], freeing to [%f, %f, %f].",
+                       player->transform.position.x,
+                       player->transform.position.y,
+                       player->transform.position.z,
+                       trace->end.x,
+                       trace->end.y,
+                       trace->end.z);
+            break;
+        }
+
+        // Increment distance in current direction,
+        // or swap to the next direction.
+        distance += increment;
+        if (distance > max_distance)
+        {
+            distance = 0;
+            dir++;
+            if (dir >= 6)
+            {
+                gs_println("WARN: player stuck in solid at [%f, %f, %f], could not unstuck.",
+                           player->transform.position.x,
+                           player->transform.position.y,
+                           player->transform.position.z);
+                break;
+            }
+        }
     }
 }

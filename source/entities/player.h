@@ -57,6 +57,7 @@ typedef struct mg_player_t
 mg_player_t *mg_player_new();
 void mg_player_free(mg_player_t *player);
 void mg_player_update(mg_player_t *player);
+void _mg_player_unstuck(mg_player_t *player);
 void _mg_player_slidemove(mg_player_t *player, float delta_time);
 void _mg_player_uncrouch(mg_player_t *player, float delta_time);
 void _mg_player_crouch(mg_player_t *player, float delta_time);
