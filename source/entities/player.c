@@ -103,7 +103,7 @@ void _mg_player_check_floor(mg_player_t *player)
     bsp_trace_box(
         trace,
         player->transform.position,
-        gs_vec3_sub(player->transform.position, gs_vec3_scale(MG_AXIS_DOWN, 2.0f)),
+        gs_vec3_add(player->transform.position, gs_vec3_scale(MG_AXIS_DOWN, 2.0f)),
         player->mins,
         player->maxs);
 
