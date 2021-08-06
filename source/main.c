@@ -147,6 +147,15 @@ void app_update()
     sprintf(temp, "leaf: %zu", bsp_map->stats.current_leaf);
     gsi_text(gsi, 10, 90, temp, NULL, false, 255, 255, 255, 255);
 
+    // draw player stats
+    gsi_text(gsi, 5, 105, "player:", NULL, false, 255, 255, 255, 255);
+    sprintf(temp, "pos: [%f, %f, %f]", player->transform.position.x, player->transform.position.y, player->transform.position.z);
+    gsi_text(gsi, 10, 120, temp, NULL, false, 255, 255, 255, 255);
+    sprintf(temp, "ang: [%f, %f, %f]", player->yaw, player->camera.pitch, player->camera.roll);
+    gsi_text(gsi, 10, 135, temp, NULL, false, 255, 255, 255, 255);
+    sprintf(temp, "vel: [%f, %f, %f]", player->velocity.x, player->velocity.y, player->velocity.z);
+    gsi_text(gsi, 10, 150, temp, NULL, false, 255, 255, 255, 255);
+
     render_ctx_update();
 }
 
