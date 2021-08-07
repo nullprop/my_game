@@ -68,6 +68,7 @@ void app_init()
 
     player = mg_player_new();
     player->map = bsp_map;
+    player->camera.cam.fov = config->graphics.fov;
     app_spawn();
 }
 

@@ -117,20 +117,30 @@ void _mg_config_load(mg_config_t *config, char *filepath)
         }
 
 // Handle known config keys
-#define NUM_KEYS 5
+#define NUM_KEYS 6
         char *known_keys[NUM_KEYS] = {
+            // Video
             "vid_fullscreen",
             "vid_width",
             "vid_height",
             "vid_max_fps",
             "vid_vsync",
+            // Audio
+
+            // Graphics
+            "r_fov",
         };
         int32_t *containers[NUM_KEYS] = {
+            // Video
             &config->video.fullscreen,
             &config->video.width,
             &config->video.height,
             &config->video.max_fps,
             &config->video.vsync,
+            // Audio
+
+            // Graphics
+            &config->graphics.fov,
         };
         bool32_t found_key = false;
 
@@ -171,17 +181,18 @@ void _mg_config_save(mg_config_t *config, char *filepath)
     char line[128];
 
     fprintf(file, "// Video\n");
-    fprintf(file, "vid_fullscreen %d\n", config->video.fullscreen);
-    fprintf(file, "vid_width %d\n", config->video.width);
-    fprintf(file, "vid_height %d\n", config->video.height);
-    fprintf(file, "vid_max_fps %d\n", config->video.max_fps);
-    fprintf(file, "vid_vsync %d\n", config->video.vsync);
+    fprintf(file, "vid_fullscreen %zu\n", config->video.fullscreen);
+    fprintf(file, "vid_width %zu\n", config->video.width);
+    fprintf(file, "vid_height %zu\n", config->video.height);
+    fprintf(file, "vid_max_fps %zu\n", config->video.max_fps);
+    fprintf(file, "vid_vsync %zu\n", config->video.vsync);
 
     fprintf(file, "\n");
     fprintf(file, "// Audio\n");
 
     fprintf(file, "\n");
     fprintf(file, "// Graphics\n");
+    fprintf(file, "r_fov %zu\n", config->graphics.fov);
 
     fflush(file);
     fclose(file);
@@ -200,4 +211,5 @@ void _mg_config_set_default(mg_config_t *config)
     // Audio
 
     // Graphics
+    config->graphics.fov = 110;
 }

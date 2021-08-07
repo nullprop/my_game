@@ -21,9 +21,15 @@ typedef struct mg_config_video_t
     bool32_t vsync;
 } mg_config_video_t;
 
+typedef struct mg_config_graphics_t
+{
+    uint32_t fov;
+} mg_config_graphics_t;
+
 typedef struct mg_config_t
 {
     mg_config_video_t video;
+    mg_config_graphics_t graphics;
 } mg_config_t;
 
 mg_config_t *mg_config_init();
