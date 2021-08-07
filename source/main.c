@@ -155,6 +155,8 @@ void app_update()
     gsi_text(gsi, 10, 135, temp, NULL, false, 255, 255, 255, 255);
     sprintf(temp, "vel: [%f, %f, %f]", player->velocity.x, player->velocity.y, player->velocity.z);
     gsi_text(gsi, 10, 150, temp, NULL, false, 255, 255, 255, 255);
+    sprintf(temp, "vel_abs: %f, h: %f", gs_vec3_len(player->velocity), gs_vec3_len(gs_v3(player->velocity.x, player->velocity.y, 0)));
+    gsi_text(gsi, 10, 165, temp, NULL, false, 255, 255, 255, 255);
 
     render_ctx_update();
 }

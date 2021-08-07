@@ -15,7 +15,7 @@
 #include "../bsp/bsp_map.h"
 
 #define MG_PLAYER_HEIGHT 64.0f
-#define MG_PLAYER_CROUCH_HEIGHT 42.0f
+#define MG_PLAYER_CROUCH_HEIGHT 32.0f
 #define MG_PLAYER_EYE_OFFSET 4.0f
 #define MG_PLAYER_HALF_WIDTH 16.0f
 #define MG_PLAYER_MOVE_SPEED 280.0f
