@@ -126,6 +126,15 @@ void _mg_player_get_input(mg_player_t *player)
 
     gs_vec2 dp = gs_vec2_scale(gs_platform_mouse_deltav(), 1.8f * 0.022f);
 
+    if (gs_platform_key_down(GS_KEYCODE_UP))
+        dp.y -= 5.0f;
+    if (gs_platform_key_down(GS_KEYCODE_DOWN))
+        dp.y += 5.0f;
+    if (gs_platform_key_down(GS_KEYCODE_RIGHT))
+        dp.x += 5.0f;
+    if (gs_platform_key_down(GS_KEYCODE_LEFT))
+        dp.x -= 5.0f;
+
     // Rotate
     player->camera.pitch = gs_clamp(player->camera.pitch + dp.y, -90.0f, 90.0f);
     player->yaw = fmodf(player->yaw - dp.x, 360.0f);
