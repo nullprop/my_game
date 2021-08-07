@@ -134,7 +134,7 @@ typedef struct bsp_plane_lump_t
 
 typedef struct bsp_node_lump_t
 {
-    int32_t first_plane;
+    int32_t plane;
     int32_t children[2];
     int32_t mins[3];
     int32_t maxs[3];

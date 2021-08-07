@@ -50,7 +50,6 @@ void _bsp_trace(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end)
 {
     gs_assert(trace->map != NULL);
 
-    trace->hit = false;
     trace->start_solid = false;
     trace->all_solid = false;
     trace->fraction = 1.0f;
@@ -68,7 +67,6 @@ void _bsp_trace(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end)
         // Collided with something
         //           start + fraction * (end - start);
         trace->end = gs_vec3_add(start, gs_vec3_scale(gs_vec3_sub(end, start), trace->fraction));
-        trace->hit = true;
     }
 }
 
@@ -78,8 +76,8 @@ void _bsp_trace_check_node(bsp_trace_t *trace, int32_t node_index, float32_t sta
     {
         // This is a leaf
         bsp_leaf_lump_t leaf = trace->map->leaves.data[-(node_index + 1)];
-        int32_t brush_index = -1;
-        bsp_brush_lump_t brush = {0};
+        int32_t brush_index;
+        bsp_brush_lump_t brush;
         for (size_t i = 0; i < leaf.num_leaf_brushes; i++)
         {
             brush_index = trace->map->leaf_brushes.data[leaf.first_leaf_brush + i].brush;
@@ -96,7 +94,7 @@ void _bsp_trace_check_node(bsp_trace_t *trace, int32_t node_index, float32_t sta
 
     // This is a node
     bsp_node_lump_t node = trace->map->nodes.data[node_index];
-    bsp_plane_lump_t plane = trace->map->planes.data[node.first_plane];
+    bsp_plane_lump_t plane = trace->map->planes.data[node.plane];
 
     float32_t offset;
     float32_t start_distance = gs_vec3_dot(start, plane.normal) - plane.dist;
@@ -120,7 +118,7 @@ void _bsp_trace_check_node(bsp_trace_t *trace, int32_t node_index, float32_t sta
         // check the front child.
         _bsp_trace_check_node(trace, node.children[0], start_fraction, end_fraction, start, end);
     }
-    else if (start_distance < offset && end_distance < offset)
+    else if (start_distance < -offset && end_distance < -offset)
     {
         // Both points are behind the plane,
         // check back child.
@@ -169,7 +167,7 @@ void _bsp_trace_check_node(bsp_trace_t *trace, int32_t node_index, float32_t sta
         _bsp_trace_check_node(trace, node.children[side], start_fraction, middle_fraction, start, middle);
 
         // STEP 5: Calculate the middle point for the second side
-        middle_fraction = start_fraction + (end_fraction - start_fraction) * fraction1;
+        middle_fraction = start_fraction + (end_fraction - start_fraction) * fraction2;
         middle = gs_vec3_add(start, gs_vec3_scale(gs_vec3_sub(end, start), fraction2));
 
         // STEP 6: Check the second side
@@ -227,7 +225,8 @@ void _bsp_trace_check_brush(bsp_trace_t *trace, bsp_brush_lump_t brush, gs_vec3 
             ends_out = true;
 
         // Make sure the trace isn't completely on one side of the plane
-        if (start_distance > 0 && (end_distance >= GS_EPSILON || end_distance > start_distance))
+        //if (start_distance > 0 && (end_distance >= GS_EPSILON || end_distance > start_distance))
+        if (start_distance > 0 && end_distance > 0)
         {
             // Both are in front of the plane, outside of the brush
             return;

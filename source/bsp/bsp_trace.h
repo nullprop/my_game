@@ -29,7 +29,6 @@ typedef struct bsp_trace_t
     float32_t radius;
     bool32_t start_solid;
     bool32_t all_solid;
-    bool32_t hit;
     gs_vec3 end;
     gs_vec3 normal;
     gs_vec3 mins;

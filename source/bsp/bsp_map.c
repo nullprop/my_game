@@ -768,7 +768,7 @@ int32_t _bsp_find_camera_leaf(bsp_map_t *map, gs_vec3 view_position)
 
     while (leaf_index >= 0)
     {
-        bsp_plane_lump_t plane = map->planes.data[map->nodes.data[leaf_index].first_plane];
+        bsp_plane_lump_t plane = map->planes.data[map->nodes.data[leaf_index].plane];
 
         // children[0] - front node; children[1] - back node
         if (point_in_front_of_plane(plane.normal, plane.dist, view_position))

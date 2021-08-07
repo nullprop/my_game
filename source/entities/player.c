@@ -341,7 +341,7 @@ void _mg_player_unstuck(mg_player_t *player)
     float distance;
     float increment = 64.0f;
     float max_distance = increment * 10;
-    uint32_t dir;
+    uint32_t dir = 0;
     gs_vec3 start;
     gs_vec3 end;
     bsp_trace_t *trace = &(bsp_trace_t){.map = player->map};
