@@ -144,7 +144,7 @@ void app_update()
     gsi_text(gsi, 10, 60, temp, NULL, false, 255, 255, 255, 255);
     sprintf(temp, "patches: %zu/%zu", bsp_map->stats.visible_patches, bsp_map->stats.total_patches);
     gsi_text(gsi, 10, 75, temp, NULL, false, 255, 255, 255, 255);
-    sprintf(temp, "leaf: %zu", bsp_map->stats.current_leaf);
+    sprintf(temp, "leaf: %zu, cluster: %d", bsp_map->stats.current_leaf, bsp_map->leaves.data[bsp_map->stats.current_leaf].cluster);
     gsi_text(gsi, 10, 90, temp, NULL, false, 255, 255, 255, 255);
 
     // draw player stats

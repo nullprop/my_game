@@ -102,6 +102,20 @@ void mg_player_update(mg_player_t *player)
     _mg_player_slidemove(player, dt);
 
     _mg_player_camera_update(player);
+
+    // Check out of map bounds
+    uint32_t leaf_index = player->map->stats.current_leaf;
+    int32_t cluster_index = player->map->leaves.data[leaf_index].cluster;
+    if (cluster_index < 0)
+    {
+        gs_println(
+            "WARN: player in invalid leaf, reset to last valid pos: [%f, %f, %f]",
+            player->last_valid_pos.x,
+            player->last_valid_pos.y,
+            player->last_valid_pos.z);
+        player->transform.position = player->last_valid_pos;
+        player->velocity = gs_v3(0, 0, 0);
+    }
 }
 
 void _mg_player_check_floor(mg_player_t *player)
@@ -118,6 +132,13 @@ void _mg_player_check_floor(mg_player_t *player)
     {
         player->grounded = true;
         player->ground_normal = trace->normal;
+
+        uint32_t leaf_index = player->map->stats.current_leaf;
+        int32_t cluster_index = player->map->leaves.data[leaf_index].cluster;
+        if (cluster_index >= 0)
+        {
+            player->last_valid_pos = player->transform.position;
+        }
     }
     else
     {

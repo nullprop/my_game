@@ -58,6 +58,7 @@ typedef struct mg_player_t
     bool32_t crouched;
     bool32_t grounded;
     float32_t crouch_fraction;
+    gs_vec3 last_valid_pos;
 } mg_player_t;
 
 mg_player_t *mg_player_new();
