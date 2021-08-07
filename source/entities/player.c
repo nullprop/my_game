@@ -339,8 +339,8 @@ void _mg_player_unstuck(mg_player_t *player)
     };
 
     float distance;
-    float max_distance = 72.0f;
-    float increment = 1.0f;
+    float increment = 64.0f;
+    float max_distance = increment * 10;
     uint32_t dir;
     gs_vec3 start;
     gs_vec3 end;
@@ -353,17 +353,26 @@ void _mg_player_unstuck(mg_player_t *player)
         end = gs_vec3_add(start, directions[dir]);
         bsp_trace_box(trace, start, end, player->mins, player->maxs);
 
-        if (!trace->all_solid)
+        if (trace->fraction > 0.0f && !trace->all_solid)
         {
-            // Trace doesn't end in a solid, let's use it
-            player->transform.position = trace->end;
+            // Trace ends in a valid position.
+            // Trace back towards start so we move
+            // the minimum distance to get unstuck.
+            gs_vec3 valid_pos = trace->end;
+            bsp_trace_box(trace, trace->end, player->transform.position, player->mins, player->maxs);
+            if (trace->fraction < 1.0f && !trace->all_solid)
+            {
+                valid_pos = trace->end;
+            }
+
+            player->transform.position = valid_pos;
             gs_println("WARN: player stuck in solid at [%f, %f, %f], freeing to [%f, %f, %f].",
                        player->transform.position.x,
                        player->transform.position.y,
                        player->transform.position.z,
-                       trace->end.x,
-                       trace->end.y,
-                       trace->end.z);
+                       valid_pos.x,
+                       valid_pos.y,
+                       valid_pos.z);
             break;
         }
 
