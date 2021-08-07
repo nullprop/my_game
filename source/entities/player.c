@@ -49,7 +49,7 @@ void mg_player_update(mg_player_t *player)
     float dt = platform->time.delta;
 
     _mg_player_check_floor(player);
-    _mg_player_get_input(player);
+    _mg_player_get_input(player, dt);
 
     // Handle jump and gravity
     if (player->grounded)
@@ -118,7 +118,7 @@ void _mg_player_check_floor(mg_player_t *player)
     }
 }
 
-void _mg_player_get_input(mg_player_t *player)
+void _mg_player_get_input(mg_player_t *player, float delta_time)
 {
     player->wish_move = gs_v3(0, 0, 0);
     player->wish_jump = false;
@@ -127,13 +127,13 @@ void _mg_player_get_input(mg_player_t *player)
     gs_vec2 dp = gs_vec2_scale(gs_platform_mouse_deltav(), 1.8f * 0.022f);
 
     if (gs_platform_key_down(GS_KEYCODE_UP))
-        dp.y -= 5.0f;
+        dp.y -= 150.0f * delta_time;
     if (gs_platform_key_down(GS_KEYCODE_DOWN))
-        dp.y += 5.0f;
+        dp.y += 150.0f * delta_time;
     if (gs_platform_key_down(GS_KEYCODE_RIGHT))
-        dp.x += 5.0f;
+        dp.x += 150.0f * delta_time;
     if (gs_platform_key_down(GS_KEYCODE_LEFT))
-        dp.x -= 5.0f;
+        dp.x -= 150.0f * delta_time;
 
     // Rotate
     player->camera.pitch = gs_clamp(player->camera.pitch + dp.y, -90.0f, 90.0f);
