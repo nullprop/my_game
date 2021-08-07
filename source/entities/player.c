@@ -216,20 +216,47 @@ void _mg_player_accelerate(mg_player_t *player, float delta_time, float move_spe
 
 void _mg_player_crouch(mg_player_t *player, float delta_time)
 {
+    if (player->crouched) return;
+
     // Can always crouch
     player->crouched = true;
     player->maxs.z = MG_PLAYER_CROUCH_HEIGHT;
     player->eye_pos.z = MG_PLAYER_CROUCH_HEIGHT - MG_PLAYER_EYE_OFFSET;
+
+    // Pull feet up if not on ground
+    if (!player->grounded)
+    {
+        player->transform.position.z += (MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT) * 0.5f;
+    }
 }
 
 void _mg_player_uncrouch(mg_player_t *player, float delta_time)
 {
-    // Only uncrouch if room
+    if (!player->crouched) return;
+
     bsp_trace_t *trace = &(bsp_trace_t){.map = player->map};
+    gs_vec3 origin = player->transform.position;
+    bool32_t grounded = player->grounded;
+
+    if (!grounded)
+    {
+        // Feet will go down if in air, check how much room below player.
+        bsp_trace_box(
+            trace,
+            player->transform.position,
+            gs_vec3_scale(mg_get_down(player->transform.rotation), (MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT) * 0.5f),
+            player->mins,
+            player->maxs);
+
+        origin = trace->end;
+        grounded = trace->fraction < 1.0f && trace->normal.z > 0.7f;
+    }
+
+    // Check above from potential new position.
     bsp_trace_box(
         trace,
-        player->transform.position,
-        gs_vec3_add(player->transform.position, gs_vec3_scale(mg_get_up(player->transform.rotation), MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT)),
+        origin,
+        gs_vec3_add(origin, gs_vec3_scale(mg_get_up(player->transform.rotation), MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT)),
         player->mins, player->maxs);
 
     if (trace->fraction == 1.0f)
@@ -237,6 +264,8 @@ void _mg_player_uncrouch(mg_player_t *player, float delta_time)
         player->crouched = false;
         player->maxs.z = MG_PLAYER_HEIGHT;
         player->eye_pos.z = MG_PLAYER_HEIGHT - MG_PLAYER_EYE_OFFSET;
+        player->transform.position.z = origin.z;
+        player->grounded = grounded;
     }
 }
 
