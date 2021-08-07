@@ -30,6 +30,7 @@ void app_spawn()
         player->velocity = gs_v3(0, 0, 0);
         player->camera.pitch = 0;
         bsp_map_find_spawn_point(bsp_map, &player->transform.position, &player->yaw);
+        player->last_valid_pos = player->transform.position;
         player->yaw -= 90;
     }
 }
