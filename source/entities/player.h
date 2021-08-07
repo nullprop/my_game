@@ -18,8 +18,8 @@
 #define MG_PLAYER_CROUCH_HEIGHT 32.0f
 #define MG_PLAYER_EYE_OFFSET 4.0f
 #define MG_PLAYER_HALF_WIDTH 16.0f
-#define MG_PLAYER_MOVE_SPEED 280.0f
-#define MG_PLAYER_CROUCH_MOVE_SPEED 100.0f
+#define MG_PLAYER_MOVE_SPEED 320.0f
+#define MG_PLAYER_CROUCH_MOVE_SPEED 160.0f
 #define MG_PLAYER_ACCEL 10.0f
 #define MG_PLAYER_AIR_MOVE_SPEED 30.0f
 #define MG_PLAYER_AIR_ACCEL 50.0f
@@ -27,6 +27,11 @@
 #define MG_PLAYER_JUMP_SPEED 250.0f
 #define MG_PLAYER_STOP_SPEED 100.0f
 #define MG_PLAYER_MAX_VEL 3500.0f
+#define MG_PLAYER_CROUCH_TIME 0.1f
+#define MG_PLAYER_UNCROUCH_TIME 0.1f
+// Crouch transitions feel weird in air
+#define MG_PLAYER_CROUCH_TIME_AIR 0.0f
+#define MG_PLAYER_UNCROUCH_TIME_AIR 0.0f
 
 typedef struct mg_player_camera_t
 {
@@ -52,6 +57,7 @@ typedef struct mg_player_t
     bool32_t wish_crouch;
     bool32_t crouched;
     bool32_t grounded;
+    float32_t crouch_fraction;
 } mg_player_t;
 
 mg_player_t *mg_player_new();

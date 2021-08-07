@@ -84,7 +84,14 @@ void mg_player_update(mg_player_t *player)
 
     if (player->grounded)
     {
-        _mg_player_accelerate(player, dt, player->crouched ? MG_PLAYER_CROUCH_MOVE_SPEED : MG_PLAYER_MOVE_SPEED, MG_PLAYER_ACCEL, MG_PLAYER_MAX_VEL);
+        if (player->crouched)
+        {
+            _mg_player_accelerate(player, dt, mg_lerp(MG_PLAYER_MOVE_SPEED, MG_PLAYER_CROUCH_MOVE_SPEED, player->crouch_fraction), MG_PLAYER_ACCEL, MG_PLAYER_MAX_VEL);
+        }
+        else
+        {
+            _mg_player_accelerate(player, dt, MG_PLAYER_MOVE_SPEED, MG_PLAYER_ACCEL, MG_PLAYER_MAX_VEL);
+        }
     }
     else
     {
@@ -214,25 +221,49 @@ void _mg_player_accelerate(mg_player_t *player, float delta_time, float move_spe
     player->velocity.z = fminf(MG_PLAYER_MAX_VEL, fmaxf(player->velocity.z, -MG_PLAYER_MAX_VEL));
 }
 
+// Can always crouch
 void _mg_player_crouch(mg_player_t *player, float delta_time)
 {
-    if (player->crouched) return;
+    if (player->crouch_fraction == 1.0f) return;
 
-    // Can always crouch
-    player->crouched = true;
-    player->maxs.z = MG_PLAYER_CROUCH_HEIGHT;
-    player->eye_pos.z = MG_PLAYER_CROUCH_HEIGHT - MG_PLAYER_EYE_OFFSET;
+    float32_t crouch_time = MG_PLAYER_CROUCH_TIME;
+    if (!player->grounded) crouch_time = MG_PLAYER_CROUCH_TIME_AIR;
 
-    // Pull feet up if not on ground
-    if (!player->grounded)
+    if (crouch_time > 0.0f)
     {
-        player->transform.position.z += (MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT) * 0.5f;
+        float32_t prev_fraction = player->crouch_fraction;
+        player->crouch_fraction += delta_time / crouch_time;
+        if (player->crouch_fraction > 1.0f) player->crouch_fraction = 1.0f;
+
+        player->crouched = true;
+        player->maxs.z = MG_PLAYER_HEIGHT - player->crouch_fraction * (MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT);
+        player->eye_pos.z = player->maxs.z - MG_PLAYER_EYE_OFFSET;
+
+        // Pull feet up if not on ground
+        if (!player->grounded)
+        {
+            player->transform.position.z += (MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT) * 0.5f * (player->crouch_fraction - prev_fraction);
+        }
+    }
+    else
+    {
+        player->crouched = true;
+        player->crouch_fraction = 1.0f;
+        player->maxs.z = MG_PLAYER_CROUCH_HEIGHT;
+        player->eye_pos.z = player->maxs.z - MG_PLAYER_EYE_OFFSET;
+
+        // Pull feet up if not on ground
+        if (!player->grounded)
+        {
+            player->transform.position.z += (MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT) * 0.5f;
+        }
     }
 }
 
+// Can uncrouch if enough room
 void _mg_player_uncrouch(mg_player_t *player, float delta_time)
 {
-    if (!player->crouched) return;
+    if (player->crouch_fraction == 0.0f) return;
 
     bsp_trace_t *trace = &(bsp_trace_t){.map = player->map};
     gs_vec3 origin = player->transform.position;
@@ -244,7 +275,7 @@ void _mg_player_uncrouch(mg_player_t *player, float delta_time)
         bsp_trace_box(
             trace,
             player->transform.position,
-            gs_vec3_scale(mg_get_down(player->transform.rotation), (MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT) * 0.5f),
+            gs_vec3_scale(mg_get_down(player->transform.rotation), (MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT) * 0.5f * player->crouch_fraction),
             player->mins,
             player->maxs);
 
@@ -256,16 +287,39 @@ void _mg_player_uncrouch(mg_player_t *player, float delta_time)
     bsp_trace_box(
         trace,
         origin,
-        gs_vec3_add(origin, gs_vec3_scale(mg_get_up(player->transform.rotation), MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT)),
+        gs_vec3_add(origin, gs_vec3_scale(mg_get_up(player->transform.rotation), (MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT) * player->crouch_fraction)),
         player->mins, player->maxs);
 
     if (trace->fraction == 1.0f)
     {
-        player->crouched = false;
-        player->maxs.z = MG_PLAYER_HEIGHT;
-        player->eye_pos.z = MG_PLAYER_HEIGHT - MG_PLAYER_EYE_OFFSET;
-        player->transform.position.z = origin.z;
-        player->grounded = grounded;
+        // Got room to uncrouch
+        float32_t uncrouch_time = MG_PLAYER_UNCROUCH_TIME;
+        if (!player->grounded) uncrouch_time = MG_PLAYER_UNCROUCH_TIME_AIR;
+
+        if (uncrouch_time > 0.0f)
+        {
+            float32_t prev_fraction = player->crouch_fraction;
+            player->crouch_fraction -= delta_time / uncrouch_time;
+            if (player->crouch_fraction < 0.0f) player->crouch_fraction = 0.0f;
+
+            player->crouched = player->crouch_fraction != 0.0f;
+            player->maxs.z = MG_PLAYER_HEIGHT - player->crouch_fraction * (MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT);
+            player->eye_pos.z = player->maxs.z - MG_PLAYER_EYE_OFFSET;
+            player->transform.position.z -= (player->transform.position.z - origin.z) * (player->crouch_fraction - prev_fraction);
+
+            if (player->crouched == 0.0f)
+            {
+                player->grounded = grounded;
+            }
+        }
+        else
+        {
+            player->crouched = false;
+            player->crouch_fraction = 0.0f;
+            player->maxs.z = MG_PLAYER_HEIGHT;
+            player->eye_pos.z = player->maxs.z - MG_PLAYER_EYE_OFFSET;
+            player->transform.position.z = origin.z;
+        }
     }
 }
 

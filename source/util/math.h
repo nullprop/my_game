@@ -42,4 +42,9 @@ static inline gs_vec3 mg_clip_velocity(gs_vec3 velocity, gs_vec3 plane_normal, f
     return gs_vec3_sub(velocity, change);
 }
 
+static inline float32_t mg_lerp(float32_t start, float32_t end, float32_t frac)
+{
+    return start + (end - start) * frac;
+}
+
 #endif // MG_MATH_H
