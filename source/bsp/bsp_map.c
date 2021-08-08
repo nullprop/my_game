@@ -591,7 +591,7 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
     // Draw faces
     int32_t texture_index;
     int32_t lm_index;
-    bsp_face_renderable_t *container = map->render_faces;
+    bsp_face_renderable_t *container = map->visible_faces;
     for (size_t i = 0; i < gs_dyn_array_size(container); i++)
     {
         texture_index = map->faces.data[container[i].index].texture;
