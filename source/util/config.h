@@ -32,10 +32,12 @@ typedef struct mg_config_t
     mg_config_graphics_t graphics;
 } mg_config_t;
 
-mg_config_t *mg_config_init();
-void mg_config_free(mg_config_t *config);
-void _mg_config_load(mg_config_t *config, char *filepath);
-void _mg_config_save(mg_config_t *config, char *filepath);
-void _mg_config_set_default(mg_config_t *config);
+void mg_config_init();
+void mg_config_free();
+void _mg_config_load(char *filepath);
+void _mg_config_save(char *filepath);
+void _mg_config_set_default();
+
+extern mg_config_t *g_config;
 
 #endif // MG_CONFIG_H
