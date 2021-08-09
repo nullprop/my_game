@@ -8,22 +8,24 @@
 =================================================================*/
 
 #include "audio_manager.h"
+#include "../util/config.h"
 #include "../util/string.h"
 
 mg_audio_manager_t *g_audio_manager;
 
 void mg_audio_manager_init()
 {
+    // Allocate
     g_audio_manager = gs_malloc_init(mg_audio_manager_t);
     g_audio_manager->assets = gs_dyn_array_new(mg_audio_asset_t);
 
-    // TODO config
-    g_audio_manager->master_vol = 0.1f;
-    g_audio_manager->mixer_vol[MG_AUDIO_TYPE_EFFECT] = 1.0f;
-    g_audio_manager->mixer_vol[MG_AUDIO_TYPE_MUSIC] = 0.8f;
-    g_audio_manager->mixer_vol[MG_AUDIO_TYPE_AMBIENT] = 0.6f;
+    // Config
+    g_audio_manager->master_vol = g_config->sound.master;
+    g_audio_manager->mixer_vol[MG_AUDIO_TYPE_EFFECT] = g_config->sound.effect;
+    g_audio_manager->mixer_vol[MG_AUDIO_TYPE_MUSIC] = g_config->sound.music;
+    g_audio_manager->mixer_vol[MG_AUDIO_TYPE_AMBIENT] = g_config->sound.ambient;
 
-    // Player
+    // Player sounds
     _mg_audio_manager_load("sound/player/jump1.wav", MG_AUDIO_TYPE_EFFECT, false, false);
 }
 

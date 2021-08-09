@@ -117,7 +117,7 @@ void _mg_config_load(char *filepath)
         }
 
 // Handle known config keys
-#define NUM_KEYS 6
+#define NUM_KEYS 10
         char *known_keys[NUM_KEYS] = {
             // Video
             "vid_fullscreen",
@@ -125,22 +125,43 @@ void _mg_config_load(char *filepath)
             "vid_height",
             "vid_max_fps",
             "vid_vsync",
-            // Audio
-
+            // Sound
+            "snd_master",
+            "snd_effect",
+            "snd_music",
+            "snd_ambient",
             // Graphics
             "r_fov",
         };
-        int32_t *containers[NUM_KEYS] = {
+        void *containers[NUM_KEYS] = {
             // Video
-            g_config->video.fullscreen,
-            g_config->video.width,
-            g_config->video.height,
-            g_config->video.max_fps,
-            g_config->video.vsync,
+            &g_config->video.fullscreen,
+            &g_config->video.width,
+            &g_config->video.height,
+            &g_config->video.max_fps,
+            &g_config->video.vsync,
             // Audio
-
+            &g_config->sound.master,
+            &g_config->sound.effect,
+            &g_config->sound.music,
+            &g_config->sound.ambient,
             // Graphics
-            g_config->graphics.fov,
+            &g_config->graphics.fov,
+        };
+        mg_config_type types[NUM_KEYS] = {
+            // Video
+            MG_CONFIG_TYPE_INT,
+            MG_CONFIG_TYPE_INT,
+            MG_CONFIG_TYPE_INT,
+            MG_CONFIG_TYPE_INT,
+            MG_CONFIG_TYPE_INT,
+            // Audio
+            MG_CONFIG_TYPE_FLOAT,
+            MG_CONFIG_TYPE_FLOAT,
+            MG_CONFIG_TYPE_FLOAT,
+            MG_CONFIG_TYPE_FLOAT,
+            // Graphics
+            MG_CONFIG_TYPE_INT,
         };
         bool32_t found_key = false;
 
@@ -148,7 +169,15 @@ void _mg_config_load(char *filepath)
         {
             if (gs_string_compare_equal(&key, known_keys[i]))
             {
-                *containers[i] = strtol(value, (char **)NULL, 10);
+                if (types[i] == MG_CONFIG_TYPE_INT)
+                {
+                    *(int32_t *)containers[i] = strtol(value, (char **)NULL, 10);
+                }
+                else if (types[i] == MG_CONFIG_TYPE_FLOAT)
+                {
+                    *(float32_t *)containers[i] = strtof(value, (char **)NULL);
+                }
+
                 found_key = true;
                 break;
             }
@@ -189,6 +218,10 @@ void _mg_config_save(char *filepath)
 
     fprintf(file, "\n");
     fprintf(file, "// Audio\n");
+    fprintf(file, "snd_master %f\n", g_config->sound.master);
+    fprintf(file, "snd_effect %f\n", g_config->sound.effect);
+    fprintf(file, "snd_music %f\n", g_config->sound.music);
+    fprintf(file, "snd_ambient %f\n", g_config->sound.ambient);
 
     fprintf(file, "\n");
     fprintf(file, "// Graphics\n");
@@ -209,6 +242,10 @@ void _mg_config_set_default()
     g_config->video.vsync = false;
 
     // Audio
+    g_config->sound.master = 0.1f;
+    g_config->sound.effect = 1.0f;
+    g_config->sound.music = 0.8f;
+    g_config->sound.ambient = 0.6f;
 
     // Graphics
     g_config->graphics.fov = 110;

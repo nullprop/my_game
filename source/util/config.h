@@ -12,6 +12,13 @@
 
 #include <gs/gs.h>
 
+typedef enum mg_config_type
+{
+    MG_CONFIG_TYPE_INT,
+    MG_CONFIG_TYPE_FLOAT,
+    MG_CONFIG_TYPE_COUNT,
+} mg_config_type;
+
 typedef struct mg_config_video_t
 {
     bool32_t fullscreen;
@@ -26,10 +33,19 @@ typedef struct mg_config_graphics_t
     uint32_t fov;
 } mg_config_graphics_t;
 
+typedef struct mg_config_sound_t
+{
+    float32_t master;
+    float32_t effect;
+    float32_t music;
+    float32_t ambient;
+} mg_config_sound_t;
+
 typedef struct mg_config_t
 {
     mg_config_video_t video;
     mg_config_graphics_t graphics;
+    mg_config_sound_t sound;
 } mg_config_t;
 
 void mg_config_init();
