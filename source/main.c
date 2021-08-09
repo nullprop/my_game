@@ -12,6 +12,7 @@
 #define GS_IMMEDIATE_DRAW_IMPL
 #include <gs/util/gs_idraw.h>
 
+#include "audio/audio_manager.h"
 #include "bsp/bsp_loader.h"
 #include "bsp/bsp_map.h"
 #include "entities/player.h"
@@ -47,6 +48,7 @@ void app_init()
 {
     glfwSetWindowSizeCallback(gs_platform_raw_window_handle(gs_platform_main_window()), &on_window_resize);
 
+    mg_audio_manager_init();
     render_ctx_init();
     render_ctx_set_use_immediate_mode(true);
     gsi = render_ctx_get_gsi();
@@ -168,6 +170,7 @@ void app_shutdown()
     mg_player_free(player);
     bsp_map_free(bsp_map);
     render_ctx_free();
+    mg_audio_manager_free();
     mg_config_free(config);
 }
 

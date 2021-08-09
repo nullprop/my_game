@@ -8,6 +8,7 @@
 =================================================================*/
 
 #include "player.h"
+#include "../audio/audio_manager.h"
 #include "../bsp/bsp_trace.h"
 #include "../util/math.h"
 #include "../util/transform.h"
@@ -58,6 +59,8 @@ void mg_player_update(mg_player_t *player)
         {
             player->velocity.z = MG_PLAYER_JUMP_SPEED;
             player->grounded = false;
+            if (g_audio_manager != NULL)
+                mg_audio_manager_play("sound/player/jump1.wav");
         }
         else
         {
