@@ -131,7 +131,12 @@ void _mg_player_check_floor(mg_player_t *player)
         player->mins,
         player->maxs);
 
-    if (trace->fraction < 1.0f && trace->normal.z > 0.7f)
+    // Don't set grounded if moving up fast enough.
+    // (Sliding up a ramp or jumping to a higher level floor)
+    // TODO: relative velocity between player and floor if moving
+    float relative_velocity = player->velocity.z;
+
+    if (trace->fraction < 1.0f && trace->normal.z > 0.7f && relative_velocity < MG_PLAYER_SLIDE_LIMIT)
     {
         player->grounded = true;
         player->ground_normal = trace->normal;
