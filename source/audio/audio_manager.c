@@ -7,9 +7,12 @@
     ...
 =================================================================*/
 
-#include "audio_manager.h"
+#include <gs/gs.h>
+
 #include "../util/config.h"
+#include "../util/math.h"
 #include "../util/string.h"
+#include "audio_manager.h"
 
 mg_audio_manager_t *g_audio_manager;
 
@@ -26,7 +29,7 @@ void mg_audio_manager_init()
     g_audio_manager->mixer_vol[MG_AUDIO_TYPE_AMBIENT] = g_config->sound.ambient;
 
     // Player sounds
-    _mg_audio_manager_load("sound/player/jump1.wav", MG_AUDIO_TYPE_EFFECT, false, false);
+    _mg_audio_manager_load("sound/player/jump1.wav", MG_AUDIO_TYPE_EFFECT, false, false, 1.0f);
 }
 
 void mg_audio_manager_free()
@@ -41,7 +44,7 @@ void mg_audio_manager_free()
     g_audio_manager = NULL;
 }
 
-void mg_audio_manager_play(char *name)
+void mg_audio_manager_play(char *name, float pitch_var)
 {
     mg_audio_asset_t *asset = _mg_audio_manager_find(name);
     if (asset == NULL)
@@ -50,13 +53,26 @@ void mg_audio_manager_play(char *name)
         return;
     }
 
+    float pitch = 0.0f;
+    if (pitch_var != 0.0f)
+    {
+        pitch = (float)rand_range(-512, 512) * pitch_var / 512.0f;
+    }
+    gs_println("pitch: %f", pitch);
+
+    gs_audio_instance_decl_t data = gs_audio_get_instance_data(asset->instance);
+    data.pitch = pitch;
+    gs_audio_set_instance_data(asset->instance, data);
+
+    // FIXME: playing instance doesn't work here
     if (asset->loop)
     {
         gs_audio_play(asset->instance);
     }
     else
     {
-        gs_audio_play_source(asset->source, g_audio_manager->master_vol * g_audio_manager->mixer_vol[asset->type]);
+        //gs_audio_play(asset->instance);
+        gs_audio_play_source(asset->source, g_audio_manager->master_vol * g_audio_manager->mixer_vol[asset->type] * asset->volume, pitch);
     }
 }
 
@@ -108,7 +124,7 @@ bool mg_audio_manager_is_playing(char *name)
     return gs_audio_is_playing(asset->instance);
 }
 
-void _mg_audio_manager_load(char *filename, mg_audio_type type, bool loop, bool persistent)
+void _mg_audio_manager_load(char *filename, mg_audio_type type, bool loop, bool persistent, float volume)
 {
     mg_audio_asset_t asset = (mg_audio_asset_t){
         .source = gs_audio_load_from_file(filename),
@@ -116,6 +132,7 @@ void _mg_audio_manager_load(char *filename, mg_audio_type type, bool loop, bool 
         .loop = loop,
         .persistent = persistent,
         .name = filename,
+        .volume = volume,
     };
 
     asset.instance = gs_audio_instance_create(
@@ -123,7 +140,7 @@ void _mg_audio_manager_load(char *filename, mg_audio_type type, bool loop, bool 
             .src = asset.source,
             .persistent = persistent,
             .loop = loop,
-            .volume = g_audio_manager->master_vol * g_audio_manager->mixer_vol[type],
+            .volume = volume * g_audio_manager->master_vol * g_audio_manager->mixer_vol[type],
         });
 
     gs_dyn_array_push(g_audio_manager->assets, asset);

@@ -243,8 +243,8 @@ void _mg_config_set_default()
 
     // Audio
     g_config->sound.master = 0.1f;
-    g_config->sound.effect = 1.0f;
-    g_config->sound.music = 0.8f;
+    g_config->sound.effect = 0.6f;
+    g_config->sound.music = 1.0f;
     g_config->sound.ambient = 0.6f;
 
     // Graphics

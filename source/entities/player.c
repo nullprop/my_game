@@ -60,7 +60,7 @@ void mg_player_update(mg_player_t *player)
             player->velocity.z = MG_PLAYER_JUMP_SPEED;
             player->grounded = false;
             if (g_audio_manager != NULL)
-                mg_audio_manager_play("sound/player/jump1.wav");
+                mg_audio_manager_play("sound/player/jump1.wav", 0.03f);
         }
         else
         {

@@ -28,6 +28,7 @@ typedef struct mg_audio_asset_t
     bool loop;
     bool persistent;
     char *name;
+    float volume;
 } mg_audio_asset_t;
 
 typedef struct mg_audio_manager_t
@@ -39,12 +40,12 @@ typedef struct mg_audio_manager_t
 
 void mg_audio_manager_init();
 void mg_audio_manager_free();
-void mg_audio_manager_play(char *name);
+void mg_audio_manager_play(char *name, float pitch_var);
 void mg_audio_manager_stop(char *name);
 void mg_audio_manager_pause(char *name);
 void mg_audio_manager_restart(char *name);
 bool mg_audio_manager_is_playing(char *name);
-void _mg_audio_manager_load(char *filename, mg_audio_type type, bool loop, bool persistent);
+void _mg_audio_manager_load(char *filename, mg_audio_type type, bool loop, bool persistent, float volume);
 mg_audio_asset_t *_mg_audio_manager_find(char *name);
 
 extern mg_audio_manager_t *g_audio_manager;
