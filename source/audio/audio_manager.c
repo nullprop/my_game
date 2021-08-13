@@ -58,7 +58,6 @@ void mg_audio_manager_play(char *name, float pitch_var)
     {
         pitch = (float)rand_range(-512, 512) * pitch_var / 512.0f;
     }
-    gs_println("pitch: %f", pitch);
 
     gs_audio_instance_decl_t data = gs_audio_get_instance_data(asset->instance);
     data.pitch = pitch;
