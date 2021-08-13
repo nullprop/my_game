@@ -17,6 +17,8 @@ assets/*
 CMakeCache.txt
 CMakeFiles/
 x64/
+bin/
+lib/
 
 # assimp
 third_party/assimp-5.0.1/contrib/zlib/zconf.h
