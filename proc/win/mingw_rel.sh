@@ -31,10 +31,10 @@ libs=(
 	-lgdi32
 	-lWinmm
 	-lAdvapi32
-	-L ../third_party/assimp-5.0.1/lib/Debug
+	-L ../third_party/assimp-5.0.1/lib/Release
 	-lassimp-vc142-mt
 	-lIrrXML
-	-lzlib
+	-lzlistaticb
 )
 
 # Build
@@ -43,4 +43,8 @@ gcc -O3 ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -lm -o ${proj_name}
 
 cd ..
 
+# Assets
 cp ./assets/* ./bin -r
+
+# Third party binaries
+cp ./third_party/assimp-5.0.1/bin/Release/* ./bin -r

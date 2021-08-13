@@ -27,7 +27,7 @@ libs=(
 	-L ../third_party/assimp-5.0.1/lib/Debug
 	-lassimp-vc142-mtd
 	-lIrrXMLd
-	-lzlibd
+	-lzlibstaticd
 )
 
 # Build
@@ -36,4 +36,8 @@ gcc -O0 ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -lm -o ${proj_name}
 
 cd ..
 
-cp assets/* bin/ -r
+# Assets
+cp ./assets/* ./bin -r
+
+# Third party binaries
+cp ./third_party/assimp-5.0.1/bin/Debug/* ./bin -r
