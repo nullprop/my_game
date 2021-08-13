@@ -6,11 +6,13 @@ The source code release of my_game.
 
 ## Table of contents
 
-- [LICENSE](#LICENSE)
+- [License](#License)
+- [Assets](#Assets)
+- [Compiling](#Compiling)
 
 ---
 
-## LICENSE
+## License
 
 See [LICENSE](LICENSE) for the BSD 3-Clause License.
 
@@ -58,12 +60,20 @@ All projects contained in `third_party` are copyright of their respective owners
 
 [assimp](https://github.com/assimp/assimp)
 
-- File(s): `third_party/include/assimp-5.0.1`
-- License: [third_party/include/assimp-5.0.1/LICENSE](third_party/include/assimp-5.0.1/LICENSE)
+- File(s): `third_party/assimp-5.0.1/*`
+- License: [third_party/assimp-5.0.1/LICENSE](third_party/assimp-5.0.1/LICENSE)
 
 [gunslinger](https://github.com/MrFrenik/gunslinger)
 
-- File(s): `third_party/include/gs`
+- File(s): `third_party/include/gs/*`
 - License: [third_party/include/gs/LICENSE](third_party/include/gs/LICENSE)
 
 ---
+
+## Assets
+
+// TODO
+
+## Compiling
+
+// TODO
