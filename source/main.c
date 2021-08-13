@@ -17,6 +17,7 @@
 #include "bsp/bsp_map.h"
 #include "entities/player.h"
 #include "graphics/rendercontext.h"
+#include "model/model_manager.h"
 #include "util/config.h"
 
 bsp_map_t *bsp_map = NULL;
@@ -48,6 +49,8 @@ void app_init()
     glfwSetWindowSizeCallback(gs_platform_raw_window_handle(gs_platform_main_window()), &on_window_resize);
 
     mg_audio_manager_init();
+    mg_model_manager_init();
+
     render_ctx_init();
     render_ctx_set_use_immediate_mode(true);
     gsi = render_ctx_get_gsi();

@@ -37,7 +37,7 @@ mg_player_t *mg_player_new()
     _mg_player_camera_update(player);
 
     // Test
-    mg_model_t *model = mg_model_manager_find("models/test.fbx");
+    mg_model_t *model = mg_model_manager_find("models/test.obj");
 
     return player;
 }

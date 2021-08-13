@@ -21,7 +21,7 @@ void mg_model_manager_init()
     g_model_manager->models = gs_dyn_array_new(mg_model_t);
 
     // Test
-    _mg_model_manager_load("models/test.fbx");
+    _mg_model_manager_load("models/test.obj");
 }
 
 void mg_model_manager_free()
@@ -50,6 +50,7 @@ mg_model_t *mg_model_manager_find(char *filename)
         }
     }
 
+    gs_println("WARN: mg_model_manager_find invalid model %s", filename);
     return NULL;
 }
 
@@ -62,16 +63,63 @@ void _mg_model_manager_load(char *filename)
             aiProcess_JoinIdenticalVertices |
             aiProcess_SortByPType);
 
-    // TODO: grab vertices etc. from scene
+    if (scene == NULL)
+    {
+        gs_println("ERR: _mg_model_manager_load fail: %s", filename);
+        gs_println(aiGetErrorString());
+        return;
+    }
+
+    if (scene->mNumMeshes != 1)
+    {
+        gs_println("ERR: _mg_model_manager_load fail: %s", filename);
+        gs_println("invalid number of meshes: %zu", scene->mNumMeshes);
+        aiReleaseImport(scene);
+        return;
+    }
+
+    struct aiMesh *mesh = scene->mMeshes[0];
+
+    gs_dyn_array(gs_vec3) vertices = gs_dyn_array_new(gs_vec3);
+    gs_dyn_array_reserve(vertices, mesh->mNumVertices);
+    gs_dyn_array_head(vertices)->size = mesh->mNumVertices;
+
+    gs_dyn_array(uint16_t) indices = gs_dyn_array_new(uint16_t);
+    gs_dyn_array_reserve(indices, mesh->mNumFaces * 3);
+    gs_dyn_array_head(indices)->size = mesh->mNumFaces * 3;
+
+    for (size_t i = 0; i < mesh->mNumVertices; i++)
+    {
+        vertices[i] = gs_v3((float)mesh->mVertices[i].x, (float)mesh->mVertices[i].y, (float)mesh->mVertices[i].z);
+    }
+
+    for (size_t i = 0; i < mesh->mNumFaces; i++)
+    {
+        if (mesh->mFaces[i].mNumIndices != 3)
+        {
+            gs_println("ERR: _mg_model_manager_load fail: %s", filename);
+            gs_println("face % zu invalid number of indices: %zu", i, mesh->mFaces[i].mNumIndices);
+            aiReleaseImport(scene);
+            return;
+        }
+
+        for (size_t j = 0; j < 3; j++)
+        {
+            indices[i * 3 + j] = (uint16_t)(mesh->mFaces[i].mIndices[j]);
+        }
+    }
+
     mg_model_t model = (mg_model_t){
         .filename = filename,
         .data = &(mg_model_data_t){
-            .vertices = gs_dyn_array_new(gs_vec3),
-            .indices = gs_dyn_array_new(uint16_t),
+            .vertices = vertices,
+            .indices = indices,
         },
     };
 
     aiReleaseImport(scene);
 
     gs_dyn_array_push(g_model_manager->models, model);
+
+    gs_println("Model: Loaded %s, verts: %d, indices: %d", filename, gs_dyn_array_size(vertices), gs_dyn_array_size(indices));
 }
