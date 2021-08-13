@@ -10,6 +10,7 @@
 #include "player.h"
 #include "../audio/audio_manager.h"
 #include "../bsp/bsp_trace.h"
+#include "../model/model_manager.h"
 #include "../util/math.h"
 #include "../util/transform.h"
 
@@ -34,6 +35,9 @@ mg_player_t *mg_player_new()
     };
 
     _mg_player_camera_update(player);
+
+    // Test
+    mg_model_t *model = mg_model_manager_find("models/test.fbx");
 
     return player;
 }
