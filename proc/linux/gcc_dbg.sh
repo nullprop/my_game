@@ -13,7 +13,8 @@ flags=(
 
 # Include directories
 inc=(
-	-I ../third_party/include/
+	-I ../third_party/include/             # gs
+	-I ../third_party/assimp-5.0.1/include # assimp
 )
 
 # Source files
@@ -22,9 +23,16 @@ src=(
 	../source/**/*.c
 )
 
+libs=(
+	-L ../third_party/assimp-5.0.1/lib/Debug
+	-lassimp-vc142-mtd
+	-lIrrXMLd
+	-lzlibd
+)
+
 # Build
-echo gcc -O0 ${inc[*]} ${src[*]} ${flags[*]} -lm -o ${proj_name}
-gcc -O0 ${inc[*]} ${src[*]} ${flags[*]} -lm -o ${proj_name}
+echo gcc -O0 ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -lm -o ${proj_name}
+gcc -O0 ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -lm -o ${proj_name}
 
 cd ..
 

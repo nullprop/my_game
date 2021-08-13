@@ -13,7 +13,8 @@ flags=(
 
 # Include directories
 inc=(
-	-I ../third_party/include/			# Gunslinger includes
+	-I ../third_party/include/             # gs
+	-I ../third_party/assimp-5.0.1/include # assimp
 )
 
 # Source files
@@ -24,12 +25,16 @@ src=(
 
 libs=(
 	-lopengl32
-	-lkernel32 
-	-luser32 
-	-lshell32 
-	-lgdi32 
-    -lWinmm
+	-lkernel32
+	-luser32
+	-lshell32
+	-lgdi32
+	-lWinmm
 	-lAdvapi32
+	-L ../third_party/assimp-5.0.1/lib/Debug
+	-lassimp-vc142-mt
+	-lIrrXML
+	-lzlib
 )
 
 # Build
@@ -39,4 +44,3 @@ gcc -O3 ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -lm -o ${proj_name}
 cd ..
 
 cp ./assets/* ./bin -r
-
