@@ -50,10 +50,9 @@ void app_init()
 
     mg_audio_manager_init();
     mg_model_manager_init();
-
-    render_ctx_init();
-    render_ctx_set_use_immediate_mode(true);
-    gsi = render_ctx_get_gsi();
+    mg_render_ctx_init();
+    g_render_ctx->render_ctx_use_immediate_mode = true;
+    gsi = &g_render_ctx->render_ctx_gsi;
 
     // Lock mouse at start by default
     //gs_platform_lock_mouse(gs_platform_main_window(), true);
@@ -164,14 +163,14 @@ void app_update()
     sprintf(temp, "vel_abs: %f, h: %f", gs_vec3_len(player->velocity), gs_vec3_len(gs_v3(player->velocity.x, player->velocity.y, 0)));
     gsi_text(gsi, 10, 165, temp, NULL, false, 255, 255, 255, 255);
 
-    render_ctx_update();
+    mg_render_ctx_update();
 }
 
 void app_shutdown()
 {
     mg_player_free(player);
     bsp_map_free(bsp_map);
-    render_ctx_free();
+    mg_render_ctx_free();
     mg_audio_manager_free();
     mg_config_free();
 }
