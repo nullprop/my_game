@@ -11,6 +11,8 @@
 #include <gs/gs.h>
 #define GS_IMMEDIATE_DRAW_IMPL
 #include <gs/util/gs_idraw.h>
+#define GS_GFXT_IMPL
+#include <gs/util/gs_gfxt.h>
 
 #include "audio/audio_manager.h"
 #include "bsp/bsp_loader.h"

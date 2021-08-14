@@ -21,11 +21,12 @@ void mg_model_manager_init()
     g_model_manager->models = gs_dyn_array_new(mg_model_t);
 
     // Test
-    _mg_model_manager_load("models/test.obj");
+    _mg_model_manager_load("models/test.gltf");
 }
 
 void mg_model_manager_free()
 {
+#ifdef MG_USE_ASSIMP
     for (size_t i = 0; i < gs_dyn_array_size(g_model_manager->models); i++)
     {
         gs_free(g_model_manager->models[i].data.vertices);
@@ -33,7 +34,7 @@ void mg_model_manager_free()
         g_model_manager->models[i].data.vertices = NULL;
         g_model_manager->models[i].data.indices = NULL;
     }
-
+#endif
     gs_dyn_array_free(g_model_manager->models);
 
     gs_free(g_model_manager);
@@ -54,6 +55,7 @@ mg_model_t *mg_model_manager_find(char *filename)
     return NULL;
 }
 
+#ifdef MG_USE_ASSIMP
 void _mg_model_manager_load(char *filename)
 {
     const struct aiScene *scene = aiImportFile(
@@ -123,3 +125,24 @@ void _mg_model_manager_load(char *filename)
 
     gs_println("Model: Loaded %s, verts: %d, indices: %d", filename, gs_dyn_array_size(vertices), gs_dyn_array_size(indices));
 }
+#else
+void _mg_model_manager_load(char *filename)
+{
+    if (!gs_util_file_exists(filename))
+    {
+        gs_println("ERR: _mg_model_manager_load file not found %s", filename);
+        return;
+    }
+
+    gs_gfxt_mesh_import_options_t options = gs_default_val();
+    gs_gfxt_mesh_t mesh = gs_gfxt_mesh_create_from_file(filename, &options);
+    mg_model_t model = {
+        .filename = filename,
+        .data = mesh,
+    };
+
+    gs_dyn_array_push(g_model_manager->models, model);
+
+    gs_println("Model: Loaded %s", filename);
+}
+#endif

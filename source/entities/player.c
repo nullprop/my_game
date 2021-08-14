@@ -135,9 +135,10 @@ void mg_player_update(mg_player_t *player)
 void mg_player_render(mg_player_t *player)
 {
     // Test model
-    mg_model_t *model = mg_model_manager_find("models/test.obj");
+    mg_model_t *model = mg_model_manager_find("models/test.gltf");
     if (model != NULL)
     {
+#ifdef MG_USE_ASSIMP
         mg_gsi_camera(&g_render_ctx->gsi, &player->viewmodel_camera);
 
         gsi_push_matrix(&g_render_ctx->gsi, GSI_MATRIX_MODELVIEW);
@@ -160,6 +161,7 @@ void mg_player_render(mg_player_t *player)
         }
         gsi_pop_matrix(&g_render_ctx->gsi);
     }
+#endif
 }
 
 void _mg_player_check_floor(mg_player_t *player)
