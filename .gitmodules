@@ -7,3 +7,6 @@
 [submodule "assets"]
 	path = assets
 	url = https://github.com/laurirasanen/my_game_assets
+[submodule "third_party/include/cgltf"]
+	path = third_party/include/cgltf
+	url = https://github.com/jkuhlmann/cgltf
