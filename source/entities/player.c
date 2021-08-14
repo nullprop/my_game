@@ -10,9 +10,12 @@
 #include "player.h"
 #include "../audio/audio_manager.h"
 #include "../bsp/bsp_trace.h"
+#include "../graphics/rendercontext.h"
 #include "../model/model_manager.h"
+#include "../util/camera.h"
 #include "../util/math.h"
-#include "../util/transform.h"
+
+#include <gs/util/gs_idraw.h>
 
 mg_player_t *mg_player_new()
 {
@@ -28,6 +31,13 @@ mg_player_t *mg_player_new()
                 .proj_type = GS_PROJECTION_TYPE_PERSPECTIVE,
             },
         },
+        .viewmodel_camera = {
+            .aspect_ratio = 4 / 3,
+            .far_plane = 200.0f,
+            .fov = 60.0f,
+            .near_plane = 0,
+            .proj_type = GS_PROJECTION_TYPE_PERSPECTIVE,
+        },
         .health = 100,
         .eye_pos = gs_v3(0, 0, MG_PLAYER_HEIGHT - MG_PLAYER_EYE_OFFSET),
         .mins = gs_v3(-MG_PLAYER_HALF_WIDTH, -MG_PLAYER_HALF_WIDTH, 0),
@@ -35,9 +45,6 @@ mg_player_t *mg_player_new()
     };
 
     _mg_player_camera_update(player);
-
-    // Test
-    mg_model_t *model = mg_model_manager_find("models/test.obj");
 
     return player;
 }
@@ -122,6 +129,36 @@ void mg_player_update(mg_player_t *player)
             player->last_valid_pos.z);
         player->transform.position = player->last_valid_pos;
         player->velocity = gs_v3(0, 0, 0);
+    }
+}
+
+void mg_player_render(mg_player_t *player)
+{
+    // Test model
+    mg_model_t *model = mg_model_manager_find("models/test.obj");
+    if (model != NULL)
+    {
+        mg_gsi_camera(&g_render_ctx->gsi, &player->viewmodel_camera);
+
+        gsi_push_matrix(&g_render_ctx->gsi, GSI_MATRIX_MODELVIEW);
+        {
+            gsi_transf(&g_render_ctx->gsi, 0, 10, -5);
+
+            for (size_t i = 0; i < gs_dyn_array_size(model->data.indices) - 2; i += 3)
+            {
+                gsi_trianglevx(
+                    &g_render_ctx->gsi,
+                    model->data.vertices[model->data.indices[i + 0]],
+                    model->data.vertices[model->data.indices[i + 1]],
+                    model->data.vertices[model->data.indices[i + 2]],
+                    gs_v2(0, 0),
+                    gs_v2(0, 0),
+                    gs_v2(0, 0),
+                    GS_COLOR_RED,
+                    GS_GRAPHICS_PRIMITIVE_TRIANGLES);
+            }
+        }
+        gsi_pop_matrix(&g_render_ctx->gsi);
     }
 }
 

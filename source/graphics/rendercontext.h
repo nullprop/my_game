@@ -15,9 +15,9 @@
 
 typedef struct mg_render_ctx
 {
-    gs_command_buffer_t render_ctx_cb;
-    gs_immediate_draw_t render_ctx_gsi;
-    bool32_t render_ctx_use_immediate_mode;
+    gs_command_buffer_t cb;
+    gs_immediate_draw_t gsi;
+    bool32_t use_immediate_mode;
 } mg_render_ctx;
 
 void mg_render_ctx_init();

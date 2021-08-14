@@ -8,6 +8,7 @@
         "player.h": "c",
         "bsp_trace.h": "c",
         "bsp_map.h": "c",
-        "rendercontext.h": "c"
+        "rendercontext.h": "c",
+        "random": "c"
     }
 }

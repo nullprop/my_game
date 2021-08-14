@@ -111,7 +111,7 @@ void _mg_model_manager_load(char *filename)
 
     mg_model_t model = (mg_model_t){
         .filename = filename,
-        .data = &(mg_model_data_t){
+        .data = (mg_model_data_t){
             .vertices = vertices,
             .indices = indices,
         },

@@ -51,8 +51,8 @@ void app_init()
     mg_audio_manager_init();
     mg_model_manager_init();
     mg_render_ctx_init();
-    g_render_ctx->render_ctx_use_immediate_mode = true;
-    gsi = &g_render_ctx->render_ctx_gsi;
+    g_render_ctx->use_immediate_mode = true;
+    gsi = &g_render_ctx->gsi;
 
     // Lock mouse at start by default
     //gs_platform_lock_mouse(gs_platform_main_window(), true);
@@ -133,6 +133,9 @@ void app_update()
         //bsp_map_render_immediate(bsp_map, gsi, &player->camera.cam);
         bsp_map_render(bsp_map, &player->camera.cam);
     }
+
+    // Render viewmodel after map
+    mg_player_render(player);
 
     // draw fps
     char temp[64];
