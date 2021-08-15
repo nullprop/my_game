@@ -13,11 +13,11 @@
 #include <gs/gs.h>
 #include <gs/util/gs_idraw.h>
 
+#include "../graphics/shaders.h"
 #include "../util/math.h"
 #include "../util/string.h"
 #include "bsp_entity.h"
 #include "bsp_patch.h"
-#include "bsp_shaders.h"
 #include "bsp_types.h"
 
 void bsp_map_init(bsp_map_t *map);

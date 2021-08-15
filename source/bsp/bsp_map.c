@@ -87,8 +87,8 @@ void bsp_map_init(bsp_map_t *map)
 
     // Shader source description
     gs_graphics_shader_source_desc_t sources[] = {
-        (gs_graphics_shader_source_desc_t){.type = GS_GRAPHICS_SHADER_STAGE_VERTEX, .source = bsp_shader_vert_src},
-        (gs_graphics_shader_source_desc_t){.type = GS_GRAPHICS_SHADER_STAGE_FRAGMENT, .source = bsp_shader_frag_src},
+        (gs_graphics_shader_source_desc_t){.type = GS_GRAPHICS_SHADER_STAGE_VERTEX, .source = mg_bsp_shader_vert_src},
+        (gs_graphics_shader_source_desc_t){.type = GS_GRAPHICS_SHADER_STAGE_FRAGMENT, .source = mg_bsp_shader_frag_src},
     };
 
     // Create shader

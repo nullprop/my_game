@@ -69,12 +69,14 @@ void app_init()
     if (bsp_map->valid)
     {
         bsp_map_init(bsp_map);
+        g_renderer->bsp = bsp_map;
     }
 
     player = mg_player_new();
     player->map = bsp_map;
     player->camera.cam.fov = g_config->graphics.fov;
 
+    g_renderer->player = player;
     g_renderer->cam = &player->camera.cam;
 
     app_spawn();
@@ -128,45 +130,7 @@ void app_update()
         }
     }
 
-    // Update player
     mg_player_update(player);
-
-    // Update and render map
-    if (bsp_map->valid)
-    {
-        bsp_map_update(bsp_map, player->camera.cam.transform.position);
-        //bsp_map_render_immediate(bsp_map, gsi, &player->camera.cam);
-        bsp_map_render(bsp_map, &player->camera.cam);
-    }
-
-    // draw fps
-    char temp[64];
-    sprintf(temp, "fps: %d", (int)gs_round(1.0f / gs_platform_delta_time()));
-    gsi_camera2D(gsi);
-    gsi_text(gsi, 5, 15, temp, NULL, false, 255, 255, 255, 255);
-
-    // draw map stats
-    sprintf(temp, "map: %s", bsp_map->name);
-    gsi_text(gsi, 5, 30, temp, NULL, false, 255, 255, 255, 255);
-    sprintf(temp, "tris: %zu/%zu", bsp_map->stats.visible_indices / 3, bsp_map->stats.total_indices / 3);
-    gsi_text(gsi, 10, 45, temp, NULL, false, 255, 255, 255, 255);
-    sprintf(temp, "faces: %zu/%zu", bsp_map->stats.visible_faces, bsp_map->stats.total_faces);
-    gsi_text(gsi, 10, 60, temp, NULL, false, 255, 255, 255, 255);
-    sprintf(temp, "patches: %zu/%zu", bsp_map->stats.visible_patches, bsp_map->stats.total_patches);
-    gsi_text(gsi, 10, 75, temp, NULL, false, 255, 255, 255, 255);
-    sprintf(temp, "leaf: %zu, cluster: %d", bsp_map->stats.current_leaf, bsp_map->leaves.data[bsp_map->stats.current_leaf].cluster);
-    gsi_text(gsi, 10, 90, temp, NULL, false, 255, 255, 255, 255);
-
-    // draw player stats
-    gsi_text(gsi, 5, 105, "player:", NULL, false, 255, 255, 255, 255);
-    sprintf(temp, "pos: [%f, %f, %f]", player->transform.position.x, player->transform.position.y, player->transform.position.z);
-    gsi_text(gsi, 10, 120, temp, NULL, false, 255, 255, 255, 255);
-    sprintf(temp, "ang: [%f, %f, %f]", player->yaw, player->camera.pitch, player->camera.roll);
-    gsi_text(gsi, 10, 135, temp, NULL, false, 255, 255, 255, 255);
-    sprintf(temp, "vel: [%f, %f, %f]", player->velocity.x, player->velocity.y, player->velocity.z);
-    gsi_text(gsi, 10, 150, temp, NULL, false, 255, 255, 255, 255);
-    sprintf(temp, "vel_abs: %f, h: %f", gs_vec3_len(player->velocity), gs_vec3_len(gs_v3(player->velocity.x, player->velocity.y, 0)));
-    gsi_text(gsi, 10, 165, temp, NULL, false, 255, 255, 255, 255);
 
     mg_renderer_update();
 }

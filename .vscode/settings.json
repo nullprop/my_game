@@ -15,6 +15,7 @@
         "string_view": "c",
         "ranges": "c",
         "model_manager.h": "c",
-        "regex": "c"
+        "regex": "c",
+        "string.h": "c"
     }
 }

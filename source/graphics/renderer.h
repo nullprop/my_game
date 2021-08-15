@@ -13,6 +13,8 @@
 #include <gs/gs.h>
 #include <gs/util/gs_idraw.h>
 
+#include "../bsp/bsp_map.h"
+#include "../entities/player.h"
 #include "model_manager.h"
 
 typedef struct mg_renderable_t
@@ -27,6 +29,8 @@ typedef struct mg_renderer_t
     gs_immediate_draw_t gsi;
     bool32_t use_immediate_mode;
     gs_camera_t *cam;
+    bsp_map_t *bsp;
+    mg_player_t *player;
     gs_slot_array(mg_renderable_t) renderables;
     gs_handle(gs_graphics_pipeline_t) pipe;
     gs_handle(gs_graphics_shader_t) shader;
@@ -41,6 +45,7 @@ void mg_renderer_remove_renderable(uint32_t renderable_id);
 mg_renderable_t *mg_renderer_get_renderable(uint32_t renderable_id);
 void _mg_renderer_renderable_pass(gs_vec2 fb);
 void _mg_renderer_immediate_pass(gs_vec2 fb);
+void _mg_renderer_draw_debug_overlay();
 
 extern mg_renderer_t *g_renderer;
 
