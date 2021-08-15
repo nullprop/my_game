@@ -58,11 +58,6 @@ SOFTWARE.
 
 All projects contained in `third_party` are copyright of their respective owners.
 
-[assimp](https://github.com/assimp/assimp)
-
-- File(s): `third_party/assimp-5.0.1/*`
-- License: [third_party/assimp-5.0.1/LICENSE](third_party/assimp-5.0.1/LICENSE)
-
 [gunslinger](https://github.com/MrFrenik/gunslinger)
 
 - File(s): `third_party/include/gs/*`

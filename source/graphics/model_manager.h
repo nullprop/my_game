@@ -13,27 +13,11 @@
 #include <gs/gs.h>
 #include <gs/util/gs_gfxt.h>
 
-#include <assimp/scene.h>
-
-#ifdef MG_USE_ASSIMP
-typedef struct mg_model_data_t
-{
-    gs_dyn_array(gs_vec3) vertices;
-    gs_dyn_array(uint16_t) indices;
-} mg_model_data_t;
-
-typedef struct mg_model_t
-{
-    char *filename;
-    mg_model_data_t data;
-} mg_model_t;
-#else
 typedef struct mg_model_t
 {
     char *filename;
     gs_gfxt_mesh_t data;
 } mg_model_t;
-#endif
 
 typedef struct mg_model_manager_t
 {

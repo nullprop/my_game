@@ -14,7 +14,6 @@ flags=(
 # Include directories
 inc=(
 	-I ../third_party/include/             # gs
-	-I ../third_party/assimp-5.0.1/include # assimp
 )
 
 # Source files
@@ -31,10 +30,6 @@ libs=(
 	-lgdi32
 	-lWinmm
 	-lAdvapi32
-	-L ../third_party/assimp-5.0.1/lib/Release
-	-lassimp-vc142-mt
-	-lIrrXML
-	-lzlistaticb
 )
 
 # Build
@@ -45,6 +40,3 @@ cd ..
 
 # Assets
 cp ./assets/* ./bin -r
-
-# Third party binaries
-cp ./third_party/assimp-5.0.1/bin/Release/* ./bin -r

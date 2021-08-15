@@ -139,9 +139,6 @@ void app_update()
         bsp_map_render(bsp_map, &player->camera.cam);
     }
 
-    // Render viewmodel after map
-    mg_player_render(player);
-
     // draw fps
     char temp[64];
     sprintf(temp, "fps: %d", (int)gs_round(1.0f / gs_platform_delta_time()));

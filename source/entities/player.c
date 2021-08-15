@@ -137,38 +137,6 @@ void mg_player_update(mg_player_t *player)
     }
 }
 
-void mg_player_render(mg_player_t *player)
-{
-    // Test model
-    mg_model_t *model = mg_model_manager_find("models/test.gltf");
-    if (model != NULL)
-    {
-#ifdef MG_USE_ASSIMP
-        mg_gsi_camera(&g_render_ctx->gsi, &player->viewmodel_camera);
-
-        gsi_push_matrix(&g_render_ctx->gsi, GSI_MATRIX_MODELVIEW);
-        {
-            gsi_transf(&g_render_ctx->gsi, 0, 10, -5);
-
-            for (size_t i = 0; i < gs_dyn_array_size(model->data.indices) - 2; i += 3)
-            {
-                gsi_trianglevx(
-                    &g_render_ctx->gsi,
-                    model->data.vertices[model->data.indices[i + 0]],
-                    model->data.vertices[model->data.indices[i + 1]],
-                    model->data.vertices[model->data.indices[i + 2]],
-                    gs_v2(0, 0),
-                    gs_v2(0, 0),
-                    gs_v2(0, 0),
-                    GS_COLOR_RED,
-                    GS_GRAPHICS_PRIMITIVE_TRIANGLES);
-            }
-        }
-        gsi_pop_matrix(&g_render_ctx->gsi);
-#endif
-    }
-}
-
 void _mg_player_check_floor(mg_player_t *player)
 {
     bsp_trace_t *trace = &(bsp_trace_t){.map = player->map};

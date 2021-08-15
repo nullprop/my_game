@@ -4,23 +4,3 @@ bin/
 # assets
 assets/*
 !assets/cfg
-
-# third party builds
-*.vcxproj
-*.vcxproj.filters
-*.vcxproj.filters
-*.sln
-*.cmake
-*.pc
-*.dir
-*.vs
-CMakeCache.txt
-CMakeFiles/
-x64/
-bin/
-lib/
-
-# assimp
-third_party/assimp-5.0.1/contrib/zlib/zconf.h
-third_party/assimp-5.0.1/include/assimp/config.h
-third_party/assimp-5.0.1/revision.h
