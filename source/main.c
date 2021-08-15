@@ -18,8 +18,8 @@
 #include "bsp/bsp_loader.h"
 #include "bsp/bsp_map.h"
 #include "entities/player.h"
-#include "graphics/rendercontext.h"
-#include "model/model_manager.h"
+#include "graphics/model_manager.h"
+#include "graphics/renderer.h"
 #include "util/config.h"
 
 bsp_map_t *bsp_map = NULL;
@@ -52,9 +52,9 @@ void app_init()
 
     mg_audio_manager_init();
     mg_model_manager_init();
-    mg_render_ctx_init();
-    g_render_ctx->use_immediate_mode = true;
-    gsi = &g_render_ctx->gsi;
+    mg_renderer_init();
+    g_renderer->use_immediate_mode = true;
+    gsi = &g_renderer->gsi;
 
     // Lock mouse at start by default
     //gs_platform_lock_mouse(gs_platform_main_window(), true);
@@ -74,6 +74,9 @@ void app_init()
     player = mg_player_new();
     player->map = bsp_map;
     player->camera.cam.fov = g_config->graphics.fov;
+
+    g_renderer->cam = &player->camera.cam;
+
     app_spawn();
 }
 
@@ -168,14 +171,14 @@ void app_update()
     sprintf(temp, "vel_abs: %f, h: %f", gs_vec3_len(player->velocity), gs_vec3_len(gs_v3(player->velocity.x, player->velocity.y, 0)));
     gsi_text(gsi, 10, 165, temp, NULL, false, 255, 255, 255, 255);
 
-    mg_render_ctx_update();
+    mg_renderer_update();
 }
 
 void app_shutdown()
 {
     mg_player_free(player);
     bsp_map_free(bsp_map);
-    mg_render_ctx_free();
+    mg_renderer_free();
     mg_audio_manager_free();
     mg_config_free();
 }

@@ -10,8 +10,8 @@
 #include "player.h"
 #include "../audio/audio_manager.h"
 #include "../bsp/bsp_trace.h"
-#include "../graphics/rendercontext.h"
-#include "../model/model_manager.h"
+#include "../graphics/model_manager.h"
+#include "../graphics/renderer.h"
 #include "../util/camera.h"
 #include "../util/math.h"
 
@@ -42,7 +42,11 @@ mg_player_t *mg_player_new()
         .eye_pos = gs_v3(0, 0, MG_PLAYER_HEIGHT - MG_PLAYER_EYE_OFFSET),
         .mins = gs_v3(-MG_PLAYER_HALF_WIDTH, -MG_PLAYER_HALF_WIDTH, 0),
         .maxs = gs_v3(MG_PLAYER_HALF_WIDTH, MG_PLAYER_HALF_WIDTH, MG_PLAYER_HEIGHT),
+        .viewmodel_transform = gs_vqs_default(),
     };
+
+    mg_model_t *model = mg_model_manager_find("models/test.gltf");
+    player->viewmodel_handle = mg_renderer_create_renderable(*model, &player->viewmodel_transform);
 
     _mg_player_camera_update(player);
 
@@ -51,6 +55,7 @@ mg_player_t *mg_player_new()
 
 void mg_player_free(mg_player_t *player)
 {
+    mg_renderer_remove_renderable(player->viewmodel_handle);
     gs_free(player);
     player = NULL;
 }
@@ -160,8 +165,8 @@ void mg_player_render(mg_player_t *player)
             }
         }
         gsi_pop_matrix(&g_render_ctx->gsi);
-    }
 #endif
+    }
 }
 
 void _mg_player_check_floor(mg_player_t *player)
@@ -248,6 +253,14 @@ void _mg_player_camera_update(mg_player_t *player)
             .scale = gs_v3(1.0f, 1.0f, 1.0f),
         },
         &player->transform);
+
+    player->viewmodel_transform = gs_vqs_absolute_transform(
+        &(gs_vqs){
+            .position = gs_v3(0, 10, -10),
+            .rotation = gs_quat_default(),
+            .scale = gs_v3(1.0f, 1.0f, 1.0f),
+        },
+        &player->camera.cam.transform);
 }
 
 void _mg_player_friction(mg_player_t *player, float delta_time)

@@ -61,6 +61,8 @@ typedef struct mg_player_t
     bool32_t grounded;
     float32_t crouch_fraction;
     gs_vec3 last_valid_pos;
+    gs_vqs viewmodel_transform;
+    uint32_t viewmodel_handle;
 } mg_player_t;
 
 mg_player_t *mg_player_new();
