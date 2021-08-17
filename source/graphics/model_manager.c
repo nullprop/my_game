@@ -19,6 +19,8 @@ void mg_model_manager_init()
 
     // Test
     _mg_model_manager_load("models/test.gltf");
+    _mg_model_manager_load("models/Suzanne/glTF/suzanne.gltf");
+    _mg_model_manager_load("models/Sponza/glTF/Sponza.gltf");
 }
 
 void mg_model_manager_free()
@@ -51,11 +53,17 @@ void _mg_model_manager_load(char *filename)
         return;
     }
 
-    gs_gfxt_mesh_import_options_t options = gs_default_val();
-    gs_gfxt_mesh_t mesh = gs_gfxt_mesh_create_from_file(filename, &options);
+    gs_gfxt_mesh_import_options_t options = {
+        .layout = (gs_gfxt_mesh_layout_t[]){
+            {.type = GS_GFXT_MESH_ATTRIBUTE_TYPE_POSITION},
+        },
+        .layout_size = 1 * sizeof(gs_gfxt_mesh_layout_t),
+        .index_buffer_element_size = sizeof(uint32_t),
+    };
+
     mg_model_t model = {
         .filename = filename,
-        .data = mesh,
+        .data = gs_gfxt_mesh_create_from_file(filename, &options),
     };
 
     gs_dyn_array_push(g_model_manager->models, model);

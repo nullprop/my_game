@@ -44,6 +44,14 @@ void mg_renderer_init()
             },
             .stage = GS_GRAPHICS_SHADER_STAGE_VERTEX,
         });
+    g_renderer->u_view = gs_graphics_uniform_create(
+        &(gs_graphics_uniform_desc_t){
+            .name = "u_view",
+            .layout = &(gs_graphics_uniform_layout_desc_t){
+                .type = GS_GRAPHICS_UNIFORM_MAT4,
+            },
+            .stage = GS_GRAPHICS_SHADER_STAGE_VERTEX,
+        });
 
     // Pipeline vertex attributes
     gs_graphics_vertex_attribute_desc_t vattrs[] = {
@@ -83,7 +91,7 @@ void mg_renderer_update()
         bsp_map_update(g_renderer->bsp, g_renderer->cam->transform.position);
         bsp_map_render(g_renderer->bsp, g_renderer->cam);
     }
-    //_mg_renderer_renderable_pass(fb);
+    _mg_renderer_renderable_pass(fb);
     _mg_renderer_immediate_pass(fb);
 
     // Submit command buffer (syncs to GPU, MUST be done on main thread where you have your GPU context created)
@@ -101,6 +109,7 @@ uint32_t mg_renderer_create_renderable(mg_model_t model, gs_vqs *transform)
     mg_renderable_t renderable = {
         .model = model,
         .transform = transform,
+        .u_view = gs_vqs_to_mat4(transform),
     };
 
     return gs_slot_array_insert(g_renderer->renderables, renderable);
@@ -139,6 +148,7 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
             .data = &u_proj,
             .binding = 0, // VERTEX
         },
+        {0}, // u_view
     };
 
     // Begin render
@@ -153,6 +163,14 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
         gs_slot_array_iter_advance(g_renderer->renderables, it))
     {
         mg_renderable_t *renderable = gs_slot_array_iter_getp(g_renderer->renderables, it);
+
+        // View matrix
+        renderable->u_view = gs_vqs_to_mat4(renderable->transform);
+        uniforms[1] = (gs_graphics_bind_uniform_desc_t){
+            .uniform = g_renderer->u_view,
+            .data = &renderable->u_view,
+            .binding = 1, // VERTEX
+        };
 
         // Draw all primitives in renderable
         for (uint32_t i = 0; i < gs_dyn_array_size(renderable->model.data.primitives); i++)

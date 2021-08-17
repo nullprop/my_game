@@ -20,6 +20,7 @@
 typedef struct mg_renderable_t
 {
     gs_vqs *transform;
+    gs_mat4 u_view;
     mg_model_t model;
 } mg_renderable_t;
 
@@ -35,6 +36,7 @@ typedef struct mg_renderer_t
     gs_handle(gs_graphics_pipeline_t) pipe;
     gs_handle(gs_graphics_shader_t) shader;
     gs_handle(gs_graphics_uniform_t) u_proj;
+    gs_handle(gs_graphics_uniform_t) u_view;
 } mg_renderer_t;
 
 void mg_renderer_init();
