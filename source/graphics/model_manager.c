@@ -70,7 +70,7 @@ void _mg_model_manager_load(char *filename, char *texture)
 
     mg_model_t model = {
         .filename = filename,
-        .data = gs_gfxt_mesh_create_from_file(filename, &options),
+        .data = gs_gfxt_mesh_load_from_file(filename, &options),
         .texture = NULL,
     };
 
