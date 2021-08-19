@@ -37,6 +37,8 @@ typedef struct mg_renderer_t
     gs_handle(gs_graphics_shader_t) shader;
     gs_handle(gs_graphics_uniform_t) u_proj;
     gs_handle(gs_graphics_uniform_t) u_view;
+    gs_handle(gs_graphics_uniform_t) u_tex;
+    gs_handle(gs_graphics_texture_t) missing_texture;
 } mg_renderer_t;
 
 void mg_renderer_init();

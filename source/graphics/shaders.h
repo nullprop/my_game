@@ -15,21 +15,26 @@
 static const char *mg_shader_vert_src =
     GL_VERSION_STR
     "layout(location = 0) in vec3 a_pos;\n"
+    "layout(location = 1) in vec2 a_tex_coord;\n"
     "uniform mat4 u_proj;\n"
     "uniform mat4 u_view;\n"
+    "out vec2 tex_coord;\n"
     "\n"
     "void main()\n"
     "{\n"
+    "   tex_coord = a_tex_coord;\n"
     "   gl_Position = u_proj * u_view * vec4(a_pos, 1.0);\n"
     "}";
 
 static const char *mg_shader_frag_src =
     GL_VERSION_STR
+    "in vec2 tex_coord;\n"
+    "uniform sampler2D u_tex;\n"
     "out vec4 frag_color;\n"
     "\n"
     "void main()\n"
     "{\n"
-    "   frag_color = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+    "   frag_color = texture(u_tex, tex_coord);\n"
     "}";
 
 static const char *mg_bsp_shader_vert_src =
@@ -39,9 +44,9 @@ static const char *mg_bsp_shader_vert_src =
     "layout(location = 2) in vec2 a_lm_coord;\n"
     "layout(location = 3) in vec3 a_normal;\n"
     "layout(location = 4) in vec4 a_color;\n"
+    "uniform mat4 u_proj;\n"
     "out vec2 tex_coord;\n"
     "out vec2 lm_coord;\n"
-    "uniform mat4 u_proj;\n"
     "\n"
     "void main()\n"
     "{\n"
@@ -54,9 +59,9 @@ static const char *mg_bsp_shader_frag_src =
     GL_VERSION_STR
     "in vec2 tex_coord;\n"
     "in vec2 lm_coord;\n"
-    "out vec4 frag_color;\n"
     "uniform sampler2D u_tex;\n"
     "uniform sampler2D u_lm;\n"
+    "out vec4 frag_color;\n"
     "\n"
     "void main()\n"
     "{\n"

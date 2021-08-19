@@ -52,10 +52,19 @@ void mg_renderer_init()
             },
             .stage = GS_GRAPHICS_SHADER_STAGE_VERTEX,
         });
+    g_renderer->u_tex = gs_graphics_uniform_create(
+        &(gs_graphics_uniform_desc_t){
+            .name = "u_tex",
+            .layout = &(gs_graphics_uniform_layout_desc_t){
+                .type = GS_GRAPHICS_UNIFORM_SAMPLER2D,
+            },
+            .stage = GS_GRAPHICS_SHADER_STAGE_FRAGMENT,
+        });
 
     // Pipeline vertex attributes
     gs_graphics_vertex_attribute_desc_t vattrs[] = {
         (gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT3, .name = "a_pos"},
+        (gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT2, .name = "a_tex_coord"},
     };
 
     // Create pipeline
@@ -78,6 +87,34 @@ void mg_renderer_init()
                 .size = sizeof(vattrs),
             },
         });
+
+#define MISSING_TEX_SIZE 10
+    // Generate black and pink grid for missing texture
+    gs_color_t c0 = gs_color(255, 0, 220, 255);
+    gs_color_t c1 = gs_color(0, 0, 0, 255);
+    gs_color_t pixels[MISSING_TEX_SIZE * MISSING_TEX_SIZE] = gs_default_val();
+    for (uint32_t r = 0; r < MISSING_TEX_SIZE; ++r)
+    {
+        for (uint32_t c = 0; c < MISSING_TEX_SIZE; ++c)
+        {
+            const bool re = (r % 2) == 0;
+            const bool ce = (c % 2) == 0;
+            uint32_t idx = r * MISSING_TEX_SIZE + c;
+            // clang-format off
+            pixels[idx] = (re && ce) ? c0 : (re) ? c1 : (ce) ? c1 : c0;
+            // clang-format on
+        }
+    }
+
+    // Create missing texture
+    g_renderer->missing_texture = gs_graphics_texture_create(
+        &(gs_graphics_texture_desc_t){
+            .width = MISSING_TEX_SIZE,
+            .height = MISSING_TEX_SIZE,
+            .format = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
+            .min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+            .mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+            .data = pixels});
 }
 
 void mg_renderer_update()
@@ -102,6 +139,9 @@ void mg_renderer_free()
 {
     gs_immediate_draw_free(&g_renderer->gsi);
     gs_command_buffer_free(&g_renderer->cb);
+
+    gs_free(g_renderer);
+    g_renderer = NULL;
 }
 
 uint32_t mg_renderer_create_renderable(mg_model_t model, gs_vqs *transform)
@@ -149,6 +189,7 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
             .binding = 0, // VERTEX
         },
         {0}, // u_view
+        {0}, // u_tex
     };
 
     // Begin render
@@ -170,6 +211,13 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
             .uniform = g_renderer->u_view,
             .data = &renderable->u_view,
             .binding = 1, // VERTEX
+        };
+
+        // Texture
+        uniforms[2] = (gs_graphics_bind_uniform_desc_t){
+            .uniform = g_renderer->u_tex,
+            .data = (renderable->model.texture != NULL ? &renderable->model.texture->hndl : &g_renderer->missing_texture),
+            .binding = 0, // FRAGMENT
         };
 
         // Draw all primitives in renderable

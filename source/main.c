@@ -43,7 +43,14 @@ void on_window_resize(GLFWwindow *window, int width, int height)
 {
     if (player != NULL)
     {
-        player->camera.cam.aspect_ratio = width / height;
+        if (width == 0 || height == 0)
+        {
+            player->camera.cam.aspect_ratio = 1;
+        }
+        else
+        {
+            player->camera.cam.aspect_ratio = width / height;
+        }
     }
 }
 
