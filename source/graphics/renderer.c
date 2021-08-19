@@ -20,20 +20,10 @@ void mg_renderer_init()
     g_renderer->cb = gs_command_buffer_new();
     g_renderer->gsi = gs_immediate_draw_new();
     g_renderer->renderables = gs_slot_array_new(mg_renderable_t);
+    g_renderer->shaders = gs_dyn_array_new(gs_handle_gs_graphics_shader_t);
 
-    // Shader source description
-    gs_graphics_shader_source_desc_t sources[] = {
-        (gs_graphics_shader_source_desc_t){.type = GS_GRAPHICS_SHADER_STAGE_VERTEX, .source = mg_shader_vert_src},
-        (gs_graphics_shader_source_desc_t){.type = GS_GRAPHICS_SHADER_STAGE_FRAGMENT, .source = mg_shader_frag_src},
-    };
-
-    // Create shader
-    g_renderer->shader = gs_graphics_shader_create(
-        &(gs_graphics_shader_desc_t){
-            .sources = sources,
-            .size = sizeof(sources),
-            .name = "model",
-        });
+    _mg_renderer_load_shader("basic");
+    _mg_renderer_load_shader("basic_unlit");
 
     // Create uniforms
     g_renderer->u_proj = gs_graphics_uniform_create(
@@ -52,6 +42,26 @@ void mg_renderer_init()
             },
             .stage = GS_GRAPHICS_SHADER_STAGE_VERTEX,
         });
+    g_renderer->u_light = gs_graphics_uniform_create(
+        &(gs_graphics_uniform_desc_t){
+            .name = "u_light",
+            .layout_size = 3 * sizeof(gs_graphics_uniform_layout_desc_t),
+            .layout = &(gs_graphics_uniform_layout_desc_t[]){
+                {
+                    .type = GS_GRAPHICS_UNIFORM_VEC3,
+                    .fname = ".ambient",
+                },
+                {
+                    .type = GS_GRAPHICS_UNIFORM_VEC3,
+                    .fname = ".directional",
+                },
+                {
+                    .type = GS_GRAPHICS_UNIFORM_VEC3,
+                    .fname = ".direction",
+                },
+            },
+            .stage = GS_GRAPHICS_SHADER_STAGE_FRAGMENT,
+        });
     g_renderer->u_tex = gs_graphics_uniform_create(
         &(gs_graphics_uniform_desc_t){
             .name = "u_tex",
@@ -64,14 +74,15 @@ void mg_renderer_init()
     // Pipeline vertex attributes
     gs_graphics_vertex_attribute_desc_t vattrs[] = {
         (gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT3, .name = "a_pos"},
-        (gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT2, .name = "a_tex_coord"},
+        (gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT3, .name = "a_normal"},
+        (gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT2, .name = "a_texcoord"},
     };
 
     // Create pipeline
     g_renderer->pipe = gs_graphics_pipeline_create(
         &(gs_graphics_pipeline_desc_t){
             .raster = {
-                .shader = g_renderer->shader,
+                .shader = g_renderer->shaders[0],
                 .index_buffer_element_size = sizeof(uint32_t),
             },
             .blend = {
@@ -188,8 +199,9 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
             .data = &u_proj,
             .binding = 0, // VERTEX
         },
-        {0}, // u_view
-        {0}, // u_tex
+        {0}, // u_view, VERTEX
+        {0}, // u_light, FRAGMENT
+        {0}, // u_tex, FRAGMENT
     };
 
     // Begin render
@@ -213,11 +225,23 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
             .binding = 1, // VERTEX
         };
 
-        // Texture
+        // Light
+        mg_renderer_light_t light = {
+            .ambient = gs_v3(0.1f, 0.1f, 0.2f),
+            .directional = gs_v3(0.9f, 0.9f, 1.0f),
+            .direction = gs_vec3_norm(gs_v3(0.3f, 0.1f, -0.6f)),
+        };
         uniforms[2] = (gs_graphics_bind_uniform_desc_t){
+            .uniform = g_renderer->u_light,
+            .data = &light,
+            .binding = 0, // FRAGMENT
+        };
+
+        // Texture
+        uniforms[3] = (gs_graphics_bind_uniform_desc_t){
             .uniform = g_renderer->u_tex,
             .data = (renderable->model.texture != NULL ? &renderable->model.texture->hndl : &g_renderer->missing_texture),
-            .binding = 0, // FRAGMENT
+            .binding = 1, // FRAGMENT
         };
 
         // Draw all primitives in renderable
@@ -299,4 +323,68 @@ void _mg_renderer_draw_debug_overlay()
         sprintf(temp, "vel_abs: %f, h: %f", gs_vec3_len(g_renderer->player->velocity), gs_vec3_len(gs_v3(g_renderer->player->velocity.x, g_renderer->player->velocity.y, 0)));
         gsi_text(&g_renderer->gsi, 10, 165, temp, NULL, false, 255, 255, 255, 255);
     }
+}
+
+void _mg_renderer_load_shader(char *name)
+{
+    // Get paths to shaders
+    char *base_path = "shaders/";
+    char *vert_ext = "_vs.glsl";
+    char *frag_ext = "_fs.glsl";
+
+    size_t sz = strlen(base_path) + strlen(name) + strlen(vert_ext) + 1;
+    char *vert = gs_malloc(sz);
+    memset(vert, 0, sz);
+    strcat(vert, base_path);
+    strcat(vert, name);
+    strcat(vert, vert_ext);
+
+    sz = strlen(base_path) + strlen(name) + strlen(frag_ext) + 1;
+    char *frag = gs_malloc(sz);
+    memset(frag, 0, sz);
+    strcat(frag, base_path);
+    strcat(frag, name);
+    strcat(frag, frag_ext);
+
+    // Sanity check
+    if (!gs_util_file_exists(vert))
+    {
+        gs_println("ERR: _mg_renderer_load_shader no shader %s", vert);
+        gs_free(vert);
+        gs_free(frag);
+        return;
+    }
+    if (!gs_util_file_exists(frag))
+    {
+        gs_println("ERR: _mg_renderer_load_shader no shader %s", frag);
+        gs_free(vert);
+        gs_free(frag);
+        return;
+    }
+
+    // Read from files
+    char *vert_src = gs_platform_read_file_contents(vert, "r", &sz);
+    gs_println("_mg_renderer_load_shader read %zu bytes from %s", sz, vert);
+
+    char *frag_src = gs_platform_read_file_contents(frag, "r", &sz);
+    gs_println("_mg_renderer_load_shader read %zu bytes from %s", sz, frag);
+
+    // Create description
+    gs_graphics_shader_source_desc_t sources[] = {
+        (gs_graphics_shader_source_desc_t){.type = GS_GRAPHICS_SHADER_STAGE_VERTEX, .source = vert_src},
+        (gs_graphics_shader_source_desc_t){.type = GS_GRAPHICS_SHADER_STAGE_FRAGMENT, .source = frag_src},
+    };
+
+    // Create shader
+    gs_handle_gs_graphics_shader_t shader = gs_graphics_shader_create(
+        &(gs_graphics_shader_desc_t){
+            .sources = sources,
+            .size = sizeof(sources),
+            .name = name,
+        });
+
+    gs_dyn_array_push(g_renderer->shaders, shader);
+
+    gs_free(vert);
+    gs_free(frag);
 }

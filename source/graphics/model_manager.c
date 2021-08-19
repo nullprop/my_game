@@ -18,9 +18,9 @@ void mg_model_manager_init()
     g_model_manager->models = gs_dyn_array_new(mg_model_t);
 
     // Test
-    _mg_model_manager_load("models/test.gltf", NULL);
-    _mg_model_manager_load("models/Suzanne/glTF/suzanne.gltf", "models/Suzanne/glTF/Suzanne_BaseColor.png");
-    _mg_model_manager_load("models/Sponza/glTF/Sponza.gltf", NULL);
+    //_mg_model_manager_load("models/test.gltf", "basic", NULL);
+    _mg_model_manager_load("models/Suzanne/glTF/suzanne.gltf", "basic", "models/Suzanne/glTF/Suzanne_BaseColor.png");
+    //_mg_model_manager_load("models/Sponza/glTF/Sponza.gltf", "basic", NULL);
 }
 
 void mg_model_manager_free()
@@ -51,7 +51,7 @@ mg_model_t *mg_model_manager_find(char *filename)
     return NULL;
 }
 
-void _mg_model_manager_load(char *filename, char *texture)
+void _mg_model_manager_load(char *filename, char *shader, char *texture)
 {
     if (!gs_util_file_exists(filename))
     {
@@ -62,14 +62,16 @@ void _mg_model_manager_load(char *filename, char *texture)
     gs_gfxt_mesh_import_options_t options = {
         .layout = (gs_gfxt_mesh_layout_t[]){
             {.type = GS_GFXT_MESH_ATTRIBUTE_TYPE_POSITION},
+            {.type = GS_GFXT_MESH_ATTRIBUTE_TYPE_NORMAL},
             {.type = GS_GFXT_MESH_ATTRIBUTE_TYPE_TEXCOORD},
         },
-        .layout_size = 2 * sizeof(gs_gfxt_mesh_layout_t),
+        .layout_size = 3 * sizeof(gs_gfxt_mesh_layout_t),
         .index_buffer_element_size = sizeof(uint32_t),
     };
 
     mg_model_t model = {
         .filename = filename,
+        .shader = shader,
         .data = gs_gfxt_mesh_load_from_file(filename, &options),
         .texture = NULL,
     };

@@ -25,7 +25,7 @@
 bsp_map_t *bsp_map = NULL;
 mg_player_t *player = NULL;
 gs_immediate_draw_t *gsi = NULL;
-gs_vqs testmodel_transform;
+gs_vqs *testmodel_transform;
 
 void app_spawn()
 {
@@ -88,17 +88,19 @@ void app_init()
     g_renderer->cam = &player->camera.cam;
 
     mg_model_t *testmodel = mg_model_manager_find("models/Suzanne/glTF/suzanne.gltf");
-    testmodel_transform = gs_vqs_ctor(
-        gs_v3(660.0f, 2078.0f, 50.0f),
-        gs_quat_from_euler(0.0f, 0.0f, 90.0f),
-        gs_v3(50.0f, 50.0f, 50.0f));
-    mg_renderer_create_renderable(*testmodel, &testmodel_transform);
+    testmodel_transform = gs_malloc_init(gs_vqs);
+    testmodel_transform->position = gs_v3(660.0f, 2078.0f, 50.0f);
+    testmodel_transform->rotation = gs_quat_from_euler(0.0f, 0.0f, 90.0f);
+    testmodel_transform->scale = gs_v3(50.0f, 50.0f, 50.0f);
+    mg_renderer_create_renderable(*testmodel, testmodel_transform);
 
     app_spawn();
 }
 
 void app_update()
 {
+    testmodel_transform->rotation = gs_quat_from_euler(20.0f * gs_platform_elapsed_time() / 1000.0f, 0.0f, 90.0f);
+
     if (gs_platform_key_pressed(GS_KEYCODE_ESC))
         gs_engine_quit();
 
@@ -152,6 +154,7 @@ void app_update()
 
 void app_shutdown()
 {
+    gs_free(testmodel_transform);
     mg_player_free(player);
     bsp_map_free(bsp_map);
     mg_renderer_free();

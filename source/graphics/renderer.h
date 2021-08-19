@@ -17,6 +17,13 @@
 #include "../entities/player.h"
 #include "model_manager.h"
 
+typedef struct mg_renderer_light_t
+{
+    gs_vec3 ambient;
+    gs_vec3 directional;
+    gs_vec3 direction;
+} mg_renderer_light_t;
+
 typedef struct mg_renderable_t
 {
     gs_vqs *transform;
@@ -34,9 +41,10 @@ typedef struct mg_renderer_t
     mg_player_t *player;
     gs_slot_array(mg_renderable_t) renderables;
     gs_handle(gs_graphics_pipeline_t) pipe;
-    gs_handle(gs_graphics_shader_t) shader;
+    gs_dyn_array(gs_handle(gs_graphics_shader_t)) shaders;
     gs_handle(gs_graphics_uniform_t) u_proj;
     gs_handle(gs_graphics_uniform_t) u_view;
+    gs_handle(gs_graphics_uniform_t) u_light;
     gs_handle(gs_graphics_uniform_t) u_tex;
     gs_handle(gs_graphics_texture_t) missing_texture;
 } mg_renderer_t;
@@ -50,6 +58,7 @@ mg_renderable_t *mg_renderer_get_renderable(uint32_t renderable_id);
 void _mg_renderer_renderable_pass(gs_vec2 fb);
 void _mg_renderer_immediate_pass(gs_vec2 fb);
 void _mg_renderer_draw_debug_overlay();
+void _mg_renderer_load_shader(char *name);
 
 extern mg_renderer_t *g_renderer;
 
