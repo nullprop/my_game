@@ -42,6 +42,7 @@ typedef struct mg_renderer_t
     gs_slot_array(mg_renderable_t) renderables;
     gs_handle(gs_graphics_pipeline_t) pipe;
     gs_dyn_array(gs_handle(gs_graphics_shader_t)) shaders;
+    gs_dyn_array(char *) shader_names;
     gs_handle(gs_graphics_uniform_t) u_proj;
     gs_handle(gs_graphics_uniform_t) u_view;
     gs_handle(gs_graphics_uniform_t) u_light;
@@ -55,6 +56,7 @@ void mg_renderer_free();
 uint32_t mg_renderer_create_renderable(mg_model_t model, gs_vqs *transform);
 void mg_renderer_remove_renderable(uint32_t renderable_id);
 mg_renderable_t *mg_renderer_get_renderable(uint32_t renderable_id);
+gs_handle(gs_graphics_shader_t) mg_renderer_get_shader(char *name);
 void _mg_renderer_renderable_pass(gs_vec2 fb);
 void _mg_renderer_immediate_pass(gs_vec2 fb);
 void _mg_renderer_draw_debug_overlay();

@@ -11,13 +11,13 @@
 =================================================================*/
 
 #include "bsp_map.h"
+#include "../graphics/renderer.h"
 #include "../util/camera.h"
 
 static gs_command_buffer_t bsp_graphics_cb = {0};
 static gs_handle(gs_graphics_vertex_buffer_t) bsp_graphics_vbo = {0};
 static gs_handle(gs_graphics_index_buffer_t) bsp_graphics_ibo = {0};
 static gs_handle(gs_graphics_pipeline_t) bsp_graphics_pipe = {0};
-static gs_handle(gs_graphics_shader_t) bsp_graphics_shader = {0};
 static gs_handle(gs_graphics_uniform_t) bsp_graphics_u_proj = {0};
 static gs_handle(gs_graphics_uniform_t) bsp_graphics_u_tex = {0};
 static gs_handle(gs_graphics_uniform_t) bsp_graphics_u_lm = {0};
@@ -85,20 +85,6 @@ void bsp_map_init(bsp_map_t *map)
     // Index & Vertex buffers
     _bsp_map_create_buffers(map);
 
-    // Shader source description
-    gs_graphics_shader_source_desc_t sources[] = {
-        (gs_graphics_shader_source_desc_t){.type = GS_GRAPHICS_SHADER_STAGE_VERTEX, .source = mg_bsp_shader_vert_src},
-        (gs_graphics_shader_source_desc_t){.type = GS_GRAPHICS_SHADER_STAGE_FRAGMENT, .source = mg_bsp_shader_frag_src},
-    };
-
-    // Create shader
-    bsp_graphics_shader = gs_graphics_shader_create(
-        &(gs_graphics_shader_desc_t){
-            .sources = sources,
-            .size = sizeof(sources),
-            .name = "bsp",
-        });
-
     // Create uniforms
     bsp_graphics_u_proj = gs_graphics_uniform_create(
         &(gs_graphics_uniform_desc_t){
@@ -137,7 +123,7 @@ void bsp_map_init(bsp_map_t *map)
     bsp_graphics_pipe = gs_graphics_pipeline_create(
         &(gs_graphics_pipeline_desc_t){
             .raster = {
-                .shader = bsp_graphics_shader,
+                .shader = mg_renderer_get_shader("bsp"),
                 .index_buffer_element_size = sizeof(uint32_t),
             },
             .blend = {

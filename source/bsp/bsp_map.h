@@ -13,7 +13,6 @@
 #include <gs/gs.h>
 #include <gs/util/gs_idraw.h>
 
-#include "../graphics/shaders.h"
 #include "../util/math.h"
 #include "../util/string.h"
 #include "bsp_entity.h"

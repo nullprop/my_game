@@ -9,7 +9,6 @@
 
 #include "renderer.h"
 #include "../util/camera.h"
-#include "shaders.h"
 
 mg_renderer_t *g_renderer;
 
@@ -21,9 +20,11 @@ void mg_renderer_init()
     g_renderer->gsi = gs_immediate_draw_new();
     g_renderer->renderables = gs_slot_array_new(mg_renderable_t);
     g_renderer->shaders = gs_dyn_array_new(gs_handle_gs_graphics_shader_t);
+    g_renderer->shader_names = gs_dyn_array_new(char *);
 
     _mg_renderer_load_shader("basic");
     _mg_renderer_load_shader("basic_unlit");
+    _mg_renderer_load_shader("bsp");
 
     // Create uniforms
     g_renderer->u_proj = gs_graphics_uniform_create(
@@ -82,7 +83,7 @@ void mg_renderer_init()
     g_renderer->pipe = gs_graphics_pipeline_create(
         &(gs_graphics_pipeline_desc_t){
             .raster = {
-                .shader = g_renderer->shaders[0],
+                .shader = mg_renderer_get_shader("basic"),
                 .index_buffer_element_size = sizeof(uint32_t),
             },
             .blend = {
@@ -148,6 +149,12 @@ void mg_renderer_update()
 
 void mg_renderer_free()
 {
+    for (size_t i = 0; i < gs_dyn_array_size(g_renderer->shader_names); i++)
+    {
+        gs_free(g_renderer->shader_names[i]);
+        g_renderer->shader_names[i] = NULL;
+    }
+
     gs_immediate_draw_free(&g_renderer->gsi);
     gs_command_buffer_free(&g_renderer->cb);
 
@@ -180,6 +187,21 @@ mg_renderable_t *mg_renderer_get_renderable(uint32_t renderable_id)
     }
 
     return gs_slot_array_getp(g_renderer->renderables, renderable_id);
+}
+
+gs_handle(gs_graphics_shader_t) mg_renderer_get_shader(char *name)
+{
+    for (size_t i = 0; i < gs_dyn_array_size(g_renderer->shader_names); i++)
+    {
+        if (strcmp(name, g_renderer->shader_names[i]) == 0)
+        {
+            return g_renderer->shaders[i];
+        }
+    }
+
+    gs_println("ERR: mg_renderer_get_shader no shader %s", name);
+
+    return gs_handle_invalid(gs_graphics_shader_t);
 }
 
 void _mg_renderer_renderable_pass(gs_vec2 fb)
@@ -229,7 +251,7 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
         mg_renderer_light_t light = {
             .ambient = gs_v3(0.1f, 0.1f, 0.2f),
             .directional = gs_v3(0.9f, 0.9f, 1.0f),
-            .direction = gs_vec3_norm(gs_v3(0.3f, 0.1f, -0.6f)),
+            .direction = gs_vec3_norm(gs_v3(-0.3f, 0.1f, -0.6f)),
         };
         uniforms[2] = (gs_graphics_bind_uniform_desc_t){
             .uniform = g_renderer->u_light,
@@ -384,6 +406,10 @@ void _mg_renderer_load_shader(char *name)
         });
 
     gs_dyn_array_push(g_renderer->shaders, shader);
+    // make a persistent copy
+    char *name_cpy = gs_malloc(strlen(name) + 1);
+    memcpy(name_cpy, name, strlen(name) + 1);
+    gs_dyn_array_push(g_renderer->shader_names, name_cpy);
 
     gs_free(vert);
     gs_free(frag);
