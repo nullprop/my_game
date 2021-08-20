@@ -248,10 +248,26 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
         };
 
         // Light
+        bsp_lightvol_lump_t lump = bsp_get_lightvol(g_renderer->bsp, renderable->transform->position);
+        float phi = (float)lump.dir[0] * 360.0f / 255.0f - 90.0f;
+        float theta = (float)lump.dir[1] * 360.0f / 255.0f + 0.0f;
+        gs_vec3 ambient = gs_v3(
+            (float)lump.ambient[0] / 255.0f,
+            (float)lump.ambient[1] / 255.0f,
+            (float)lump.ambient[2] / 255.0f);
+        gs_vec3 directional = gs_v3(
+            (float)lump.directional[0] / 255.0f,
+            (float)lump.directional[1] / 255.0f,
+            (float)lump.directional[2] / 255.0f);
         mg_renderer_light_t light = {
-            .ambient = gs_v3(0.1f, 0.1f, 0.2f),
-            .directional = gs_v3(0.9f, 0.9f, 1.0f),
-            .direction = gs_vec3_norm(gs_v3(-0.3f, 0.1f, -0.6f)),
+            .ambient = ambient,
+            .directional = directional,
+            .direction = gs_vec3_norm(
+                gs_quat_rotate(
+                    gs_quat_add(
+                        gs_quat_angle_axis(gs_deg2rad(phi), MG_AXIS_RIGHT),
+                        gs_quat_angle_axis(gs_deg2rad(theta), MG_AXIS_UP)),
+                    MG_AXIS_FORWARD)),
         };
         uniforms[2] = (gs_graphics_bind_uniform_desc_t){
             .uniform = g_renderer->u_light,

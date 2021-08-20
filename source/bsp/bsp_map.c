@@ -863,3 +863,39 @@ bool32_t _bsp_cluster_visible(bsp_map_t *map, int32_t view_cluster, int32_t test
     int32_t idx = view_cluster * map->visdata.size_vecs + (test_cluster >> 3);
     return (map->visdata.vecs[idx] & (1 << (test_cluster & 7))) != 0;
 }
+
+bsp_lightvol_lump_t bsp_get_lightvol(bsp_map_t *map, gs_vec3 position)
+{
+    // Light volumes are 64x64x128 units in size.
+    // This is how many volumes there are per axis.
+    uint32_t num_x = floor(map->models.data[0].maxs.x / 64) - ceil(map->models.data[0].mins.x / 64) + 1;
+    uint32_t num_y = floor(map->models.data[0].maxs.y / 64) - ceil(map->models.data[0].mins.y / 64) + 1;
+    uint32_t num_z = floor(map->models.data[0].maxs.z / 128) - ceil(map->models.data[0].mins.z / 128) + 1;
+
+    // Get our position in the map
+    gs_vec3 map_size = gs_vec3_sub(map->models.data[0].maxs, map->models.data[0].mins);
+    gs_vec3 position_fraction = gs_vec3_div(gs_vec3_sub(position, map->models.data[0].mins), map_size);
+
+    // Sanity check
+    for (size_t i = 0; i < 3; i++)
+    {
+        if (position_fraction.xyz[i] < 0.0f)
+        {
+            position_fraction.xyz[i] = 0.0f;
+        }
+        else if (position_fraction.xyz[i] > 1.0f)
+        {
+            position_fraction.xyz[i] = 1.0f;
+        }
+    }
+
+    uint32_t position_index =
+        (uint32_t)floor(num_x * position_fraction.x) +
+        (uint32_t)floor(num_y * position_fraction.y) * num_x +
+        (uint32_t)floor(num_z * position_fraction.z) * num_x * num_y;
+
+    gs_assert(position_index < map->lightvols.count);
+
+    // TODO: sample neighboring volumes and interpolate
+    return map->lightvols.data[position_index];
+}

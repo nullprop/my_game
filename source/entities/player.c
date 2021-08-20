@@ -224,9 +224,9 @@ void _mg_player_camera_update(mg_player_t *player)
 
     player->viewmodel_transform = gs_vqs_absolute_transform(
         &(gs_vqs){
-            .position = gs_v3(0, 10, -10),
-            .rotation = gs_quat_default(),
-            .scale = gs_v3(1.0f, 1.0f, 1.0f),
+            .position = gs_v3(0, 15, -10),
+            .rotation = gs_quat_angle_axis(gs_deg2rad(90), MG_AXIS_RIGHT),
+            .scale = gs_v3(4.0f, 4.0f, 4.0f),
         },
         &player->camera.cam.transform);
 }

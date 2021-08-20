@@ -235,9 +235,9 @@ typedef struct bsp_lightmap_lump_t
 
 typedef struct bsp_lightvol_lump_t
 {
-    char ambient[3];
-    char directional[3];
-    char dir[2];
+    uint8_t ambient[3];
+    uint8_t directional[3];
+    uint8_t dir[2];
 } bsp_lightvol_lump_t;
 
 typedef struct bsp_visdata_lump_t
