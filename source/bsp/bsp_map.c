@@ -864,7 +864,7 @@ bool32_t _bsp_cluster_visible(bsp_map_t *map, int32_t view_cluster, int32_t test
     return (map->visdata.vecs[idx] & (1 << (test_cluster & 7))) != 0;
 }
 
-bsp_lightvol_lump_t bsp_get_lightvol(bsp_map_t *map, gs_vec3 position)
+bsp_lightvol_lump_t bsp_get_lightvol(bsp_map_t *map, gs_vec3 position, gs_vec3 *center)
 {
     // Light volumes are 64x64x128 units in size.
     // This is how many volumes there are per axis.
@@ -876,26 +876,119 @@ bsp_lightvol_lump_t bsp_get_lightvol(bsp_map_t *map, gs_vec3 position)
     gs_vec3 map_size = gs_vec3_sub(map->models.data[0].maxs, map->models.data[0].mins);
     gs_vec3 position_fraction = gs_vec3_div(gs_vec3_sub(position, map->models.data[0].mins), map_size);
 
-    // Sanity check
-    for (size_t i = 0; i < 3; i++)
+    if (
+        position_fraction.x < 0 ||
+        position_fraction.y < 0 ||
+        position_fraction.z < 0 ||
+        position_fraction.x > 1.0f ||
+        position_fraction.y > 1.0f ||
+        position_fraction.z > 1.0f)
     {
-        if (position_fraction.xyz[i] < 0.0f)
+        return (bsp_lightvol_lump_t){0};
+    }
+
+    uint32_t pos_x = (uint32_t)(num_x * position_fraction.x);
+    uint32_t pos_y = (uint32_t)(num_y * position_fraction.y);
+    uint32_t pos_z = (uint32_t)(num_z * position_fraction.z);
+    uint32_t position_index =
+        pos_x +
+        pos_y * num_x +
+        pos_z * num_x * num_y;
+
+    if (center != NULL)
+    {
+        *center = gs_v3(pos_x * 64.0f, pos_y * 64.0f, pos_z * 128.0f);
+    }
+
+    return map->lightvols.data[position_index];
+}
+
+mg_renderer_light_t bsp_get_lightvol_interp(bsp_map_t *map, gs_vec3 position)
+{
+    // Get our position in the map
+    gs_vec3 position_relative = gs_vec3_sub(position, map->models.data[0].mins);
+
+    mg_renderer_light_t light = {0};
+    bsp_lightvol_lump_t lump;
+    gs_vec3 lump_center = gs_default_val();
+    float frac;
+    float distance;
+    float total = 0;
+    float phi = 0;
+    float theta = 0;
+
+    // How many volumes to sample in each direction on all axis.
+    // Total volumes = (2 * samples_xy + 1)^2 * (2 * samples_z + 1)
+    int32_t samples_xy = 2;
+    int32_t samples_z = 1;
+
+    for (int32_t x = -64 * samples_xy; x < 64 * samples_xy; x += 64)
+    {
+        for (int32_t y = -64 * samples_xy; y < 64 * samples_xy; y += 64)
         {
-            position_fraction.xyz[i] = 0.0f;
-        }
-        else if (position_fraction.xyz[i] > 1.0f)
-        {
-            position_fraction.xyz[i] = 1.0f;
+            for (int32_t z = -128 * samples_z; z < 128 * samples_z; z += 128)
+            {
+                lump = bsp_get_lightvol(map, gs_vec3_add(position, gs_v3(x, y, z)), &lump_center);
+
+                if (lump.ambient[0] == 0 && lump.ambient[1] == 0 && lump.ambient[2] == 0)
+                {
+                    // Inside a wall or outside the map
+                    continue;
+                }
+
+                distance = gs_vec3_dist(position_relative, lump_center);
+                // sqrt( 128^2 + 64^2 + 64^2 )
+                //frac = 1.0f - distance / 156.77f;
+                frac = 1.0f - distance / 90.51f;
+                // sqrt( 64^2 + 32^2 + 32^2 )
+                //frac = 1.0f - distance / 78.4f;
+                if (frac < 0)
+                {
+                    continue;
+                }
+                total += frac;
+
+                light.ambient.x += frac * lump.ambient[0];
+                light.ambient.y += frac * lump.ambient[1];
+                light.ambient.z += frac * lump.ambient[2];
+
+                light.directional.x += frac * lump.directional[0];
+                light.directional.y += frac * lump.directional[1];
+                light.directional.z += frac * lump.directional[2];
+
+                phi = lump.dir[0] * 360.0f / 255.0f - 90.0f;
+                theta = lump.dir[1] * 360.0f / 255.0f + 0.0f;
+                // clang-format off
+                light.direction = gs_vec3_add(
+                    light.direction,
+                    gs_vec3_scale(
+                        gs_vec3_norm(
+                            gs_quat_rotate(
+                                gs_quat_add(
+                                    gs_quat_angle_axis(gs_deg2rad(phi), MG_AXIS_RIGHT),
+                                    gs_quat_angle_axis(gs_deg2rad(theta), MG_AXIS_UP)
+                                ),
+                                MG_AXIS_FORWARD
+                            )
+                        ), 
+                        frac
+                    )
+                );
+                // clang-format on
+            }
         }
     }
 
-    uint32_t position_index =
-        (uint32_t)floor(num_x * position_fraction.x) +
-        (uint32_t)floor(num_y * position_fraction.y) * num_x +
-        (uint32_t)floor(num_z * position_fraction.z) * num_x * num_y;
+    if (total == 0)
+    {
+        return light;
+    }
 
-    gs_assert(position_index < map->lightvols.count);
+    // Normalize
+    total = 1.0f / total;
+    light.ambient = gs_vec3_scale(light.ambient, total / 255.0f);
+    light.directional = gs_vec3_scale(light.directional, total / 255.0f);
+    light.direction = gs_vec3_norm(light.direction);
 
-    // TODO: sample neighboring volumes and interpolate
-    return map->lightvols.data[position_index];
+    return light;
 }

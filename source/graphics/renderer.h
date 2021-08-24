@@ -16,13 +16,7 @@
 #include "../bsp/bsp_map.h"
 #include "../entities/player.h"
 #include "model_manager.h"
-
-typedef struct mg_renderer_light_t
-{
-    gs_vec3 ambient;
-    gs_vec3 directional;
-    gs_vec3 direction;
-} mg_renderer_light_t;
+#include "types.h"
 
 typedef struct mg_renderable_t
 {
