@@ -145,7 +145,8 @@ void _mg_player_check_floor(mg_player_t *player)
         player->transform.position,
         gs_vec3_add(player->transform.position, gs_vec3_scale(MG_AXIS_DOWN, 2.0f)),
         player->mins,
-        player->maxs);
+        player->maxs,
+        BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
 
     // Don't set grounded if moving up fast enough.
     // (Sliding up a ramp or jumping to a higher level floor)
@@ -330,7 +331,8 @@ void _mg_player_uncrouch(mg_player_t *player, float delta_time)
             player->transform.position,
             gs_vec3_scale(mg_get_down(player->transform.rotation), (MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT) * 0.5f * player->crouch_fraction),
             player->mins,
-            player->maxs);
+            player->maxs,
+            BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
 
         origin = trace->end;
         grounded = trace->fraction < 1.0f && trace->normal.z > 0.7f;
@@ -341,7 +343,8 @@ void _mg_player_uncrouch(mg_player_t *player, float delta_time)
         trace,
         origin,
         gs_vec3_add(origin, gs_vec3_scale(mg_get_up(player->transform.rotation), (MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT) * player->crouch_fraction)),
-        player->mins, player->maxs);
+        player->mins, player->maxs,
+        BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
 
     if (trace->fraction == 1.0f)
     {
@@ -404,7 +407,8 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
             start,
             end,
             player->mins,
-            player->maxs);
+            player->maxs,
+            BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
 
         if (trace->start_solid)
         {
@@ -487,7 +491,7 @@ void _mg_player_unstuck(mg_player_t *player)
         // Sweep player aabb by 1 unit
         start = gs_vec3_add(player->transform.position, gs_vec3_scale(directions[dir], distance));
         end = gs_vec3_add(start, directions[dir]);
-        bsp_trace_box(trace, start, end, player->mins, player->maxs);
+        bsp_trace_box(trace, start, end, player->mins, player->maxs, BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
 
         if (trace->fraction > 0.0f && !trace->all_solid)
         {
@@ -495,7 +499,7 @@ void _mg_player_unstuck(mg_player_t *player)
             // Trace back towards start so we move
             // the minimum distance to get unstuck.
             gs_vec3 valid_pos = trace->end;
-            bsp_trace_box(trace, trace->end, player->transform.position, player->mins, player->maxs);
+            bsp_trace_box(trace, trace->end, player->transform.position, player->mins, player->maxs, BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
             if (trace->fraction < 1.0f && !trace->all_solid)
             {
                 valid_pos = trace->end;

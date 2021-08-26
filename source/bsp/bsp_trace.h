@@ -38,11 +38,11 @@ typedef struct bsp_trace_t
     int32_t surface_flags;
 } bsp_trace_t;
 
-void bsp_trace_ray(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end);
-void bsp_trace_sphere(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, float32_t radius);
-void bsp_trace_box(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, gs_vec3 mins, gs_vec3 maxs);
-void _bsp_trace(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end);
-void _bsp_trace_check_node(bsp_trace_t *trace, int32_t node_index, float32_t start_fraction, float32_t end_fraction, gs_vec3 start, gs_vec3 end);
+void bsp_trace_ray(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, int32_t content_mask);
+void bsp_trace_sphere(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, float32_t radius, int32_t content_mask);
+void bsp_trace_box(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, gs_vec3 mins, gs_vec3 maxs, int32_t content_mask);
+void _bsp_trace(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, int32_t content_mask);
+void _bsp_trace_check_node(bsp_trace_t *trace, int32_t node_index, float32_t start_fraction, float32_t end_fraction, gs_vec3 start, gs_vec3 end, int32_t content_mask);
 void _bsp_trace_check_brush(bsp_trace_t *trace, bsp_brush_lump_t brush, gs_vec3 start, gs_vec3 end);
 
 #endif // BSP_TRACE_H

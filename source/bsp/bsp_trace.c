@@ -11,26 +11,26 @@
 
 #include "bsp_trace.h"
 
-void bsp_trace_ray(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end)
+void bsp_trace_ray(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, int32_t content_mask)
 {
     trace->type = RAY;
     trace->radius = 0;
-    _bsp_trace(trace, start, end);
+    _bsp_trace(trace, start, end, content_mask);
 }
 
-void bsp_trace_sphere(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, float32_t radius)
+void bsp_trace_sphere(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, float32_t radius, int32_t content_mask)
 {
     trace->type = SPHERE;
     trace->radius = radius;
-    _bsp_trace(trace, start, end);
+    _bsp_trace(trace, start, end, content_mask);
 }
 
-void bsp_trace_box(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, gs_vec3 mins, gs_vec3 maxs)
+void bsp_trace_box(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, gs_vec3 mins, gs_vec3 maxs, int32_t content_mask)
 {
     if (gs_vec3_len2(mins) < GS_EPSILON && gs_vec3_len2(maxs) < GS_EPSILON)
     {
         // Treat as a ray
-        bsp_trace_ray(trace, start, end);
+        bsp_trace_ray(trace, start, end, content_mask);
         return;
     }
 
@@ -43,10 +43,10 @@ void bsp_trace_box(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, gs_vec3 mins,
         gs_max(-trace->mins.y, trace->maxs.y),
         gs_max(-trace->mins.z, trace->maxs.z));
 
-    _bsp_trace(trace, start, end);
+    _bsp_trace(trace, start, end, content_mask);
 }
 
-void _bsp_trace(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end)
+void _bsp_trace(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, int32_t content_mask)
 {
     gs_assert(trace->map != NULL);
 
@@ -55,7 +55,7 @@ void _bsp_trace(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end)
     trace->fraction = 1.0f;
 
     // Walk through the BSP tree
-    _bsp_trace_check_node(trace, 0, 0.0f, 1.0f, start, end);
+    _bsp_trace_check_node(trace, 0, 0.0f, 1.0f, start, end, content_mask);
 
     if (trace->fraction == 1.0f)
     {
@@ -70,7 +70,7 @@ void _bsp_trace(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end)
     }
 }
 
-void _bsp_trace_check_node(bsp_trace_t *trace, int32_t node_index, float32_t start_fraction, float32_t end_fraction, gs_vec3 start, gs_vec3 end)
+void _bsp_trace_check_node(bsp_trace_t *trace, int32_t node_index, float32_t start_fraction, float32_t end_fraction, gs_vec3 start, gs_vec3 end, int32_t content_mask)
 {
     if (node_index < 0)
     {
@@ -82,7 +82,7 @@ void _bsp_trace_check_node(bsp_trace_t *trace, int32_t node_index, float32_t sta
         {
             brush_index = trace->map->leaf_brushes.data[leaf.first_leaf_brush + i].brush;
             brush = trace->map->brushes.data[brush_index];
-            if (brush.num_brush_sides > 0 && (trace->map->textures.data[brush.texture].contents & BSP_CONTENT_CONTENTS_SOLID) == BSP_CONTENT_CONTENTS_SOLID)
+            if (brush.num_brush_sides > 0 && (trace->map->textures.data[brush.texture].contents & content_mask) != 0)
             {
                 _bsp_trace_check_brush(trace, brush, start, end);
             }
@@ -116,13 +116,13 @@ void _bsp_trace_check_node(bsp_trace_t *trace, int32_t node_index, float32_t sta
     {
         // Both points are in front of the plane,
         // check the front child.
-        _bsp_trace_check_node(trace, node.children[0], start_fraction, end_fraction, start, end);
+        _bsp_trace_check_node(trace, node.children[0], start_fraction, end_fraction, start, end, content_mask);
     }
     else if (start_distance < -offset && end_distance < -offset)
     {
         // Both points are behind the plane,
         // check back child.
-        _bsp_trace_check_node(trace, node.children[1], start_fraction, end_fraction, start, end);
+        _bsp_trace_check_node(trace, node.children[1], start_fraction, end_fraction, start, end, content_mask);
     }
     else
     {
@@ -164,14 +164,14 @@ void _bsp_trace_check_node(bsp_trace_t *trace, int32_t node_index, float32_t sta
         middle = gs_vec3_add(start, gs_vec3_scale(gs_vec3_sub(end, start), fraction1));
 
         // STEP 4: Check the first side
-        _bsp_trace_check_node(trace, node.children[side], start_fraction, middle_fraction, start, middle);
+        _bsp_trace_check_node(trace, node.children[side], start_fraction, middle_fraction, start, middle, content_mask);
 
         // STEP 5: Calculate the middle point for the second side
         middle_fraction = start_fraction + (end_fraction - start_fraction) * fraction2;
         middle = gs_vec3_add(start, gs_vec3_scale(gs_vec3_sub(end, start), fraction2));
 
         // STEP 6: Check the second side
-        _bsp_trace_check_node(trace, node.children[1 - side], middle_fraction, end_fraction, middle, end);
+        _bsp_trace_check_node(trace, node.children[1 - side], middle_fraction, end_fraction, middle, end, content_mask);
     }
 }
 
