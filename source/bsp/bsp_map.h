@@ -36,6 +36,6 @@ int32_t _bsp_find_camera_leaf(bsp_map_t *map, gs_vec3 view_position);
 void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf);
 bool32_t _bsp_cluster_visible(bsp_map_t *map, int32_t view_cluster, int32_t test_cluster);
 bsp_lightvol_lump_t bsp_get_lightvol(bsp_map_t *map, gs_vec3 position, gs_vec3 *center);
-mg_renderer_light_t bsp_get_lightvol_interp(bsp_map_t *map, gs_vec3 position);
+mg_renderer_light_t bsp_sample_lightvol(bsp_map_t *map, gs_vec3 position);
 
 #endif // BSP_MAP_H

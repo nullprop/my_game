@@ -102,19 +102,22 @@ void mg_renderer_init()
 
 #define MISSING_TEX_SIZE 10
     // Generate black and pink grid for missing texture
-    gs_color_t c0 = gs_color(255, 0, 220, 255);
-    gs_color_t c1 = gs_color(0, 0, 0, 255);
+    gs_color_t pink = gs_color(255, 0, 220, 255);
+    gs_color_t black = gs_color(0, 0, 0, 255);
     gs_color_t pixels[MISSING_TEX_SIZE * MISSING_TEX_SIZE] = gs_default_val();
-    for (uint32_t r = 0; r < MISSING_TEX_SIZE; ++r)
+    for (uint32_t row = 0; row < MISSING_TEX_SIZE; row++)
     {
-        for (uint32_t c = 0; c < MISSING_TEX_SIZE; ++c)
+        for (uint32_t col = 0; col < MISSING_TEX_SIZE; col++)
         {
-            const bool re = (r % 2) == 0;
-            const bool ce = (c % 2) == 0;
-            uint32_t idx = r * MISSING_TEX_SIZE + c;
-            // clang-format off
-            pixels[idx] = (re && ce) ? c0 : (re) ? c1 : (ce) ? c1 : c0;
-            // clang-format on
+            uint32_t idx = row * MISSING_TEX_SIZE + col;
+            if ((row % 2) == (col % 2))
+            {
+                pixels[idx] = pink;
+            }
+            else
+            {
+                pixels[idx] = black;
+            }
         }
     }
 
@@ -248,7 +251,7 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
         };
 
         // Light
-        mg_renderer_light_t light = bsp_get_lightvol_interp(g_renderer->bsp, renderable->transform->position);
+        mg_renderer_light_t light = bsp_sample_lightvol(g_renderer->bsp, renderable->transform->position);
         uniforms[2] = (gs_graphics_bind_uniform_desc_t){
             .uniform = g_renderer->u_light,
             .data = &light,

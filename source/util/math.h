@@ -25,17 +25,17 @@ static inline bool32_t point_in_front_of_plane(gs_vec3 plane_normal, float32_t p
     return false;
 }
 
-static inline gs_vec3 mg_clip_velocity(gs_vec3 velocity, gs_vec3 plane_normal, float overbounce)
+static inline gs_vec3 mg_clip_velocity(gs_vec3 velocity, gs_vec3 plane_normal, float bounce)
 {
     float backoff = gs_vec3_dot(velocity, plane_normal);
 
     if (backoff < 0)
     {
-        backoff *= overbounce;
+        backoff *= bounce;
     }
     else
     {
-        backoff /= overbounce;
+        backoff /= bounce;
     }
 
     gs_vec3 change = gs_vec3_scale(plane_normal, backoff);

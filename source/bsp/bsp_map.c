@@ -230,20 +230,24 @@ void _bsp_load_textures(bsp_map_t *map)
     }
 
 #define ROW_COL_CT 10
+    // TODO: this is duplicated in renderer.c
     // Generate black and pink grid for missing texture
-    gs_color_t c0 = gs_color(255, 0, 220, 255);
-    gs_color_t c1 = gs_color(0, 0, 0, 255);
+    gs_color_t pink = gs_color(255, 0, 220, 255);
+    gs_color_t black = gs_color(0, 0, 0, 255);
     gs_color_t pixels[ROW_COL_CT * ROW_COL_CT] = gs_default_val();
-    for (uint32_t r = 0; r < ROW_COL_CT; ++r)
+    for (uint32_t row = 0; row < ROW_COL_CT; row++)
     {
-        for (uint32_t c = 0; c < ROW_COL_CT; ++c)
+        for (uint32_t col = 0; col < ROW_COL_CT; col++)
         {
-            const bool re = (r % 2) == 0;
-            const bool ce = (c % 2) == 0;
-            uint32_t idx = r * ROW_COL_CT + c;
-            // clang-format off
-            pixels[idx] = (re && ce) ? c0 : (re) ? c1 : (ce) ? c1 : c0;
-            // clang-format on
+            uint32_t idx = row * ROW_COL_CT + col;
+            if ((row % 2) == (col % 2))
+            {
+                pixels[idx] = pink;
+            }
+            else
+            {
+                pixels[idx] = black;
+            }
         }
     }
 
@@ -903,7 +907,10 @@ bsp_lightvol_lump_t bsp_get_lightvol(bsp_map_t *map, gs_vec3 position, gs_vec3 *
     return map->lightvols.data[position_index];
 }
 
-mg_renderer_light_t bsp_get_lightvol_interp(bsp_map_t *map, gs_vec3 position)
+// TODO: still some funkiness when moving between lightvols,
+// ideally make interp good enough to not have to support
+// multiple directional lights.
+mg_renderer_light_t bsp_sample_lightvol(bsp_map_t *map, gs_vec3 position)
 {
     // Get our position in the map
     gs_vec3 position_relative = gs_vec3_sub(position, map->models.data[0].mins);
@@ -922,11 +929,11 @@ mg_renderer_light_t bsp_get_lightvol_interp(bsp_map_t *map, gs_vec3 position)
     int32_t samples_xy = 2;
     int32_t samples_z = 1;
 
-    for (int32_t x = -64 * samples_xy; x < 64 * samples_xy; x += 64)
+    for (int32_t x = -64 * samples_xy; x < 64 * samples_xy + 1; x += 64)
     {
-        for (int32_t y = -64 * samples_xy; y < 64 * samples_xy; y += 64)
+        for (int32_t y = -64 * samples_xy; y < 64 * samples_xy + 1; y += 64)
         {
-            for (int32_t z = -128 * samples_z; z < 128 * samples_z; z += 128)
+            for (int32_t z = -128 * samples_z; z < 128 * samples_z + 1; z += 128)
             {
                 lump = bsp_get_lightvol(map, gs_vec3_add(position, gs_v3(x, y, z)), &lump_center);
 
@@ -937,11 +944,7 @@ mg_renderer_light_t bsp_get_lightvol_interp(bsp_map_t *map, gs_vec3 position)
                 }
 
                 distance = gs_vec3_dist(position_relative, lump_center);
-                // sqrt( 128^2 + 64^2 + 64^2 )
-                //frac = 1.0f - distance / 156.77f;
-                frac = 1.0f - distance / 90.51f;
-                // sqrt( 64^2 + 32^2 + 32^2 )
-                //frac = 1.0f - distance / 78.4f;
+                frac = 1.0f - distance / sqrtf(powf(samples_z * 128, 2) + 2 * powf(samples_xy * 64, 2));
                 if (frac < 0)
                 {
                     continue;
@@ -955,6 +958,10 @@ mg_renderer_light_t bsp_get_lightvol_interp(bsp_map_t *map, gs_vec3 position)
                 light.directional.x += frac * lump.directional[0];
                 light.directional.y += frac * lump.directional[1];
                 light.directional.z += frac * lump.directional[2];
+
+                // The higher the intensity of the light at this point in space,
+                // the more it affects the direction vector.
+                float intensity = gs_vec3_len(light.directional) / 1325.0f; // sqrt(3 * 255^2)
 
                 phi = lump.dir[0] * 360.0f / 255.0f - 90.0f;
                 theta = lump.dir[1] * 360.0f / 255.0f + 0.0f;
@@ -971,7 +978,7 @@ mg_renderer_light_t bsp_get_lightvol_interp(bsp_map_t *map, gs_vec3 position)
                                 MG_AXIS_FORWARD
                             )
                         ), 
-                        frac
+                        frac * intensity
                     )
                 );
                 // clang-format on
