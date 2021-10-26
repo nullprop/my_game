@@ -13,6 +13,7 @@
 #include "bsp_map.h"
 #include "../graphics/renderer.h"
 #include "../util/camera.h"
+#include "../util/render.h"
 
 static gs_command_buffer_t bsp_graphics_cb = {0};
 static gs_handle(gs_graphics_vertex_buffer_t) bsp_graphics_vbo = {0};
@@ -229,37 +230,20 @@ void _bsp_load_textures(bsp_map_t *map)
         gs_free(filename);
     }
 
-#define ROW_COL_CT 10
-    // TODO: this is duplicated in renderer.c
-    // Generate black and pink grid for missing texture
-    gs_color_t pink = gs_color(255, 0, 220, 255);
-    gs_color_t black = gs_color(0, 0, 0, 255);
-    gs_color_t pixels[ROW_COL_CT * ROW_COL_CT] = gs_default_val();
-    for (uint32_t row = 0; row < ROW_COL_CT; row++)
-    {
-        for (uint32_t col = 0; col < ROW_COL_CT; col++)
-        {
-            uint32_t idx = row * ROW_COL_CT + col;
-            if ((row % 2) == (col % 2))
-            {
-                pixels[idx] = pink;
-            }
-            else
-            {
-                pixels[idx] = black;
-            }
-        }
-    }
-
     // Create missing texture
+    uint32_t missing_size = 10;
+    gs_color_t *pixels = mg_get_missing_texture_pixels(missing_size);
+
     map->missing_texture = gs_graphics_texture_create(
         &(gs_graphics_texture_desc_t){
-            .width = ROW_COL_CT,
-            .height = ROW_COL_CT,
+            .width = missing_size,
+            .height = missing_size,
             .format = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
             .min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
             .mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
             .data = pixels});
+
+    gs_free(pixels);
 }
 
 void _bsp_load_lightmaps(bsp_map_t *map)

@@ -9,6 +9,7 @@
 
 #include "renderer.h"
 #include "../util/camera.h"
+#include "../util/render.h"
 
 mg_renderer_t *g_renderer;
 
@@ -100,36 +101,20 @@ void mg_renderer_init()
             },
         });
 
-#define MISSING_TEX_SIZE 10
-    // Generate black and pink grid for missing texture
-    gs_color_t pink = gs_color(255, 0, 220, 255);
-    gs_color_t black = gs_color(0, 0, 0, 255);
-    gs_color_t pixels[MISSING_TEX_SIZE * MISSING_TEX_SIZE] = gs_default_val();
-    for (uint32_t row = 0; row < MISSING_TEX_SIZE; row++)
-    {
-        for (uint32_t col = 0; col < MISSING_TEX_SIZE; col++)
-        {
-            uint32_t idx = row * MISSING_TEX_SIZE + col;
-            if ((row % 2) == (col % 2))
-            {
-                pixels[idx] = pink;
-            }
-            else
-            {
-                pixels[idx] = black;
-            }
-        }
-    }
-
     // Create missing texture
+    uint32_t missing_size = 10;
+    gs_color_t *pixels = mg_get_missing_texture_pixels(missing_size);
+
     g_renderer->missing_texture = gs_graphics_texture_create(
         &(gs_graphics_texture_desc_t){
-            .width = MISSING_TEX_SIZE,
-            .height = MISSING_TEX_SIZE,
+            .width = missing_size,
+            .height = missing_size,
             .format = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
             .min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
             .mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
             .data = pixels});
+
+    gs_free(pixels);
 }
 
 void mg_renderer_update()
