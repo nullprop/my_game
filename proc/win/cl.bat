@@ -14,6 +14,7 @@ set src_dir=..\source
 
 rem All source together
 set src_all=%src_dir%\*.c ^
+%src_dir%\audio\*.c ^
 %src_dir%\bsp\*.c ^
 %src_dir%\entities\*.c ^
 %src_dir%\graphics\*.c ^
