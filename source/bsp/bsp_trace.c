@@ -27,7 +27,7 @@ void bsp_trace_sphere(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, float32_t 
 
 void bsp_trace_box(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, gs_vec3 mins, gs_vec3 maxs, int32_t content_mask)
 {
-    if (gs_vec3_len2(mins) < GS_EPSILON && gs_vec3_len2(maxs) < GS_EPSILON)
+    if (gs_vec3_len2(mins) < BSP_TRACE_EPSILON && gs_vec3_len2(maxs) < BSP_TRACE_EPSILON)
     {
         // Treat as a ray
         bsp_trace_ray(trace, start, end, content_mask);
@@ -138,15 +138,15 @@ void _bsp_trace_check_node(bsp_trace_t *trace, int32_t node_index, float32_t sta
         {
             side = 1; // back
             float32_t inverse_distance = 1.0f / (start_distance - end_distance);
-            fraction1 = (start_distance - offset + GS_EPSILON) * inverse_distance;
-            fraction2 = (start_distance + offset + GS_EPSILON) * inverse_distance;
+            fraction1 = (start_distance - offset + BSP_TRACE_EPSILON) * inverse_distance;
+            fraction2 = (start_distance + offset + BSP_TRACE_EPSILON) * inverse_distance;
         }
         else if (end_distance < start_distance)
         {
             side = 0; // front
             float32_t inverse_distance = 1.0f / (start_distance - end_distance);
-            fraction1 = (start_distance + offset + GS_EPSILON) * inverse_distance;
-            fraction2 = (start_distance - offset - GS_EPSILON) * inverse_distance;
+            fraction1 = (start_distance + offset + BSP_TRACE_EPSILON) * inverse_distance;
+            fraction2 = (start_distance - offset - BSP_TRACE_EPSILON) * inverse_distance;
         }
         else
         {
@@ -224,9 +224,9 @@ void _bsp_trace_check_brush(bsp_trace_t *trace, bsp_brush_lump_t brush, gs_vec3 
         if (end_distance > 0)
             ends_out = true;
 
-        // Make sure the trace isn't completely on one side of the plane
-        //if (start_distance > 0 && (end_distance >= GS_EPSILON || end_distance > start_distance))
-        if (start_distance > 0 && end_distance > 0)
+        // Make sure the trace isn't completely on one side of the plane.
+        // Make sure end_distance can't get too close to the plane.
+        if (start_distance > 0 && (end_distance >= BSP_TRACE_EPSILON || end_distance >= start_distance))
         {
             // Both are in front of the plane, outside of the brush
             return;
@@ -240,7 +240,11 @@ void _bsp_trace_check_brush(bsp_trace_t *trace, bsp_brush_lump_t brush, gs_vec3 
         if (start_distance > end_distance)
         {
             // The line is entering the plane
-            fraction = (start_distance - GS_EPSILON) / (start_distance - end_distance);
+            fraction = (start_distance - BSP_TRACE_EPSILON) / (start_distance - end_distance);
+            if (fraction < 0)
+            {
+                fraction = 0;
+            }
             if (fraction > start_fraction)
             {
                 start_fraction = fraction;
@@ -251,7 +255,11 @@ void _bsp_trace_check_brush(bsp_trace_t *trace, bsp_brush_lump_t brush, gs_vec3 
         else
         {
             // The line is leaving the plane
-            fraction = (start_distance + GS_EPSILON) / (start_distance - end_distance);
+            fraction = (start_distance + BSP_TRACE_EPSILON) / (start_distance - end_distance);
+            if (fraction > 1.0f)
+            {
+                fraction = 1.0f;
+            }
             if (fraction < end_fraction)
             {
                 end_fraction = fraction;

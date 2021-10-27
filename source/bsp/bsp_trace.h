@@ -14,6 +14,8 @@
 
 #include "bsp_types.h"
 
+#define BSP_TRACE_EPSILON 0.125f
+
 typedef enum bsp_trace_type
 {
     RAY,

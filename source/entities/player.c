@@ -391,6 +391,11 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 
     while (delta_time > 0)
     {
+        if (gs_vec3_len2(player->velocity) == 0)
+        {
+            break;
+        }
+
         // Sanity check for infinite loops,
         // shouldn't really happen.
         if (current_iter >= max_iter)
@@ -443,18 +448,6 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
             // Moved all the way
             break;
         }
-
-        if (current_iter > 1)
-        {
-            if (prev_frac == trace->fraction && gs_vec3_dot(prev_normal, trace->normal) > 1.0f - GS_EPSILON)
-            {
-                // Not going anywhere
-                break;
-            }
-        }
-
-        prev_frac = trace->fraction;
-        prev_normal = trace->normal;
 
         delta_time -= delta_time * trace->fraction;
 
