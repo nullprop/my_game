@@ -13,6 +13,7 @@
 #include "../graphics/model_manager.h"
 #include "../graphics/renderer.h"
 #include "../util/camera.h"
+#include "../util/config.h"
 #include "../util/math.h"
 
 #include <gs/util/gs_idraw.h>
@@ -177,7 +178,7 @@ void _mg_player_get_input(mg_player_t *player, float delta_time)
     player->wish_jump = false;
     player->wish_crouch = false;
 
-    gs_vec2 dp = gs_vec2_scale(gs_platform_mouse_deltav(), 1.8f * 0.022f);
+    gs_vec2 dp = gs_vec2_scale(gs_platform_mouse_deltav(), g_config->controls.sensitivity * 0.022f);
 
     if (gs_platform_key_down(GS_KEYCODE_UP))
         dp.y -= 150.0f * delta_time;

@@ -117,7 +117,8 @@ void _mg_config_load(char *filepath)
         }
 
 // Handle known config keys
-#define NUM_KEYS 10
+// TODO: could make a macro to simplify these
+#define NUM_KEYS 11
         char *known_keys[NUM_KEYS] = {
             // Video
             "vid_fullscreen",
@@ -132,6 +133,8 @@ void _mg_config_load(char *filepath)
             "snd_ambient",
             // Graphics
             "r_fov",
+            // Controls
+            "cl_sensitivity",
         };
         void *containers[NUM_KEYS] = {
             // Video
@@ -147,6 +150,8 @@ void _mg_config_load(char *filepath)
             &g_config->sound.ambient,
             // Graphics
             &g_config->graphics.fov,
+            // Controls
+            &g_config->controls.sensitivity,
         };
         mg_config_type types[NUM_KEYS] = {
             // Video
@@ -162,6 +167,8 @@ void _mg_config_load(char *filepath)
             MG_CONFIG_TYPE_FLOAT,
             // Graphics
             MG_CONFIG_TYPE_INT,
+            // Controls
+            MG_CONFIG_TYPE_FLOAT,
         };
         bool32_t found_key = false;
 
@@ -227,6 +234,10 @@ void _mg_config_save(char *filepath)
     fprintf(file, "// Graphics\n");
     fprintf(file, "r_fov %zu\n", g_config->graphics.fov);
 
+    fprintf(file, "\n");
+    fprintf(file, "// Controls\n");
+    fprintf(file, "cl_sensitivity %f\n", g_config->controls.sensitivity);
+
     fflush(file);
     fclose(file);
     gs_println("Config saved");
@@ -249,4 +260,7 @@ void _mg_config_set_default()
 
     // Graphics
     g_config->graphics.fov = 110;
+
+    // Controls
+    g_config->controls.sensitivity = 2.0f;
 }
