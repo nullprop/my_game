@@ -40,3 +40,6 @@ cd ..
 
 # Assets
 cp ./assets/* ./bin -r
+
+# Shaders
+cp ./source/shaders ./bin -r
