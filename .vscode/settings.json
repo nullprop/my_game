@@ -17,6 +17,7 @@
         "model_manager.h": "c",
         "regex": "c",
         "string.h": "c",
-        "bsp_types.h": "c"
+        "bsp_types.h": "c",
+        "gs_gfxt.h": "c"
     }
 }

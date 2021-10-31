@@ -85,7 +85,7 @@ void mg_renderer_init()
         &(gs_graphics_pipeline_desc_t){
             .raster = {
                 .shader = mg_renderer_get_shader("basic"),
-                .index_buffer_element_size = sizeof(uint32_t),
+                .index_buffer_element_size = sizeof(int32_t),
             },
             .blend = {
                 .func = GS_GRAPHICS_BLEND_EQUATION_ADD,
@@ -156,6 +156,8 @@ uint32_t mg_renderer_create_renderable(mg_model_t model, gs_vqs *transform)
         .model = model,
         .transform = transform,
         .u_view = gs_vqs_to_mat4(transform),
+        .frame = 0,
+        .prev_frame_time = gs_platform_elapsed_time(),
     };
 
     return gs_slot_array_insert(g_renderer->renderables, renderable);
@@ -243,28 +245,28 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
             .binding = 0, // FRAGMENT
         };
 
-        // Texture
+        // TODO Texture
         uniforms[3] = (gs_graphics_bind_uniform_desc_t){
             .uniform = g_renderer->u_tex,
-            .data = (renderable->model.texture != NULL ? &renderable->model.texture->hndl : &g_renderer->missing_texture),
+            .data = (/*renderable->model.texture != NULL ? &renderable->model.texture->hndl :*/ &g_renderer->missing_texture),
             .binding = 1, // FRAGMENT
         };
 
-        // Draw all primitives in renderable
-        for (uint32_t i = 0; i < gs_dyn_array_size(renderable->model.data.primitives); i++)
+        // Draw each surface
+        for (size_t i = 0; i < renderable->model.data->header.num_surfaces; i++)
         {
-            gs_gfxt_mesh_primitive_t *prim = &renderable->model.data.primitives[i];
+            md3_surface_t surf = renderable->model.data->surfaces[i];
 
             // Construct binds
             gs_graphics_bind_desc_t binds = {
                 .vertex_buffers = {
                     .desc = &(gs_graphics_bind_vertex_buffer_desc_t){
-                        .buffer = prim->vbo,
+                        .buffer = surf.vbos[renderable->frame],
                     },
                 },
                 .index_buffers = {
                     .desc = &(gs_graphics_bind_index_buffer_desc_t){
-                        .buffer = prim->ibo,
+                        .buffer = surf.ibo,
                     },
                 },
                 .uniforms = {
@@ -274,7 +276,19 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
             };
 
             gs_graphics_apply_bindings(&g_renderer->cb, &binds);
-            gs_graphics_draw(&g_renderer->cb, &(gs_graphics_draw_desc_t){.start = 0, .count = prim->count});
+            gs_graphics_draw(&g_renderer->cb, &(gs_graphics_draw_desc_t){.start = 0, .count = surf.num_tris * 3});
+        }
+
+        // Test, loop through anims at 20fps
+        double pt = gs_platform_elapsed_time();
+        if (pt - renderable->prev_frame_time >= 50)
+        {
+            renderable->frame++;
+            renderable->prev_frame_time += 50;
+            if (renderable->frame >= renderable->model.data->header.num_frames)
+            {
+                renderable->frame = 0;
+            }
         }
     }
 

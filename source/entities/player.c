@@ -46,8 +46,8 @@ mg_player_t *mg_player_new()
         .viewmodel_transform = gs_vqs_default(),
     };
 
-    mg_model_t *model = mg_model_manager_find("models/Suzanne/glTF/suzanne.gltf");
-    player->viewmodel_handle = mg_renderer_create_renderable(*model, &player->viewmodel_transform);
+    //mg_model_t *model = mg_model_manager_find("models/Suzanne/glTF/suzanne.gltf");
+    //player->viewmodel_handle = mg_renderer_create_renderable(*model, &player->viewmodel_transform);
 
     _mg_player_camera_update(player);
 
@@ -56,7 +56,7 @@ mg_player_t *mg_player_new()
 
 void mg_player_free(mg_player_t *player)
 {
-    mg_renderer_remove_renderable(player->viewmodel_handle);
+    //mg_renderer_remove_renderable(player->viewmodel_handle);
     gs_free(player);
     player = NULL;
 }

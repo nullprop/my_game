@@ -18,17 +18,17 @@ void mg_model_manager_init()
     g_model_manager->models = gs_dyn_array_new(mg_model_t);
 
     // Test
-    //_mg_model_manager_load("models/test.gltf", "basic", NULL);
-    _mg_model_manager_load("models/Suzanne/glTF/suzanne.gltf", "basic", "models/Suzanne/glTF/Suzanne_BaseColor.png");
-    //_mg_model_manager_load("models/Sponza/glTF/Sponza.gltf", "basic", NULL);
+    _mg_model_manager_load("models/players/sarge/head.md3", "basic");
+    _mg_model_manager_load("models/players/sarge/upper.md3", "basic");
+    _mg_model_manager_load("models/players/sarge/lower.md3", "basic");
 }
 
 void mg_model_manager_free()
 {
     for (size_t i = 0; i < gs_dyn_array_size(g_model_manager->models); i++)
     {
-        gs_free(g_model_manager->models[i].texture);
-        g_model_manager->models[i].texture = NULL;
+        mg_free_md3(g_model_manager->models[i].data);
+        g_model_manager->models[i].data = NULL;
     }
 
     gs_dyn_array_free(g_model_manager->models);
@@ -51,46 +51,22 @@ mg_model_t *mg_model_manager_find(char *filename)
     return NULL;
 }
 
-void _mg_model_manager_load(char *filename, char *shader, char *texture)
+void _mg_model_manager_load(char *filename, char *shader)
 {
-    if (!gs_util_file_exists(filename))
+    md3_t *data = gs_malloc_init(md3_t);
+    if (!mg_load_md3(filename, data))
     {
-        gs_println("ERR: _mg_model_manager_load file not found %s", filename);
+        gs_println("WARN: _mg_model_manager_load failed, model %s", filename);
+        mg_free_md3(data);
+        data = NULL;
         return;
     }
-
-    gs_gfxt_mesh_import_options_t options = {
-        .layout = (gs_gfxt_mesh_layout_t[]){
-            {.type = GS_GFXT_MESH_ATTRIBUTE_TYPE_POSITION},
-            {.type = GS_GFXT_MESH_ATTRIBUTE_TYPE_NORMAL},
-            {.type = GS_GFXT_MESH_ATTRIBUTE_TYPE_TEXCOORD},
-        },
-        .layout_size = 3 * sizeof(gs_gfxt_mesh_layout_t),
-        .index_buffer_element_size = sizeof(uint32_t),
-    };
 
     mg_model_t model = {
         .filename = filename,
         .shader = shader,
-        .data = gs_gfxt_mesh_load_from_file(filename, &options),
-        .texture = NULL,
+        .data = data,
     };
-
-    // TODO: remove in favor of gs_gfxt materials
-    if (texture != NULL)
-    {
-        model.texture = gs_malloc_init(gs_asset_texture_t);
-        gs_asset_texture_load_from_file(
-            texture,
-            model.texture,
-            &(gs_graphics_texture_desc_t){
-                .format = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
-                .min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
-                .mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
-            },
-            false,
-            false);
-    }
 
     gs_dyn_array_push(g_model_manager->models, model);
 

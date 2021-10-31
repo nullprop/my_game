@@ -14,6 +14,7 @@
 #include "../graphics/renderer.h"
 #include "../util/camera.h"
 #include "../util/render.h"
+#include "../util/transform.h"
 
 static gs_command_buffer_t bsp_graphics_cb = {0};
 static gs_handle(gs_graphics_vertex_buffer_t) bsp_graphics_vbo = {0};
@@ -947,21 +948,11 @@ mg_renderer_light_t bsp_sample_lightvol(bsp_map_t *map, gs_vec3 position)
                 // the more it affects the direction vector.
                 float intensity = gs_vec3_len(light.directional) / 1325.0f; // sqrt(3 * 255^2)
 
-                phi = lump.dir[0] * 360.0f / 255.0f - 90.0f;
-                theta = lump.dir[1] * 360.0f / 255.0f + 0.0f;
                 // clang-format off
                 light.direction = gs_vec3_add(
                     light.direction,
                     gs_vec3_scale(
-                        gs_vec3_norm(
-                            gs_quat_rotate(
-                                gs_quat_add(
-                                    gs_quat_angle_axis(gs_deg2rad(phi), MG_AXIS_RIGHT),
-                                    gs_quat_angle_axis(gs_deg2rad(theta), MG_AXIS_UP)
-                                ),
-                                MG_AXIS_FORWARD
-                            )
-                        ), 
+                        mg_sphere_to_normal(lump.dir), 
                         frac * intensity
                     )
                 );

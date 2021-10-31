@@ -23,6 +23,8 @@ typedef struct mg_renderable_t
     gs_vqs *transform;
     gs_mat4 u_view;
     mg_model_t model;
+    int32_t frame;
+    double prev_frame_time;
 } mg_renderable_t;
 
 typedef struct mg_renderer_t

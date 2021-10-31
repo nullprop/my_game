@@ -13,12 +13,13 @@
 #include <gs/gs.h>
 #include <gs/util/gs_gfxt.h>
 
+#include "model.h"
+
 typedef struct mg_model_t
 {
     char *filename;
     char *shader;
-    gs_gfxt_mesh_t data;
-    gs_asset_texture_t *texture;
+    md3_t *data;
 } mg_model_t;
 
 typedef struct mg_model_manager_t
@@ -29,7 +30,7 @@ typedef struct mg_model_manager_t
 void mg_model_manager_init();
 void mg_model_manager_free();
 mg_model_t *mg_model_manager_find(char *filename);
-void _mg_model_manager_load(char *filename, char *shader, char *texture);
+void _mg_model_manager_load(char *filename, char *shader);
 
 extern mg_model_manager_t *g_model_manager;
 
