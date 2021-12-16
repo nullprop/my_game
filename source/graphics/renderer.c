@@ -245,17 +245,17 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
             .binding = 0, // FRAGMENT
         };
 
-        // TODO Texture
-        uniforms[3] = (gs_graphics_bind_uniform_desc_t){
-            .uniform = g_renderer->u_tex,
-            .data = (/*renderable->model.texture != NULL ? &renderable->model.texture->hndl :*/ &g_renderer->missing_texture),
-            .binding = 1, // FRAGMENT
-        };
-
         // Draw each surface
         for (size_t i = 0; i < renderable->model.data->header.num_surfaces; i++)
         {
             md3_surface_t surf = renderable->model.data->surfaces[i];
+
+            // Texture
+            uniforms[3] = (gs_graphics_bind_uniform_desc_t){
+                .uniform = g_renderer->u_tex,
+                .data = (gs_handle_is_valid(surf.textures[0].hndl) ? &surf.textures[0].hndl : &g_renderer->missing_texture),
+                .binding = 1, // FRAGMENT
+            };
 
             // Construct binds
             gs_graphics_bind_desc_t binds = {

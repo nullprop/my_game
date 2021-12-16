@@ -178,57 +178,13 @@ void _bsp_load_textures(bsp_map_t *map)
     map->texture_assets.count = num_textures;
     map->texture_assets.data = gs_malloc(sizeof(gs_asset_texture_t) * num_textures);
 
-    char extensions[2][5] = {
-        ".jpg",
-        ".tga",
-    };
-
     for (size_t i = 0; i < num_textures; i++)
     {
-        bool32_t success = false;
-        size_t malloc_sz = strlen(map->textures.data[i].name) + 5;
-        char *filename = gs_malloc(malloc_sz);
-        memset(filename, 0, malloc_sz);
-        strcat(filename, map->textures.data[i].name);
-        strcat(filename, extensions[0]);
-
-        for (size_t j = 0; j < 2; j++)
+        bool32_t success = mg_load_texture_asset(map->textures.data[i].name, &map->texture_assets.data[i]);
+        if (success)
         {
-            if (j > 0)
-            {
-                strcpy(filename + strlen(filename) - 4, extensions[j]);
-            }
-
-            if (gs_util_file_exists(filename))
-            {
-                success = gs_asset_texture_load_from_file(
-                    filename,
-                    &map->texture_assets.data[i],
-                    &(gs_graphics_texture_desc_t){
-                        .format = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
-                        .min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
-                        .mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
-                    },
-                    false,
-                    false);
-            }
-            else if (j == 1)
-            {
-                gs_println("Warning: could not load texture: %s, file not found", map->textures.data[i].name);
-            }
-
-            if (success)
-            {
-                map->stats.loaded_textures++;
-                break;
-            }
-            else
-            {
-                map->texture_assets.data[i].hndl = gs_handle_invalid(gs_graphics_texture_t);
-            }
+            map->stats.loaded_textures++;
         }
-
-        gs_free(filename);
     }
 
     // Create missing texture

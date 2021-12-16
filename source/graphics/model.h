@@ -104,6 +104,7 @@ typedef struct md3_surface_t
     mg_md3_render_vertex_t *render_vertices;
     gs_handle_gs_graphics_vertex_buffer_t *vbos;
     gs_handle_gs_graphics_index_buffer_t ibo;
+    gs_asset_texture_t *textures;
 } md3_surface_t;
 
 typedef struct md3_t

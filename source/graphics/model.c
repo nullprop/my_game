@@ -8,6 +8,7 @@
 =================================================================*/
 
 #include "model.h"
+#include "../util/render.h"
 #include "../util/transform.h"
 
 // shorthand util for failing during MD3 load
@@ -100,7 +101,7 @@ bool mg_load_md3(char *filename, md3_t *model)
         gs_byte_buffer_read_bulk(&buffer, &surf->triangles, sz);
 
         // texcoords
-        sz = sizeof(md3_texcoord_t) * surf->num_shaders;
+        sz = sizeof(md3_texcoord_t) * surf->num_shaders * surf->num_verts;
         surf->texcoords = gs_malloc(sz);
         buffer.position = off_start + surf->off_texcoords;
         gs_byte_buffer_read_bulk(&buffer, &surf->texcoords, sz);
@@ -123,8 +124,10 @@ bool mg_load_md3(char *filename, md3_t *model)
 
             surf->render_vertices[j].normal = mg_int16_to_vec3(surf->vertices[j].normal);
 
-            surf->render_vertices[j].texcoord.x = surf->texcoords[shader_index].u;
-            surf->render_vertices[j].texcoord.y = surf->texcoords[shader_index].v;
+            // Loop texcoords for each frame
+            size_t texcoord_index = ((shader_index + 1) * j) % (surf->num_shaders * surf->num_verts);
+            surf->render_vertices[j].texcoord.x = surf->texcoords[texcoord_index].u;
+            surf->render_vertices[j].texcoord.y = surf->texcoords[texcoord_index].v;
         }
 
         // Vertex buffers
@@ -142,6 +145,16 @@ bool mg_load_md3(char *filename, md3_t *model)
         idesc.data = surf->triangles;
         idesc.size = sizeof(md3_triangle_t) * surf->num_tris;
         surf->ibo = gs_graphics_index_buffer_create(&idesc);
+
+        // Textures
+        surf->textures = gs_malloc(sizeof(gs_asset_texture_t) * surf->num_shaders);
+        for (size_t i = 0; i < surf->num_shaders; i++)
+        {
+            // FIXME: why do shader names start with null?
+            // \0odels/players/...
+            if (surf->shaders[i].name[0] == '\0') surf->shaders[i].name[0] = 'm';
+            mg_load_texture_asset(surf->shaders[i].name, &surf->textures[i]);
+        }
 
         // Seek to next surface
         buffer.position = off_start + surf->off_end;
@@ -161,6 +174,7 @@ void mg_free_md3(md3_t *model)
         gs_free(model->surfaces[i].texcoords);
         gs_free(model->surfaces[i].vertices);
         gs_free(model->surfaces[i].render_vertices);
+        gs_free(model->surfaces[i].textures);
 
         model->surfaces[i].magic = NULL;
         model->surfaces[i].name = NULL;
@@ -169,6 +183,7 @@ void mg_free_md3(md3_t *model)
         model->surfaces[i].texcoords = NULL;
         model->surfaces[i].vertices = NULL;
         model->surfaces[i].render_vertices = NULL;
+        model->surfaces[i].textures = NULL;
     }
 
     gs_free(model->frames);

@@ -25,7 +25,6 @@
 bsp_map_t *bsp_map = NULL;
 mg_player_t *player = NULL;
 gs_immediate_draw_t *gsi = NULL;
-gs_vqs *testmodel_transform;
 
 void app_spawn()
 {
@@ -87,21 +86,35 @@ void app_init()
     g_renderer->player = player;
     g_renderer->cam = &player->camera.cam;
 
-    // Test
-    mg_model_t *testmodel = mg_model_manager_find("models/players/sarge/lower.md3");
-    testmodel_transform = gs_malloc_init(gs_vqs);
+    // - - - -
+    // MD3 testing
+    mg_model_t *testmodel = mg_model_manager_find("models/players/sarge/head.md3");
+    gs_vqs *testmodel_transform = gs_malloc_init(gs_vqs);
     testmodel_transform->position = gs_v3(660.0f, 2078.0f, 50.0f);
     testmodel_transform->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
     testmodel_transform->scale = gs_v3(1.0f, 1.0f, 1.0f);
     mg_renderer_create_renderable(*testmodel, testmodel_transform);
+
+    mg_model_t *testmodel_1 = mg_model_manager_find("models/players/sarge/upper.md3");
+    gs_vqs *testmodel_transform_1 = gs_malloc_init(gs_vqs);
+    testmodel_transform_1->position = gs_v3(660.0f, 2048.0f, 50.0f);
+    testmodel_transform_1->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
+    testmodel_transform_1->scale = gs_v3(1.0f, 1.0f, 1.0f);
+    mg_renderer_create_renderable(*testmodel_1, testmodel_transform_1);
+
+    mg_model_t *testmodel_2 = mg_model_manager_find("models/players/sarge/lower.md3");
+    gs_vqs *testmodel_transform_2 = gs_malloc_init(gs_vqs);
+    testmodel_transform_2->position = gs_v3(660.0f, 2018.0f, 50.0f);
+    testmodel_transform_2->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
+    testmodel_transform_2->scale = gs_v3(1.0f, 1.0f, 1.0f);
+    mg_renderer_create_renderable(*testmodel_2, testmodel_transform_2);
+    // - - - -
 
     app_spawn();
 }
 
 void app_update()
 {
-    //testmodel_transform->rotation = gs_quat_from_euler(20.0f * gs_platform_elapsed_time() / 1000.0f, 0.0f, 90.0f);
-
     if (gs_platform_key_pressed(GS_KEYCODE_ESC))
         gs_engine_quit();
 
@@ -155,7 +168,6 @@ void app_update()
 
 void app_shutdown()
 {
-    gs_free(testmodel_transform);
     mg_player_free(player);
     bsp_map_free(bsp_map);
     mg_renderer_free();
