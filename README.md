@@ -72,3 +72,10 @@ All projects contained in `third_party` are copyright of their respective owners
 ## Compiling
 
 // TODO
+
+### Linux
+
+```sh
+sudo apt install gcc mesa-common-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev
+bash proc/linux/gcc_dbg.sh
+```
