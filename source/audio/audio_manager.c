@@ -134,6 +134,11 @@ void _mg_audio_manager_load(char *filename, mg_audio_type type, bool loop, bool 
         .volume = volume,
     };
 
+    if (!gs_handle_is_valid(asset.source))
+    {
+        return;
+    }
+
     asset.instance = gs_audio_instance_create(
         &(gs_audio_instance_decl_t){
             .src = asset.source,
@@ -141,6 +146,11 @@ void _mg_audio_manager_load(char *filename, mg_audio_type type, bool loop, bool 
             .loop = loop,
             .volume = volume * g_audio_manager->master_vol * g_audio_manager->mixer_vol[type],
         });
+    
+    if (!gs_handle_is_valid(asset.instance))
+    {
+        return;
+    }
 
     gs_dyn_array_push(g_audio_manager->assets, asset);
 }
