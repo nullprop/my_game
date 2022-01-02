@@ -4,11 +4,12 @@
     * Copyright (c) 2021 Lauri Räsänen
     * ================================
 
-    Q3 MD3 version 15 loading.
+    Q3 MD3 version 15 loading + modified animation.cfg.
 =================================================================*/
 
 #include "model.h"
 #include "../util/render.h"
+#include "../util/string.h"
 #include "../util/transform.h"
 
 // shorthand util for failing during MD3 load
@@ -149,17 +150,127 @@ bool mg_load_md3(char *filename, md3_t *model)
         // Textures
         // TODO: don't load same texture multiple times; create manager
         surf->textures = gs_malloc(sizeof(gs_asset_texture_t) * surf->num_shaders);
-        for (size_t i = 0; i < surf->num_shaders; i++)
+        for (size_t j = 0; j < surf->num_shaders; j++)
         {
             // FIXME: why do shader names start with null?
             // \0odels/players/...
-            if (surf->shaders[i].name[0] == '\0') surf->shaders[i].name[0] = 'm';
-            mg_load_texture_asset(surf->shaders[i].name, &surf->textures[i]);
+            if (surf->shaders[j].name[0] == '\0') surf->shaders[j].name[0] = 'm';
+
+            mg_load_texture_asset(surf->shaders[j].name, &surf->textures[j]);
         }
 
         // Seek to next surface
         buffer.position = off_start + surf->off_end;
     }
+
+    // Animations from animation.cfg
+    model->animations = gs_dyn_array_new(mg_md3_animation_t);
+
+    char *dir_path = mg_get_directory_from_path(filename);
+    char *cfg_name = "animation.cfg";
+    char *cfg_path = mg_append_string(dir_path, cfg_name);
+
+    if (gs_util_file_exists(cfg_path))
+    {
+        gs_println("mg_load_md3(): loading animations from '%s'", cfg_path);
+
+        FILE *file = fopen(cfg_path, "r");
+        if (file == NULL)
+        {
+            gs_println("WARN: failed to read animation file %s", cfg_path);
+            return;
+        }
+
+        char line[128];
+        char *token;
+        u8 num_parts = 0;
+        u8 num_line = 0;
+        while (fgets(line, sizeof(line), file))
+        {
+            num_line++;
+
+            // Empty line
+            if (line[0] == '\n')
+            {
+                continue;
+            }
+
+            // Comment
+            if (line[0] == '/' && line[1] == '/')
+            {
+                continue;
+            }
+
+            mg_md3_animation_t anim = (mg_md3_animation_t){};
+
+            // Parse values delimited by space:
+            // first frame, num frames, loop, frames per second, name
+            num_parts = 0;
+            token = strtok(&line, " ");
+            while (token)
+            {
+                switch (num_parts)
+                {
+                case 0:
+                    anim.first_frame = strtol(token, (char **)NULL, 10);
+                    break;
+
+                case 1:
+                    anim.num_frames = strtol(token, (char **)NULL, 10);
+                    break;
+
+                case 2:
+                    anim.loop = strtol(token, (char **)NULL, 10);
+                    break;
+
+                case 3:
+                    anim.fps = strtol(token, (char **)NULL, 10);
+                    break;
+
+                case 4:
+                    strcat(anim.name, token);
+                    // Remove new line at the end
+                    for (size_t i = 0; i < 16; i++)
+                    {
+                        if (anim.name[i] == '\n')
+                        {
+                            anim.name[i] = '\0';
+                            break;
+                        }
+                    }
+
+                    break;
+
+                default:
+                    gs_println("WARN: animation config line %zu has too many arguments", num_line);
+                    break;
+                }
+
+                num_parts++;
+
+                token = strtok(0, " ");
+            }
+
+            // Check we got all
+            if (num_parts < 5)
+            {
+                gs_println("WARN: animation config line %zu has too few arguments", num_line);
+                continue;
+            }
+
+            gs_dyn_array_push(model->animations, anim);
+        }
+
+        fclose(file);
+        gs_println("Config loaded");
+    }
+    else
+    {
+        gs_println("mg_load_md3(): no animation.cfg for model '%s' (%s)", filename, cfg_path);
+    }
+
+    gs_free(dir_path);
+    gs_free(cfg_path);
 
     return true;
 }
@@ -194,4 +305,6 @@ void mg_free_md3(md3_t *model)
     model->frames = NULL;
     model->tags = NULL;
     model->surfaces = NULL;
+
+    gs_dyn_array_free(model->animations);
 }

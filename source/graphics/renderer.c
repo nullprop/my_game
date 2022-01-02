@@ -158,6 +158,7 @@ uint32_t mg_renderer_create_renderable(mg_model_t model, gs_vqs *transform)
         .u_view = gs_vqs_to_mat4(transform),
         .frame = 0,
         .prev_frame_time = gs_platform_elapsed_time(),
+        .current_animation = NULL,
     };
 
     return gs_slot_array_insert(g_renderer->renderables, renderable);
@@ -192,6 +193,35 @@ gs_handle(gs_graphics_shader_t) mg_renderer_get_shader(char *name)
     gs_println("ERR: mg_renderer_get_shader no shader %s", name);
 
     return gs_handle_invalid(gs_graphics_shader_t);
+}
+
+bool32_t mg_renderer_play_animation(uint32_t id, char *name)
+{
+    mg_renderable_t *renderable = mg_renderer_get_renderable(id);
+    if (renderable == NULL)
+    {
+        return false;
+    }
+
+    bool32_t found = false;
+
+    for (size_t i = 0; i < gs_dyn_array_size(renderable->model.data->animations); i++)
+    {
+        if (strcmp(renderable->model.data->animations[i].name, name) == 0)
+        {
+            renderable->current_animation = &renderable->model.data->animations[i];
+            renderable->frame = renderable->current_animation->first_frame;
+            found = true;
+            break;
+        }
+    }
+
+    if (!found)
+    {
+        gs_println("WARN: mg_model_manager_play_animation could not find animation %s in model %s", name, renderable->model.filename);
+    }
+
+    return found;
 }
 
 void _mg_renderer_renderable_pass(gs_vec2 fb)
@@ -279,15 +309,40 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
             gs_graphics_draw(&g_renderer->cb, &(gs_graphics_draw_desc_t){.start = 0, .count = surf.num_tris * 3});
         }
 
-        // Test, loop through anims at 20fps
-        double pt = gs_platform_elapsed_time();
-        if (pt - renderable->prev_frame_time >= 50)
+        // Play animation
+        if (renderable->current_animation != NULL)
         {
-            renderable->frame++;
-            renderable->prev_frame_time += 50;
-            if (renderable->frame >= renderable->model.data->header.num_frames)
+            double plat_time = gs_platform_elapsed_time();
+            double frame_time = 1000 / renderable->current_animation->fps;
+
+            if (plat_time - renderable->prev_frame_time >= frame_time)
             {
-                renderable->frame = 0;
+                renderable->frame++;
+                renderable->prev_frame_time += frame_time;
+
+                if (renderable->frame >= renderable->current_animation->first_frame + renderable->current_animation->num_frames)
+                {
+                    if (renderable->current_animation->loop)
+                    {
+                        renderable->frame = renderable->current_animation->first_frame;
+                    }
+                    else
+                    {
+                        renderable->current_animation = NULL;
+                    }
+                }
+
+                // Sanity
+                if (renderable->frame >= renderable->model.data->header.num_frames)
+                {
+                    gs_println(
+                        "ERR: _mg_renderer_renderable_pass animation '%s' exceeds model '%s' num_frames %d",
+                        renderable->current_animation->name,
+                        renderable->model.filename,
+                        renderable->model.data->header.num_frames);
+                    renderable->frame = 0;
+                    renderable->current_animation = NULL;
+                }
             }
         }
     }

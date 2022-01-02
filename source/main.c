@@ -100,14 +100,17 @@ void app_init()
     testmodel_transform_1->position = gs_v3(660.0f, 2048.0f, 50.0f);
     testmodel_transform_1->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
     testmodel_transform_1->scale = gs_v3(1.0f, 1.0f, 1.0f);
-    mg_renderer_create_renderable(*testmodel_1, testmodel_transform_1);
+    uint32_t id_1 = mg_renderer_create_renderable(*testmodel_1, testmodel_transform_1);
 
     mg_model_t *testmodel_2 = mg_model_manager_find("models/players/sarge/lower.md3");
     gs_vqs *testmodel_transform_2 = gs_malloc_init(gs_vqs);
     testmodel_transform_2->position = gs_v3(660.0f, 2018.0f, 50.0f);
     testmodel_transform_2->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
     testmodel_transform_2->scale = gs_v3(1.0f, 1.0f, 1.0f);
-    mg_renderer_create_renderable(*testmodel_2, testmodel_transform_2);
+    uint32_t id_2 = mg_renderer_create_renderable(*testmodel_2, testmodel_transform_2);
+
+    mg_renderer_play_animation(id_1, "TORSO_GESTURE");
+    mg_renderer_play_animation(id_2, "LEGS_WALK");
     // - - - -
 
     app_spawn();

@@ -4,7 +4,7 @@
     * Copyright (c) 2021 Lauri Räsänen
     * ================================
 
-    Q3 MD3 version 15 loading.
+    Q3 MD3 version 15 loading + modified animation.cfg.
 =================================================================*/
 
 #ifndef MODEL_H
@@ -15,6 +15,15 @@
 #define MD3_MAGIC "IDP3"
 #define MD3_VERSION 15
 #define MD3_SCALE 64.0f
+
+typedef struct mg_md3_animation_t
+{
+    int32_t first_frame;
+    int32_t num_frames;
+    bool32_t loop;
+    int32_t fps;
+    char name[16];
+} mg_md3_animation_t;
 
 typedef struct md3_header_t
 {
@@ -113,6 +122,7 @@ typedef struct md3_t
     md3_frame_t *frames;
     md3_tag_t *tags;
     md3_surface_t *surfaces;
+    gs_dyn_array(mg_md3_animation_t) animations;
 } md3_t;
 
 b32 _mg_load_md3_fail(gs_byte_buffer_t *buffer, char *msg);
