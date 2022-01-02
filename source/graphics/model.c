@@ -1,5 +1,5 @@
 /*================================================================
-    * model/model.c
+    * graphics/model.c
     *
     * Copyright (c) 2021 Lauri Räsänen
     * ================================
@@ -147,6 +147,7 @@ bool mg_load_md3(char *filename, md3_t *model)
         surf->ibo = gs_graphics_index_buffer_create(&idesc);
 
         // Textures
+        // TODO: don't load same texture multiple times; create manager
         surf->textures = gs_malloc(sizeof(gs_asset_texture_t) * surf->num_shaders);
         for (size_t i = 0; i < surf->num_shaders; i++)
         {

@@ -1,5 +1,5 @@
 /*================================================================
-    * model/model_manager.c
+    * graphics/model_manager.c
     *
     * Copyright (c) 2021 Lauri Räsänen
     * ================================
