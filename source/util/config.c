@@ -42,6 +42,61 @@ void mg_config_free()
 // Load config from file
 void _mg_config_load(char *filepath)
 {
+    // Known config keys
+    // TODO: could make a macro to simplify these
+#define NUM_KEYS 11
+    char *known_keys[NUM_KEYS] = {
+        // Video
+        "vid_fullscreen",
+        "vid_width",
+        "vid_height",
+        "vid_max_fps",
+        "vid_vsync",
+        // Sound
+        "snd_master",
+        "snd_effect",
+        "snd_music",
+        "snd_ambient",
+        // Graphics
+        "r_fov",
+        // Controls
+        "cl_sensitivity",
+    };
+    void *containers[NUM_KEYS] = {
+        // Video
+        &g_config->video.fullscreen,
+        &g_config->video.width,
+        &g_config->video.height,
+        &g_config->video.max_fps,
+        &g_config->video.vsync,
+        // Audio
+        &g_config->sound.master,
+        &g_config->sound.effect,
+        &g_config->sound.music,
+        &g_config->sound.ambient,
+        // Graphics
+        &g_config->graphics.fov,
+        // Controls
+        &g_config->controls.sensitivity,
+    };
+    mg_config_type types[NUM_KEYS] = {
+        // Video
+        MG_CONFIG_TYPE_INT,
+        MG_CONFIG_TYPE_INT,
+        MG_CONFIG_TYPE_INT,
+        MG_CONFIG_TYPE_INT,
+        MG_CONFIG_TYPE_INT,
+        // Audio
+        MG_CONFIG_TYPE_FLOAT,
+        MG_CONFIG_TYPE_FLOAT,
+        MG_CONFIG_TYPE_FLOAT,
+        MG_CONFIG_TYPE_FLOAT,
+        // Graphics
+        MG_CONFIG_TYPE_INT,
+        // Controls
+        MG_CONFIG_TYPE_FLOAT,
+    };
+
     gs_println("Loading config from '%s'", filepath);
 
     FILE *file = fopen(filepath, "r");
@@ -55,8 +110,8 @@ void _mg_config_load(char *filepath)
     char key[64];
     char value[64];
     char *token;
-    u8 num_parts;
-    uint16_t num_line;
+    u8 num_parts = 0;
+    u8 num_line = 0;
     while (fgets(line, sizeof(line), file))
     {
         num_line++;
@@ -116,62 +171,8 @@ void _mg_config_load(char *filepath)
             continue;
         }
 
-// Handle known config keys
-// TODO: could make a macro to simplify these
-#define NUM_KEYS 11
-        char *known_keys[NUM_KEYS] = {
-            // Video
-            "vid_fullscreen",
-            "vid_width",
-            "vid_height",
-            "vid_max_fps",
-            "vid_vsync",
-            // Sound
-            "snd_master",
-            "snd_effect",
-            "snd_music",
-            "snd_ambient",
-            // Graphics
-            "r_fov",
-            // Controls
-            "cl_sensitivity",
-        };
-        void *containers[NUM_KEYS] = {
-            // Video
-            &g_config->video.fullscreen,
-            &g_config->video.width,
-            &g_config->video.height,
-            &g_config->video.max_fps,
-            &g_config->video.vsync,
-            // Audio
-            &g_config->sound.master,
-            &g_config->sound.effect,
-            &g_config->sound.music,
-            &g_config->sound.ambient,
-            // Graphics
-            &g_config->graphics.fov,
-            // Controls
-            &g_config->controls.sensitivity,
-        };
-        mg_config_type types[NUM_KEYS] = {
-            // Video
-            MG_CONFIG_TYPE_INT,
-            MG_CONFIG_TYPE_INT,
-            MG_CONFIG_TYPE_INT,
-            MG_CONFIG_TYPE_INT,
-            MG_CONFIG_TYPE_INT,
-            // Audio
-            MG_CONFIG_TYPE_FLOAT,
-            MG_CONFIG_TYPE_FLOAT,
-            MG_CONFIG_TYPE_FLOAT,
-            MG_CONFIG_TYPE_FLOAT,
-            // Graphics
-            MG_CONFIG_TYPE_INT,
-            // Controls
-            MG_CONFIG_TYPE_FLOAT,
-        };
+        // Find the key
         bool32_t found_key = false;
-
         for (size_t i = 0; i < NUM_KEYS; i++)
         {
             if (gs_string_compare_equal(&key, known_keys[i]))
