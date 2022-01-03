@@ -11,6 +11,7 @@
 #include "../util/render.h"
 #include "../util/string.h"
 #include "../util/transform.h"
+#include "texture_manager.h"
 
 // shorthand util for failing during MD3 load
 b32 _mg_load_md3_fail(gs_byte_buffer_t *buffer, char *msg)
@@ -148,15 +149,14 @@ bool mg_load_md3(char *filename, md3_t *model)
         surf->ibo = gs_graphics_index_buffer_create(&idesc);
 
         // Textures
-        // TODO: don't load same texture multiple times; create manager
-        surf->textures = gs_malloc(sizeof(gs_asset_texture_t) * surf->num_shaders);
+        surf->textures = gs_malloc(sizeof(gs_asset_texture_t *) * surf->num_shaders);
         for (size_t j = 0; j < surf->num_shaders; j++)
         {
             // FIXME: why do shader names start with null?
             // \0odels/players/...
             if (surf->shaders[j].name[0] == '\0') surf->shaders[j].name[0] = 'm';
 
-            mg_load_texture_asset(surf->shaders[j].name, &surf->textures[j]);
+            surf->textures[j] = mg_texture_manager_get(surf->shaders[j].name);
         }
 
         // Seek to next surface

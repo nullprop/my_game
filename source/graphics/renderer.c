@@ -283,7 +283,7 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
             // Texture
             uniforms[3] = (gs_graphics_bind_uniform_desc_t){
                 .uniform = g_renderer->u_tex,
-                .data = (gs_handle_is_valid(surf.textures[0].hndl) ? &surf.textures[0].hndl : &g_renderer->missing_texture),
+                .data = ((surf.textures[0] != NULL && gs_handle_is_valid(surf.textures[0]->hndl)) ? &surf.textures[0]->hndl : &g_renderer->missing_texture),
                 .binding = 1, // FRAGMENT
             };
 

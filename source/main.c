@@ -20,6 +20,7 @@
 #include "entities/player.h"
 #include "graphics/model_manager.h"
 #include "graphics/renderer.h"
+#include "graphics/texture_manager.h"
 #include "util/config.h"
 
 bsp_map_t *bsp_map = NULL;
@@ -57,9 +58,12 @@ void app_init()
 {
     glfwSetWindowSizeCallback(gs_platform_raw_window_handle(gs_platform_main_window()), &on_window_resize);
 
+    // Init managers, free in app_shutdown if adding here
     mg_audio_manager_init();
+    mg_texture_manager_init();
     mg_model_manager_init();
     mg_renderer_init();
+
     g_renderer->use_immediate_mode = true;
     gsi = &g_renderer->gsi;
 
@@ -173,8 +177,12 @@ void app_shutdown()
 {
     mg_player_free(player);
     bsp_map_free(bsp_map);
+
     mg_renderer_free();
+    mg_model_manager_free();
+    mg_texture_manager_free();
     mg_audio_manager_free();
+
     mg_config_free();
 }
 

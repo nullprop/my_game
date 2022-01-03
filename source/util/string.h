@@ -31,6 +31,25 @@ static inline char *mg_append_string(char *str1, char *str2)
     return app;
 }
 
+static inline char *mg_path_remove_ext(char *path)
+{
+    size_t malloc_sz = strlen(path) + 1;
+    char *name = gs_malloc(malloc_sz);
+    bool32_t end = false;
+
+    for (size_t i = 0; i < malloc_sz; i++)
+    {
+        if (path[i] == '.')
+        {
+            end = true;
+        }
+
+        name[i] = end ? '\0' : path[i];
+    }
+
+    return name;
+}
+
 static inline char *mg_get_filename_from_path(char *path)
 {
     char *filename = path;

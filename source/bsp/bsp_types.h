@@ -394,7 +394,7 @@ typedef struct bsp_map_t
     struct
     {
         uint32_t count;
-        gs_asset_texture_t *data;
+        gs_asset_texture_t **data;
     } texture_assets;
 
     struct

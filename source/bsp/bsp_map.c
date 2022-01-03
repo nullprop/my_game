@@ -12,6 +12,7 @@
 
 #include "bsp_map.h"
 #include "../graphics/renderer.h"
+#include "../graphics/texture_manager.h"
 #include "../util/camera.h"
 #include "../util/render.h"
 #include "../util/transform.h"
@@ -176,12 +177,12 @@ void _bsp_load_textures(bsp_map_t *map)
 
     map->stats.total_textures = num_textures;
     map->texture_assets.count = num_textures;
-    map->texture_assets.data = gs_malloc(sizeof(gs_asset_texture_t) * num_textures);
+    map->texture_assets.data = gs_malloc(sizeof(gs_asset_texture_t *) * num_textures);
 
     for (size_t i = 0; i < num_textures; i++)
     {
-        bool32_t success = mg_load_texture_asset(map->textures.data[i].name, &map->texture_assets.data[i]);
-        if (success)
+        map->texture_assets.data[i] = mg_texture_manager_get(map->textures.data[i].name);
+        if (map->texture_assets.data[i] != NULL)
         {
             map->stats.loaded_textures++;
         }
@@ -386,9 +387,9 @@ void bsp_map_render_immediate(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camer
         {
             bsp_patch_t patch = map->patches[index];
 
-            if (patch.texture_idx >= 0 && gs_handle_is_valid(map->texture_assets.data[patch.texture_idx].hndl))
+            if (patch.texture_idx >= 0 && map->texture_assets.data[patch.texture_idx] != NULL && gs_handle_is_valid(map->texture_assets.data[patch.texture_idx]->hndl))
             {
-                gsi_texture(gsi, map->texture_assets.data[patch.texture_idx].hndl);
+                gsi_texture(gsi, map->texture_assets.data[patch.texture_idx]->hndl);
             }
             else
             {
@@ -426,9 +427,9 @@ void bsp_map_render_immediate(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camer
             int32_t first_index = face.first_index;
             int32_t first_vertex = face.first_vertex;
 
-            if (face.texture >= 0 && gs_handle_is_valid(map->texture_assets.data[face.texture].hndl))
+            if (face.texture >= 0 && map->texture_assets.data[face.texture] != NULL && gs_handle_is_valid(map->texture_assets.data[face.texture]->hndl))
             {
-                gsi_texture(gsi, map->texture_assets.data[face.texture].hndl);
+                gsi_texture(gsi, map->texture_assets.data[face.texture]->hndl);
             }
             else
             {
@@ -528,7 +529,7 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
         texture_index = map->faces.data[container[i].index].texture;
         lm_index = map->faces.data[container[i].index].lm_index;
 
-        if (!gs_handle_is_valid(map->texture_assets.data[texture_index].hndl))
+        if (map->texture_assets.data[texture_index] == NULL || !gs_handle_is_valid(map->texture_assets.data[texture_index]->hndl))
         {
             texture_index = -1;
         }
@@ -542,7 +543,7 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
             // TEXTURE
             {
                 .uniform = bsp_graphics_u_tex,
-                .data = texture_index >= 0 ? &map->texture_assets.data[texture_index].hndl : &map->missing_texture,
+                .data = texture_index >= 0 ? &map->texture_assets.data[texture_index]->hndl : &map->missing_texture,
                 .binding = 0, // FRAGMENT
             },
             // LIGHTMAP
