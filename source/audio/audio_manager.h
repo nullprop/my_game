@@ -1,10 +1,10 @@
 /*================================================================
-    * audio/audio_manager.h
-    *
-    * Copyright (c) 2021 Lauri Räsänen
-    * ================================
+	* audio/audio_manager.h
+	*
+	* Copyright (c) 2021 Lauri Räsänen
+	* ================================
 
-    ...
+	...
 =================================================================*/
 
 #ifndef MG_AUDIO_MANAGER_H
@@ -14,28 +14,28 @@
 
 typedef enum mg_audio_type
 {
-    MG_AUDIO_TYPE_EFFECT,
-    MG_AUDIO_TYPE_MUSIC,
-    MG_AUDIO_TYPE_AMBIENT,
-    MG_AUDIO_TYPE_COUNT,
+	MG_AUDIO_TYPE_EFFECT,
+	MG_AUDIO_TYPE_MUSIC,
+	MG_AUDIO_TYPE_AMBIENT,
+	MG_AUDIO_TYPE_COUNT,
 } mg_audio_type;
 
 typedef struct mg_audio_asset_t
 {
-    gs_handle(gs_audio_source_t) source;
-    gs_handle(gs_audio_instance_t) instance;
-    mg_audio_type type;
-    bool loop;
-    bool persistent;
-    char *name;
-    float volume;
+	gs_handle(gs_audio_source_t) source;
+	gs_handle(gs_audio_instance_t) instance;
+	mg_audio_type type;
+	bool loop;
+	bool persistent;
+	char *name;
+	float volume;
 } mg_audio_asset_t;
 
 typedef struct mg_audio_manager_t
 {
-    gs_dyn_array(mg_audio_asset_t) assets;
-    float master_vol;
-    float mixer_vol[MG_AUDIO_TYPE_COUNT];
+	gs_dyn_array(mg_audio_asset_t) assets;
+	float master_vol;
+	float mixer_vol[MG_AUDIO_TYPE_COUNT];
 } mg_audio_manager_t;
 
 void mg_audio_manager_init();

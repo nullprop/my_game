@@ -1,10 +1,10 @@
 /*================================================================
-    * util/config.h
-    *
-    * Copyright (c) 2021 Lauri Räsänen
-    * ================================
+	* util/config.h
+	*
+	* Copyright (c) 2021 Lauri Räsänen
+	* ================================
 
-    Config types.
+	Config types.
 =================================================================*/
 
 #ifndef MG_CONFIG_H
@@ -14,45 +14,45 @@
 
 typedef enum mg_config_type
 {
-    MG_CONFIG_TYPE_INT,
-    MG_CONFIG_TYPE_FLOAT,
-    MG_CONFIG_TYPE_KEY, // TODO
-    MG_CONFIG_TYPE_COUNT,
+	MG_CONFIG_TYPE_INT,
+	MG_CONFIG_TYPE_FLOAT,
+	MG_CONFIG_TYPE_KEY, // TODO
+	MG_CONFIG_TYPE_COUNT,
 } mg_config_type;
 
 typedef struct mg_config_video_t
 {
-    bool32_t fullscreen;
-    uint32_t width;
-    uint32_t height;
-    uint32_t max_fps;
-    bool32_t vsync;
+	bool32_t fullscreen;
+	uint32_t width;
+	uint32_t height;
+	uint32_t max_fps;
+	bool32_t vsync;
 } mg_config_video_t;
 
 typedef struct mg_config_graphics_t
 {
-    uint32_t fov;
+	uint32_t fov;
 } mg_config_graphics_t;
 
 typedef struct mg_config_sound_t
 {
-    float32_t master;
-    float32_t effect;
-    float32_t music;
-    float32_t ambient;
+	float32_t master;
+	float32_t effect;
+	float32_t music;
+	float32_t ambient;
 } mg_config_sound_t;
 
 typedef struct mg_config_controls_t
 {
-    float32_t sensitivity;
+	float32_t sensitivity;
 } mg_config_controls_t;
 
 typedef struct mg_config_t
 {
-    mg_config_video_t video;
-    mg_config_graphics_t graphics;
-    mg_config_sound_t sound;
-    mg_config_controls_t controls;
+	mg_config_video_t video;
+	mg_config_graphics_t graphics;
+	mg_config_sound_t sound;
+	mg_config_controls_t controls;
 } mg_config_t;
 
 void mg_config_init();

@@ -1,10 +1,10 @@
 /*================================================================
-    * graphics/model_manager.h
-    *
-    * Copyright (c) 2021 Lauri Räsänen
-    * ================================
+	* graphics/model_manager.h
+	*
+	* Copyright (c) 2021 Lauri Räsänen
+	* ================================
 
-    ...
+	...
 =================================================================*/
 
 #ifndef MG_MODEL_MANAGER_H
@@ -17,14 +17,14 @@
 
 typedef struct mg_model_t
 {
-    char *filename;
-    char *shader;
-    md3_t *data;
+	char *filename;
+	char *shader;
+	md3_t *data;
 } mg_model_t;
 
 typedef struct mg_model_manager_t
 {
-    gs_dyn_array(mg_model_t) models;
+	gs_dyn_array(mg_model_t) models;
 } mg_model_manager_t;
 
 void mg_model_manager_init();

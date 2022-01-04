@@ -1,10 +1,10 @@
 /*================================================================
-    * bsp/bsp_trace.h
-    *
-    * Copyright (c) 2021 Lauri Räsänen
-    * ================================
+	* bsp/bsp_trace.h
+	*
+	* Copyright (c) 2021 Lauri Räsänen
+	* ================================
 
-    Types for BSP tracing.
+	Types for BSP tracing.
 =================================================================*/
 
 #ifndef BSP_TRACE_H
@@ -18,26 +18,26 @@
 
 typedef enum bsp_trace_type
 {
-    RAY,
-    SPHERE,
-    BOX,
+	RAY,
+	SPHERE,
+	BOX,
 } bsp_trace_type;
 
 typedef struct bsp_trace_t
 {
-    bsp_map_t *map;
-    bsp_trace_type type;
-    float32_t fraction;
-    float32_t radius;
-    bool32_t start_solid;
-    bool32_t all_solid;
-    gs_vec3 end;
-    gs_vec3 normal;
-    gs_vec3 mins;
-    gs_vec3 maxs;
-    gs_vec3 extents;
-    int32_t contents;
-    int32_t surface_flags;
+	bsp_map_t *map;
+	bsp_trace_type type;
+	float32_t fraction;
+	float32_t radius;
+	bool32_t start_solid;
+	bool32_t all_solid;
+	gs_vec3 end;
+	gs_vec3 normal;
+	gs_vec3 mins;
+	gs_vec3 maxs;
+	gs_vec3 extents;
+	int32_t contents;
+	int32_t surface_flags;
 } bsp_trace_t;
 
 void bsp_trace_ray(bsp_trace_t *trace, gs_vec3 start, gs_vec3 end, int32_t content_mask);

@@ -1,10 +1,10 @@
 /*================================================================
-    * shaders/basic_unlit_fs.glsl
-    *
-    * Copyright (c) 2021 Lauri Räsänen
-    * ================================
+	* shaders/basic_unlit_fs.glsl
+	*
+	* Copyright (c) 2021 Lauri Räsänen
+	* ================================
 
-    Basic fragment shader with texture.
+	Basic fragment shader with texture.
 =================================================================*/
 
 #version 330 core
@@ -17,5 +17,5 @@ out vec4 frag_color;
 
 void main()
 {
-    frag_color = texture(u_tex, v_texcoord);
+	frag_color = texture(u_tex, v_texcoord);
 };

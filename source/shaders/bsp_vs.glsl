@@ -1,10 +1,10 @@
 /*================================================================
-    * shaders/bsp_vs.glsl
-    *
-    * Copyright (c) 2021 Lauri Räsänen
-    * ================================
+	* shaders/bsp_vs.glsl
+	*
+	* Copyright (c) 2021 Lauri Räsänen
+	* ================================
 
-    BSP vertex shader.
+	BSP vertex shader.
 =================================================================*/
 
 #version 330 core
@@ -22,7 +22,7 @@ out vec2 lm_coord;
 
 void main()
 {
-    gl_Position = u_proj * vec4(a_pos, 1.0);
-    tex_coord = a_tex_coord;
-    lm_coord = a_lm_coord;
+	gl_Position = u_proj * vec4(a_pos, 1.0);
+	tex_coord = a_tex_coord;
+	lm_coord = a_lm_coord;
 }

@@ -1,10 +1,10 @@
 /*================================================================
-    * shaders/basic_vs.glsl
-    *
-    * Copyright (c) 2021 Lauri Räsänen
-    * ================================
+	* shaders/basic_vs.glsl
+	*
+	* Copyright (c) 2021 Lauri Räsänen
+	* ================================
 
-    Basic vertex shader.
+	Basic vertex shader.
 =================================================================*/
 
 #version 330 core
@@ -21,8 +21,8 @@ out vec2 v_texcoord;
 
 void main()
 {
-    v_normal = -normalize(mat3(u_view) * a_normal);
-    v_texcoord = a_texcoord;
+	v_normal = -normalize(mat3(u_view) * a_normal);
+	v_texcoord = a_texcoord;
 
-    gl_Position = u_proj * u_view * vec4(a_pos, 1.0);
+	gl_Position = u_proj * u_view * vec4(a_pos, 1.0);
 }

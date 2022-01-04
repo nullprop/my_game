@@ -1,10 +1,10 @@
 /*================================================================
-    * main.c
-    *
-    * Copyright (c) 2021 Lauri Räsänen
-    * ================================
+	* main.c
+	*
+	* Copyright (c) 2021 Lauri Räsänen
+	* ================================
 
-    The main entry point of my_game.
+	The main entry point of my_game.
 =================================================================*/
 
 #define GS_IMPL
@@ -23,182 +23,182 @@
 #include "graphics/texture_manager.h"
 #include "util/config.h"
 
-bsp_map_t *bsp_map = NULL;
-mg_player_t *player = NULL;
+bsp_map_t *bsp_map	 = NULL;
+mg_player_t *player	 = NULL;
 gs_immediate_draw_t *gsi = NULL;
 
 void app_spawn()
 {
-    if (bsp_map->valid)
-    {
-        player->velocity = gs_v3(0, 0, 0);
-        player->camera.pitch = 0;
-        bsp_map_find_spawn_point(bsp_map, &player->transform.position, &player->yaw);
-        player->last_valid_pos = player->transform.position;
-        player->yaw -= 90;
-    }
+	if (bsp_map->valid)
+	{
+		player->velocity     = gs_v3(0, 0, 0);
+		player->camera.pitch = 0;
+		bsp_map_find_spawn_point(bsp_map, &player->transform.position, &player->yaw);
+		player->last_valid_pos = player->transform.position;
+		player->yaw -= 90;
+	}
 }
 
 void on_window_resize(GLFWwindow *window, int width, int height)
 {
-    if (player != NULL)
-    {
-        if (width == 0 || height == 0)
-        {
-            player->camera.cam.aspect_ratio = 1;
-        }
-        else
-        {
-            player->camera.cam.aspect_ratio = width / height;
-        }
-    }
+	if (player != NULL)
+	{
+		if (width == 0 || height == 0)
+		{
+			player->camera.cam.aspect_ratio = 1;
+		}
+		else
+		{
+			player->camera.cam.aspect_ratio = width / height;
+		}
+	}
 }
 
 void app_init()
 {
-    glfwSetWindowSizeCallback(gs_platform_raw_window_handle(gs_platform_main_window()), &on_window_resize);
+	glfwSetWindowSizeCallback(gs_platform_raw_window_handle(gs_platform_main_window()), &on_window_resize);
 
-    // Init managers, free in app_shutdown if adding here
-    mg_audio_manager_init();
-    mg_texture_manager_init();
-    mg_model_manager_init();
-    mg_renderer_init();
+	// Init managers, free in app_shutdown if adding here
+	mg_audio_manager_init();
+	mg_texture_manager_init();
+	mg_model_manager_init();
+	mg_renderer_init();
 
-    g_renderer->use_immediate_mode = true;
-    gsi = &g_renderer->gsi;
+	g_renderer->use_immediate_mode = true;
+	gsi			       = &g_renderer->gsi;
 
-    // Lock mouse at start by default
-    //gs_platform_lock_mouse(gs_platform_main_window(), true);
-    if (glfwRawMouseMotionSupported())
-    {
-        glfwSetInputMode(gs_platform_raw_window_handle(gs_platform_main_window()), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-    }
+	// Lock mouse at start by default
+	// gs_platform_lock_mouse(gs_platform_main_window(), true);
+	if (glfwRawMouseMotionSupported())
+	{
+		glfwSetInputMode(gs_platform_raw_window_handle(gs_platform_main_window()), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+	}
 
-    bsp_map = gs_malloc_init(bsp_map_t);
-    load_bsp("maps/q3dm1.bsp", bsp_map);
+	bsp_map = gs_malloc_init(bsp_map_t);
+	load_bsp("maps/q3dm1.bsp", bsp_map);
 
-    if (bsp_map->valid)
-    {
-        bsp_map_init(bsp_map);
-        g_renderer->bsp = bsp_map;
-    }
+	if (bsp_map->valid)
+	{
+		bsp_map_init(bsp_map);
+		g_renderer->bsp = bsp_map;
+	}
 
-    player = mg_player_new();
-    player->map = bsp_map;
-    player->camera.cam.fov = g_config->graphics.fov;
+	player		       = mg_player_new();
+	player->map	       = bsp_map;
+	player->camera.cam.fov = g_config->graphics.fov;
 
-    g_renderer->player = player;
-    g_renderer->cam = &player->camera.cam;
+	g_renderer->player = player;
+	g_renderer->cam	   = &player->camera.cam;
 
-    // - - - -
-    // MD3 testing
-    mg_model_t *testmodel = mg_model_manager_find("models/players/sarge/head.md3");
-    gs_vqs *testmodel_transform = gs_malloc_init(gs_vqs);
-    testmodel_transform->position = gs_v3(660.0f, 2078.0f, 50.0f);
-    testmodel_transform->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
-    testmodel_transform->scale = gs_v3(1.0f, 1.0f, 1.0f);
-    mg_renderer_create_renderable(*testmodel, testmodel_transform);
+	// - - - -
+	// MD3 testing
+	mg_model_t *testmodel	      = mg_model_manager_find("models/players/sarge/head.md3");
+	gs_vqs *testmodel_transform   = gs_malloc_init(gs_vqs);
+	testmodel_transform->position = gs_v3(660.0f, 2078.0f, 50.0f);
+	testmodel_transform->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
+	testmodel_transform->scale    = gs_v3(1.0f, 1.0f, 1.0f);
+	mg_renderer_create_renderable(*testmodel, testmodel_transform);
 
-    mg_model_t *testmodel_1 = mg_model_manager_find("models/players/sarge/upper.md3");
-    gs_vqs *testmodel_transform_1 = gs_malloc_init(gs_vqs);
-    testmodel_transform_1->position = gs_v3(660.0f, 2048.0f, 50.0f);
-    testmodel_transform_1->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
-    testmodel_transform_1->scale = gs_v3(1.0f, 1.0f, 1.0f);
-    uint32_t id_1 = mg_renderer_create_renderable(*testmodel_1, testmodel_transform_1);
+	mg_model_t *testmodel_1		= mg_model_manager_find("models/players/sarge/upper.md3");
+	gs_vqs *testmodel_transform_1	= gs_malloc_init(gs_vqs);
+	testmodel_transform_1->position = gs_v3(660.0f, 2048.0f, 50.0f);
+	testmodel_transform_1->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
+	testmodel_transform_1->scale	= gs_v3(1.0f, 1.0f, 1.0f);
+	uint32_t id_1			= mg_renderer_create_renderable(*testmodel_1, testmodel_transform_1);
 
-    mg_model_t *testmodel_2 = mg_model_manager_find("models/players/sarge/lower.md3");
-    gs_vqs *testmodel_transform_2 = gs_malloc_init(gs_vqs);
-    testmodel_transform_2->position = gs_v3(660.0f, 2018.0f, 50.0f);
-    testmodel_transform_2->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
-    testmodel_transform_2->scale = gs_v3(1.0f, 1.0f, 1.0f);
-    uint32_t id_2 = mg_renderer_create_renderable(*testmodel_2, testmodel_transform_2);
+	mg_model_t *testmodel_2		= mg_model_manager_find("models/players/sarge/lower.md3");
+	gs_vqs *testmodel_transform_2	= gs_malloc_init(gs_vqs);
+	testmodel_transform_2->position = gs_v3(660.0f, 2018.0f, 50.0f);
+	testmodel_transform_2->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
+	testmodel_transform_2->scale	= gs_v3(1.0f, 1.0f, 1.0f);
+	uint32_t id_2			= mg_renderer_create_renderable(*testmodel_2, testmodel_transform_2);
 
-    mg_renderer_play_animation(id_1, "TORSO_GESTURE");
-    mg_renderer_play_animation(id_2, "LEGS_WALK");
-    // - - - -
+	mg_renderer_play_animation(id_1, "TORSO_GESTURE");
+	mg_renderer_play_animation(id_2, "LEGS_WALK");
+	// - - - -
 
-    app_spawn();
+	app_spawn();
 }
 
 void app_update()
 {
-    if (gs_platform_key_pressed(GS_KEYCODE_ESC))
-        gs_engine_quit();
+	if (gs_platform_key_pressed(GS_KEYCODE_ESC))
+		gs_engine_quit();
 
-    if (gs_platform_key_pressed(GS_KEYCODE_R))
-        app_spawn();
+	if (gs_platform_key_pressed(GS_KEYCODE_R))
+		app_spawn();
 
-    if (gs_platform_key_pressed(GS_KEYCODE_F1))
-    {
-        uint32_t main_window = gs_platform_main_window();
+	if (gs_platform_key_pressed(GS_KEYCODE_F1))
+	{
+		uint32_t main_window = gs_platform_main_window();
 
-        // TODO: monitor size should probably be in the api
-        GLFWvidmode *vid_mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+		// TODO: monitor size should probably be in the api
+		GLFWvidmode *vid_mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
-        bool32_t want_fullscreen = !gs_platform_window_fullscreen(main_window);
-        gs_platform_set_window_fullscreen(main_window, want_fullscreen);
+		bool32_t want_fullscreen = !gs_platform_window_fullscreen(main_window);
+		gs_platform_set_window_fullscreen(main_window, want_fullscreen);
 
-        if (!want_fullscreen)
-        {
-            gs_platform_set_window_size(main_window, 800, 600);
+		if (!want_fullscreen)
+		{
+			gs_platform_set_window_size(main_window, 800, 600);
 
-            // Going back to windowed mode,
-            // restore window to center of screen.
-            gs_vec2 window_size = gs_platform_window_sizev(main_window);
-            gs_vec2 monitor_size = gs_v2(vid_mode->width, vid_mode->height);
+			// Going back to windowed mode,
+			// restore window to center of screen.
+			gs_vec2 window_size  = gs_platform_window_sizev(main_window);
+			gs_vec2 monitor_size = gs_v2(vid_mode->width, vid_mode->height);
 
-            // Set position
-            gs_vec2 top_left = gs_vec2_scale(gs_vec2_sub(monitor_size, window_size), 0.5f);
-            gs_platform_set_window_positionv(main_window, top_left);
-        }
-        else
-        {
-            // Set to fullscreen res
-            gs_platform_set_window_size(main_window, vid_mode->width, vid_mode->height);
-        }
-    }
+			// Set position
+			gs_vec2 top_left = gs_vec2_scale(gs_vec2_sub(monitor_size, window_size), 0.5f);
+			gs_platform_set_window_positionv(main_window, top_left);
+		}
+		else
+		{
+			// Set to fullscreen res
+			gs_platform_set_window_size(main_window, vid_mode->width, vid_mode->height);
+		}
+	}
 
-    // If click, then lock again (in case lost)
-    if (gs_platform_mouse_pressed(GS_MOUSE_LBUTTON) && !gs_platform_mouse_locked())
-    {
-        gs_platform_lock_mouse(gs_platform_main_window(), true);
-        if (glfwRawMouseMotionSupported())
-        {
-            glfwSetInputMode(gs_platform_raw_window_handle(gs_platform_main_window()), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-        }
-    }
+	// If click, then lock again (in case lost)
+	if (gs_platform_mouse_pressed(GS_MOUSE_LBUTTON) && !gs_platform_mouse_locked())
+	{
+		gs_platform_lock_mouse(gs_platform_main_window(), true);
+		if (glfwRawMouseMotionSupported())
+		{
+			glfwSetInputMode(gs_platform_raw_window_handle(gs_platform_main_window()), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+		}
+	}
 
-    mg_player_update(player);
+	mg_player_update(player);
 
-    mg_renderer_update();
+	mg_renderer_update();
 }
 
 void app_shutdown()
 {
-    mg_player_free(player);
-    bsp_map_free(bsp_map);
+	mg_player_free(player);
+	bsp_map_free(bsp_map);
 
-    mg_renderer_free();
-    mg_model_manager_free();
-    mg_texture_manager_free();
-    mg_audio_manager_free();
+	mg_renderer_free();
+	mg_model_manager_free();
+	mg_texture_manager_free();
+	mg_audio_manager_free();
 
-    mg_config_free();
+	mg_config_free();
 }
 
 gs_app_desc_t gs_main(int32_t argc, char **argv)
 {
-    // Load config first so we can use resolution, etc.
-    mg_config_init();
+	// Load config first so we can use resolution, etc.
+	mg_config_init();
 
-    return (gs_app_desc_t){
-        .init = app_init,
-        .update = app_update,
-        .shutdown = app_shutdown,
-        .window_flags = g_config->video.fullscreen ? GS_WINDOW_FLAGS_FULLSCREEN : 0,
-        .window_width = g_config->video.width,
-        .window_height = g_config->video.height,
-        .enable_vsync = g_config->video.vsync,
-        .frame_rate = g_config->video.max_fps,
-    };
+	return (gs_app_desc_t){
+		.init	       = app_init,
+		.update	       = app_update,
+		.shutdown      = app_shutdown,
+		.window_flags  = g_config->video.fullscreen ? GS_WINDOW_FLAGS_FULLSCREEN : 0,
+		.window_width  = g_config->video.width,
+		.window_height = g_config->video.height,
+		.enable_vsync  = g_config->video.vsync,
+		.frame_rate    = g_config->video.max_fps,
+	};
 }

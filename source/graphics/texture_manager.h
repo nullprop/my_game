@@ -1,10 +1,10 @@
 /*================================================================
-    * graphics/texture_manager.h
-    *
-    * Copyright (c) 2021 Lauri Räsänen
-    * ================================
+	* graphics/texture_manager.h
+	*
+	* Copyright (c) 2021 Lauri Räsänen
+	* ================================
 
-    ...
+	...
 =================================================================*/
 
 #ifndef MG_TEXTURE_MANAGER_H
@@ -14,13 +14,13 @@
 
 typedef struct mg_texture_t
 {
-    char *filename;
-    gs_asset_texture_t *asset;
+	char *filename;
+	gs_asset_texture_t *asset;
 } mg_texture_t;
 
 typedef struct mg_texture_manager_t
 {
-    gs_dyn_array(mg_texture_t) textures;
+	gs_dyn_array(mg_texture_t) textures;
 } mg_texture_manager_t;
 
 void mg_texture_manager_init();

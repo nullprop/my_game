@@ -1,10 +1,10 @@
 /*================================================================
-    * graphics/renderer.h
-    *
-    * Copyright (c) 2021 Lauri Räsänen
-    * ================================
+	* graphics/renderer.h
+	*
+	* Copyright (c) 2021 Lauri Räsänen
+	* ================================
 
-    ...
+	...
 =================================================================*/
 
 #ifndef MG_RENDERER_H
@@ -21,31 +21,31 @@
 // Renderable instance of a model
 typedef struct mg_renderable_t
 {
-    gs_vqs *transform;
-    gs_mat4 u_view;
-    mg_model_t model;
-    mg_md3_animation_t *current_animation;
-    int32_t frame;
-    double prev_frame_time;
+	gs_vqs *transform;
+	gs_mat4 u_view;
+	mg_model_t model;
+	mg_md3_animation_t *current_animation;
+	int32_t frame;
+	double prev_frame_time;
 } mg_renderable_t;
 
 typedef struct mg_renderer_t
 {
-    gs_command_buffer_t cb;
-    gs_immediate_draw_t gsi;
-    bool32_t use_immediate_mode;
-    gs_camera_t *cam;
-    bsp_map_t *bsp;
-    mg_player_t *player;
-    gs_slot_array(mg_renderable_t) renderables;
-    gs_handle(gs_graphics_pipeline_t) pipe;
-    gs_dyn_array(gs_handle(gs_graphics_shader_t)) shaders;
-    gs_dyn_array(char *) shader_names;
-    gs_handle(gs_graphics_uniform_t) u_proj;
-    gs_handle(gs_graphics_uniform_t) u_view;
-    gs_handle(gs_graphics_uniform_t) u_light;
-    gs_handle(gs_graphics_uniform_t) u_tex;
-    gs_handle(gs_graphics_texture_t) missing_texture;
+	gs_command_buffer_t cb;
+	gs_immediate_draw_t gsi;
+	bool32_t use_immediate_mode;
+	gs_camera_t *cam;
+	bsp_map_t *bsp;
+	mg_player_t *player;
+	gs_slot_array(mg_renderable_t) renderables;
+	gs_handle(gs_graphics_pipeline_t) pipe;
+	gs_dyn_array(gs_handle(gs_graphics_shader_t)) shaders;
+	gs_dyn_array(char *) shader_names;
+	gs_handle(gs_graphics_uniform_t) u_proj;
+	gs_handle(gs_graphics_uniform_t) u_view;
+	gs_handle(gs_graphics_uniform_t) u_light;
+	gs_handle(gs_graphics_uniform_t) u_tex;
+	gs_handle(gs_graphics_texture_t) missing_texture;
 } mg_renderer_t;
 
 void mg_renderer_init();
