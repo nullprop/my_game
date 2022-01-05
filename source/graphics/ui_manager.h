@@ -50,6 +50,8 @@ void mg_ui_manager_free();
 void mg_ui_manager_render(gs_vec2 fb);
 void _mg_ui_manager_pass(gs_vec2 fb);
 
+void mg_ui_manager_add_dialogue(char *text);
+
 uint32_t mg_ui_manager_add_text(mg_ui_text_t text);
 void mg_ui_manager_remove_text(uint32_t id);
 mg_ui_text_t *mg_ui_manager_get_text(uint32_t id);

@@ -21,31 +21,7 @@ void mg_ui_manager_init()
 	g_ui_manager->rects = gs_slot_array_new(mg_ui_rect_t);
 
 	// Test
-	mg_ui_text_t text = {
-		.element = {
-			.height	  = 64,
-			.width	  = 512,
-			.position = {.x = 0.5, .y = 0.85},
-			.center_x = true,
-			.center_y = true,
-		},
-		.font_size = 16.0f,
-		.content   = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-		.color	   = {.r = 255, .g = 255, .b = 255, .a = 255},
-
-	};
-	mg_ui_manager_add_text(text);
-	mg_ui_rect_t rect = {
-		.element = {
-			.height	  = 64, // same height for center_y
-			.width	  = 512 + 16,
-			.position = {.x = 0.5, .y = 0.85},
-			.center_x = true,
-			.center_y = true,
-		},
-		.color = {.r = 0, .g = 0, .b = 0, .a = 80},
-	};
-	mg_ui_manager_add_rect(rect);
+	mg_ui_manager_add_dialogue("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
 }
 
 void mg_ui_manager_free()
@@ -174,6 +150,72 @@ void _mg_ui_manager_pass(gs_vec2 fb)
 	gs_graphics_set_viewport(&g_renderer->cb, 0, 0, (int32_t)fb.x, (int32_t)fb.y);
 	gsi_draw(&g_renderer->gsi, &g_renderer->cb);
 	gs_graphics_end_render_pass(&g_renderer->cb);
+}
+
+void mg_ui_manager_add_dialogue(char *text)
+{
+	const gs_vec2 fb	= gs_platform_framebuffer_sizev(gs_platform_main_window());
+	float pos_x_pct		= 0.5f;
+	float pos_y_pct		= 0.85f;
+	float pos_x		= fb.x * pos_x_pct;
+	float cur_pos_x		= pos_x;
+	uint32_t max_width	= 512;
+	gs_asset_font_t *fp	= &g_renderer->gsi.font_default;
+	stbtt_bakedchar *glyphs = (stbtt_bakedchar *)fp->glyphs;
+	float char_width	= glyphs->xadvance;
+	float char_height	= 16.0f;
+	uint32_t num_lines	= 1;
+	char *word;
+	char modifiable[gs_string_length(text) + 1];
+	strcpy(modifiable, text);
+
+	word = strtok(modifiable, " ");
+	while (word)
+	{
+		uint32_t word_width = char_width * gs_string_length(word);
+
+		if (cur_pos_x > pos_x + FLT_EPSILON)
+		{
+			cur_pos_x += char_width;
+			if (cur_pos_x + word_width - pos_x > max_width)
+			{
+				num_lines++;
+				cur_pos_x = pos_x;
+			}
+		}
+
+		cur_pos_x += (float)word_width;
+		word = strtok(NULL, " ");
+	}
+
+	uint32_t element_height = (num_lines + 1) * char_height;
+
+	mg_ui_text_t text_el = {
+		.element = {
+			.height	  = element_height,
+			.width	  = max_width,
+			.position = {.x = pos_x_pct, .y = pos_y_pct},
+			.center_x = true,
+			.center_y = true,
+		},
+		.font_size = 16.0f,
+		.content   = text,
+		.color	   = {.r = 255, .g = 255, .b = 255, .a = 255},
+
+	};
+	mg_ui_manager_add_text(text_el);
+
+	mg_ui_rect_t rect = {
+		.element = {
+			.height	  = element_height, // same height for center_y
+			.width	  = max_width + 16,
+			.position = {.x = pos_x_pct, .y = pos_y_pct},
+			.center_x = true,
+			.center_y = true,
+		},
+		.color = {.r = 0, .g = 0, .b = 0, .a = 80},
+	};
+	mg_ui_manager_add_rect(rect);
 }
 
 uint32_t mg_ui_manager_add_text(mg_ui_text_t text)
