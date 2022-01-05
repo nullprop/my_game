@@ -19,6 +19,10 @@ In development.
 
 ![game screenshot](/docs/screenshots/game_2022-01-05.png)
 
+<p align="center">Testing with Q3 assets.</p>
+
+---
+
 ## License
 
 See [LICENSE](LICENSE) for the BSD 3-Clause License.
