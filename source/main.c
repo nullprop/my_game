@@ -21,11 +21,11 @@
 #include "graphics/model_manager.h"
 #include "graphics/renderer.h"
 #include "graphics/texture_manager.h"
+#include "graphics/ui_manager.h"
 #include "util/config.h"
 
-bsp_map_t *bsp_map	 = NULL;
-mg_player_t *player	 = NULL;
-gs_immediate_draw_t *gsi = NULL;
+bsp_map_t *bsp_map  = NULL;
+mg_player_t *player = NULL;
 
 void app_spawn()
 {
@@ -62,10 +62,10 @@ void app_init()
 	mg_audio_manager_init();
 	mg_texture_manager_init();
 	mg_model_manager_init();
+	mg_ui_manager_init();
 	mg_renderer_init();
 
 	g_renderer->use_immediate_mode = true;
-	gsi			       = &g_renderer->gsi;
 
 	// Lock mouse at start by default
 	// gs_platform_lock_mouse(gs_platform_main_window(), true);
@@ -94,21 +94,21 @@ void app_init()
 	// MD3 testing
 	mg_model_t *testmodel	      = mg_model_manager_find("models/players/sarge/head.md3");
 	gs_vqs *testmodel_transform   = gs_malloc_init(gs_vqs);
-	testmodel_transform->position = gs_v3(660.0f, 2078.0f, 50.0f);
+	testmodel_transform->position = gs_v3(660.0f, 778.0f, -10.0f);
 	testmodel_transform->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
 	testmodel_transform->scale    = gs_v3(1.0f, 1.0f, 1.0f);
 	mg_renderer_create_renderable(*testmodel, testmodel_transform);
 
 	mg_model_t *testmodel_1		= mg_model_manager_find("models/players/sarge/upper.md3");
 	gs_vqs *testmodel_transform_1	= gs_malloc_init(gs_vqs);
-	testmodel_transform_1->position = gs_v3(660.0f, 2048.0f, 50.0f);
+	testmodel_transform_1->position = gs_v3(660.0f, 748.0f, -10.0f);
 	testmodel_transform_1->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
 	testmodel_transform_1->scale	= gs_v3(1.0f, 1.0f, 1.0f);
 	uint32_t id_1			= mg_renderer_create_renderable(*testmodel_1, testmodel_transform_1);
 
 	mg_model_t *testmodel_2		= mg_model_manager_find("models/players/sarge/lower.md3");
 	gs_vqs *testmodel_transform_2	= gs_malloc_init(gs_vqs);
-	testmodel_transform_2->position = gs_v3(660.0f, 2018.0f, 50.0f);
+	testmodel_transform_2->position = gs_v3(660.0f, 718.0f, -10.0f);
 	testmodel_transform_2->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
 	testmodel_transform_2->scale	= gs_v3(1.0f, 1.0f, 1.0f);
 	uint32_t id_2			= mg_renderer_create_renderable(*testmodel_2, testmodel_transform_2);
@@ -179,6 +179,7 @@ void app_shutdown()
 	bsp_map_free(bsp_map);
 
 	mg_renderer_free();
+	mg_ui_manager_free();
 	mg_model_manager_free();
 	mg_texture_manager_free();
 	mg_audio_manager_free();

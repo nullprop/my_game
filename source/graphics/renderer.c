@@ -10,6 +10,7 @@
 #include "renderer.h"
 #include "../util/camera.h"
 #include "../util/render.h"
+#include "ui_manager.h"
 
 mg_renderer_t *g_renderer;
 
@@ -129,7 +130,7 @@ void mg_renderer_update()
 		bsp_map_render(g_renderer->bsp, g_renderer->cam);
 	}
 	_mg_renderer_renderable_pass(fb);
-	_mg_renderer_immediate_pass(fb);
+	mg_ui_manager_render(fb);
 
 	// Submit command buffer (syncs to GPU, MUST be done on main thread where you have your GPU context created)
 	gs_graphics_submit_command_buffer(&g_renderer->cb);
@@ -145,6 +146,8 @@ void mg_renderer_free()
 
 	gs_immediate_draw_free(&g_renderer->gsi);
 	gs_command_buffer_free(&g_renderer->cb);
+
+	gs_slot_array_free(g_renderer->renderables);
 
 	gs_free(g_renderer);
 	g_renderer = NULL;
@@ -348,56 +351,6 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
 	}
 
 	gs_graphics_end_render_pass(&g_renderer->cb);
-}
-
-void _mg_renderer_immediate_pass(gs_vec2 fb)
-{
-	if (!g_renderer->use_immediate_mode) return;
-
-	_mg_renderer_draw_debug_overlay();
-	gs_renderpass im_pass = gs_default_val();
-	gs_graphics_begin_render_pass(&g_renderer->cb, im_pass);
-	gs_graphics_set_viewport(&g_renderer->cb, 0, 0, (int32_t)fb.x, (int32_t)fb.y);
-	gsi_draw(&g_renderer->gsi, &g_renderer->cb);
-	gs_graphics_end_render_pass(&g_renderer->cb);
-}
-
-void _mg_renderer_draw_debug_overlay()
-{
-	// draw fps
-	char temp[64];
-	sprintf(temp, "fps: %d", (int)gs_round(1.0f / gs_platform_delta_time()));
-	gsi_camera2D(&g_renderer->gsi);
-	gsi_text(&g_renderer->gsi, 5, 15, temp, NULL, false, 255, 255, 255, 255);
-
-	// draw map stats
-	if (g_renderer->bsp != NULL && g_renderer->bsp->valid)
-	{
-		sprintf(temp, "map: %s", g_renderer->bsp->name);
-		gsi_text(&g_renderer->gsi, 5, 30, temp, NULL, false, 255, 255, 255, 255);
-		sprintf(temp, "tris: %zu/%zu", g_renderer->bsp->stats.visible_indices / 3, g_renderer->bsp->stats.total_indices / 3);
-		gsi_text(&g_renderer->gsi, 10, 45, temp, NULL, false, 255, 255, 255, 255);
-		sprintf(temp, "faces: %zu/%zu", g_renderer->bsp->stats.visible_faces, g_renderer->bsp->stats.total_faces);
-		gsi_text(&g_renderer->gsi, 10, 60, temp, NULL, false, 255, 255, 255, 255);
-		sprintf(temp, "patches: %zu/%zu", g_renderer->bsp->stats.visible_patches, g_renderer->bsp->stats.total_patches);
-		gsi_text(&g_renderer->gsi, 10, 75, temp, NULL, false, 255, 255, 255, 255);
-		sprintf(temp, "leaf: %zu, cluster: %d", g_renderer->bsp->stats.current_leaf, g_renderer->bsp->leaves.data[g_renderer->bsp->stats.current_leaf].cluster);
-		gsi_text(&g_renderer->gsi, 10, 90, temp, NULL, false, 255, 255, 255, 255);
-	}
-
-	// draw player stats
-	if (g_renderer->player != NULL)
-	{
-		gsi_text(&g_renderer->gsi, 5, 105, "player:", NULL, false, 255, 255, 255, 255);
-		sprintf(temp, "pos: [%f, %f, %f]", g_renderer->player->transform.position.x, g_renderer->player->transform.position.y, g_renderer->player->transform.position.z);
-		gsi_text(&g_renderer->gsi, 10, 120, temp, NULL, false, 255, 255, 255, 255);
-		sprintf(temp, "ang: [%f, %f, %f]", g_renderer->player->yaw, g_renderer->player->camera.pitch, g_renderer->player->camera.roll);
-		gsi_text(&g_renderer->gsi, 10, 135, temp, NULL, false, 255, 255, 255, 255);
-		sprintf(temp, "vel: [%f, %f, %f]", g_renderer->player->velocity.x, g_renderer->player->velocity.y, g_renderer->player->velocity.z);
-		gsi_text(&g_renderer->gsi, 10, 150, temp, NULL, false, 255, 255, 255, 255);
-		sprintf(temp, "vel_abs: %f, h: %f", gs_vec3_len(g_renderer->player->velocity), gs_vec3_len(gs_v3(g_renderer->player->velocity.x, g_renderer->player->velocity.y, 0)));
-		gsi_text(&g_renderer->gsi, 10, 165, temp, NULL, false, 255, 255, 255, 255);
-	}
 }
 
 void _mg_renderer_load_shader(char *name)

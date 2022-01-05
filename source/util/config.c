@@ -161,7 +161,7 @@ void _mg_config_load(char *filepath)
 				break;
 			}
 
-			token = strtok(0, " ");
+			token = strtok(NULL, " ");
 		}
 
 		// Check we got both
