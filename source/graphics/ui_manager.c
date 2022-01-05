@@ -21,7 +21,7 @@ void mg_ui_manager_init()
 	g_ui_manager->rects = gs_slot_array_new(mg_ui_rect_t);
 
 	// Test
-	mg_ui_manager_add_dialogue("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+	mg_ui_manager_add_dialogue("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", 5.0f);
 }
 
 void mg_ui_manager_free()
@@ -35,6 +35,7 @@ void mg_ui_manager_free()
 
 void mg_ui_manager_render(gs_vec2 fb)
 {
+	double pt = gs_platform_elapsed_time();
 	gsi_camera2D(&g_renderer->gsi);
 
 	// Rects
@@ -67,6 +68,9 @@ void mg_ui_manager_render(gs_vec2 fb)
 				rect->color.b,
 				rect->color.a,
 				GS_GRAPHICS_PRIMITIVE_TRIANGLES);
+
+			if (rect->element.duration > 0 && pt - rect->element._start_time > rect->element.duration * 1000.0f)
+				mg_ui_manager_remove_rect(it);
 		}
 	}
 
@@ -136,6 +140,9 @@ void mg_ui_manager_render(gs_vec2 fb)
 				cur_pos_x += (float)word_width;
 				word = strtok(NULL, " ");
 			}
+
+			if (text->element.duration > 0 && pt - text->element._start_time > text->element.duration * 1000.0f)
+				mg_ui_manager_remove_text(it);
 		}
 	}
 
@@ -152,7 +159,7 @@ void _mg_ui_manager_pass(gs_vec2 fb)
 	gs_graphics_end_render_pass(&g_renderer->cb);
 }
 
-void mg_ui_manager_add_dialogue(char *text)
+void mg_ui_manager_add_dialogue(char *text, float32_t duration)
 {
 	const gs_vec2 fb	= gs_platform_framebuffer_sizev(gs_platform_main_window());
 	float pos_x_pct		= 0.5f;
@@ -197,6 +204,7 @@ void mg_ui_manager_add_dialogue(char *text)
 			.position = {.x = pos_x_pct, .y = pos_y_pct},
 			.center_x = true,
 			.center_y = true,
+			.duration = duration,
 		},
 		.font_size = 16.0f,
 		.content   = text,
@@ -212,6 +220,7 @@ void mg_ui_manager_add_dialogue(char *text)
 			.position = {.x = pos_x_pct, .y = pos_y_pct},
 			.center_x = true,
 			.center_y = true,
+			.duration = duration,
 		},
 		.color = {.r = 0, .g = 0, .b = 0, .a = 80},
 	};
@@ -220,6 +229,7 @@ void mg_ui_manager_add_dialogue(char *text)
 
 uint32_t mg_ui_manager_add_text(mg_ui_text_t text)
 {
+	text.element._start_time = gs_platform_elapsed_time();
 	return gs_slot_array_insert(g_ui_manager->texts, text);
 }
 
@@ -235,6 +245,7 @@ mg_ui_text_t *mg_ui_manager_get_text(uint32_t id)
 
 uint32_t mg_ui_manager_add_rect(mg_ui_rect_t rect)
 {
+	rect.element._start_time = gs_platform_elapsed_time();
 	return gs_slot_array_insert(g_ui_manager->rects, rect);
 }
 

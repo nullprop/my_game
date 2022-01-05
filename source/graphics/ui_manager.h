@@ -22,6 +22,8 @@ typedef struct mg_ui_element_t
 	gs_vec2 position;
 	bool32_t center_x;
 	bool32_t center_y;
+	float32_t duration;
+	double _start_time;
 } mg_ui_element_t;
 
 typedef struct mg_ui_text_t
@@ -50,7 +52,7 @@ void mg_ui_manager_free();
 void mg_ui_manager_render(gs_vec2 fb);
 void _mg_ui_manager_pass(gs_vec2 fb);
 
-void mg_ui_manager_add_dialogue(char *text);
+void mg_ui_manager_add_dialogue(char *text, float32_t duration);
 
 uint32_t mg_ui_manager_add_text(mg_ui_text_t text);
 void mg_ui_manager_remove_text(uint32_t id);
