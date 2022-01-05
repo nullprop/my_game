@@ -65,8 +65,6 @@ void app_init()
 	mg_ui_manager_init();
 	mg_renderer_init();
 
-	g_renderer->use_immediate_mode = true;
-
 	// Lock mouse at start by default
 	// gs_platform_lock_mouse(gs_platform_main_window(), true);
 	if (glfwRawMouseMotionSupported())

@@ -33,7 +33,6 @@ typedef struct mg_renderer_t
 {
 	gs_command_buffer_t cb;
 	gs_immediate_draw_t gsi;
-	bool32_t use_immediate_mode;
 	gs_camera_t *cam;
 	bsp_map_t *bsp;
 	mg_player_t *player;
