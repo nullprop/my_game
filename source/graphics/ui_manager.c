@@ -17,25 +17,41 @@ void mg_ui_manager_init()
 {
 	// Allocate
 	g_ui_manager	    = gs_malloc_init(mg_ui_manager_t);
-	g_ui_manager->texts = gs_slot_array_new(mg_renderable_t);
+	g_ui_manager->texts = gs_slot_array_new(mg_ui_text_t);
+	g_ui_manager->rects = gs_slot_array_new(mg_ui_rect_t);
 
 	// Test
-	mg_ui_text_t text = (mg_ui_text_t){
+	mg_ui_text_t text = {
+		.element = {
+			.height	  = 64,
+			.width	  = 512,
+			.position = {.x = 0.5, .y = 0.85},
+			.center_x = true,
+			.center_y = true,
+		},
 		.font_size = 16.0f,
-		.height	   = 256,
-		.width	   = 512,
-		.position  = {.x = 0.5, .y = 0.8},
 		.content   = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
 		.color	   = {.r = 255, .g = 255, .b = 255, .a = 255},
-		.center_x  = true,
-		.center_y  = false,
+
 	};
 	mg_ui_manager_add_text(text);
+	mg_ui_rect_t rect = {
+		.element = {
+			.height	  = 64, // same height for center_y
+			.width	  = 512 + 16,
+			.position = {.x = 0.5, .y = 0.85},
+			.center_x = true,
+			.center_y = true,
+		},
+		.color = {.r = 0, .g = 0, .b = 0, .a = 80},
+	};
+	mg_ui_manager_add_rect(rect);
 }
 
 void mg_ui_manager_free()
 {
 	gs_slot_array_free(g_ui_manager->texts);
+	gs_slot_array_free(g_ui_manager->rects);
 
 	gs_free(g_ui_manager);
 	g_ui_manager = NULL;
@@ -45,9 +61,43 @@ void mg_ui_manager_render(gs_vec2 fb)
 {
 	gsi_camera2D(&g_renderer->gsi);
 
-	_mg_ui_manager_draw_debug_overlay();
+	// Rects
+	if (gs_slot_array_size(g_ui_manager->rects) > 0)
+	{
+		for (
+			gs_slot_array_iter it = gs_slot_array_iter_new(g_ui_manager->rects);
+			gs_slot_array_iter_valid(g_ui_manager->rects, it);
+			gs_slot_array_iter_advance(g_ui_manager->rects, it))
+		{
+			mg_ui_rect_t *rect = gs_slot_array_iter_getp(g_ui_manager->rects, it);
 
-	// Draw all texts
+			float pos_x = rect->element.position.x * fb.x;
+			float pos_y = rect->element.position.y * fb.y;
+
+			if (rect->element.center_x)
+				pos_x -= 0.5f * rect->element.width;
+
+			if (rect->element.center_y)
+				pos_y -= 0.5f * rect->element.height;
+
+			gsi_rect(
+				&g_renderer->gsi,
+				pos_x,
+				pos_y,
+				pos_x + rect->element.width,
+				pos_y + rect->element.height,
+				rect->color.r,
+				rect->color.g,
+				rect->color.b,
+				rect->color.a,
+				GS_GRAPHICS_PRIMITIVE_TRIANGLES);
+		}
+	}
+
+	_mg_ui_manager_pass(fb);
+	gsi_camera2D(&g_renderer->gsi);
+
+	// Texts
 	if (gs_slot_array_size(g_ui_manager->texts) > 0)
 	{
 		gs_asset_font_t *fp	= &g_renderer->gsi.font_default;
@@ -66,14 +116,16 @@ void mg_ui_manager_render(gs_vec2 fb)
 			char modifiable[gs_string_length(text->content) + 1];
 			strcpy(modifiable, text->content);
 
-			float pos_x = text->position.x * fb.x;
-			float pos_y = text->position.y * fb.y;
+			float pos_x = text->element.position.x * fb.x;
+			// stb_truetype aligns to bottom, move downwards by
+			// character height to align with other ui elements.
+			float pos_y = text->element.position.y * fb.y + char_height;
 
-			if (text->center_x)
-				pos_x -= 0.5f * text->width;
+			if (text->element.center_x)
+				pos_x -= 0.5f * text->element.width;
 
-			if (text->center_y)
-				pos_y -= 0.5f * text->height;
+			if (text->element.center_y)
+				pos_y -= 0.5f * text->element.height;
 
 			float cur_pos_x = pos_x;
 			float cur_pos_y = pos_y;
@@ -86,20 +138,37 @@ void mg_ui_manager_render(gs_vec2 fb)
 				if (cur_pos_x > pos_x + FLT_EPSILON)
 				{
 					cur_pos_x += char_width;
-					if (cur_pos_x + word_width - pos_x > text->width)
+					if (cur_pos_x + word_width - pos_x > text->element.width)
 					{
 						cur_pos_x = pos_x;
 						cur_pos_y += char_height;
 					}
 				}
 
-				gsi_text(&g_renderer->gsi, cur_pos_x, cur_pos_y, word, NULL, false, 255, 255, 255, 255);
+				gsi_text(
+					&g_renderer->gsi,
+					cur_pos_x,
+					cur_pos_y,
+					word,
+					NULL,
+					false,
+					text->color.r,
+					text->color.g,
+					text->color.b,
+					text->color.a);
+
 				cur_pos_x += (float)word_width;
 				word = strtok(NULL, " ");
 			}
 		}
 	}
 
+	_mg_ui_manager_draw_debug_overlay();
+	_mg_ui_manager_pass(fb);
+}
+
+void _mg_ui_manager_pass(gs_vec2 fb)
+{
 	gs_renderpass im_pass = gs_default_val();
 	gs_graphics_begin_render_pass(&g_renderer->cb, im_pass);
 	gs_graphics_set_viewport(&g_renderer->cb, 0, 0, (int32_t)fb.x, (int32_t)fb.y);
@@ -120,6 +189,21 @@ void mg_ui_manager_remove_text(uint32_t id)
 mg_ui_text_t *mg_ui_manager_get_text(uint32_t id)
 {
 	return gs_slot_array_getp(g_ui_manager->texts, id);
+}
+
+uint32_t mg_ui_manager_add_rect(mg_ui_rect_t rect)
+{
+	return gs_slot_array_insert(g_ui_manager->rects, rect);
+}
+
+void mg_ui_manager_remove_rect(uint32_t id)
+{
+	gs_slot_array_erase(g_ui_manager->rects, id);
+}
+
+mg_ui_rect_t *mg_ui_manager_get_rect(uint32_t id)
+{
+	return gs_slot_array_getp(g_ui_manager->rects, id);
 }
 
 void _mg_ui_manager_draw_debug_overlay()
