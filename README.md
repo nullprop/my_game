@@ -6,11 +6,18 @@ The source code release of my_game.
 
 ## Table of contents
 
+- [Status](#Status)
 - [License](#License)
 - [Assets](#Assets)
 - [Compiling](#Compiling)
 
 ---
+
+## Status
+
+In development.
+
+![game screenshot](/docs/screenshots/game_2022-01-05.png)
 
 ## License
 
