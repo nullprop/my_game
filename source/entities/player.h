@@ -33,6 +33,7 @@
 // Crouch transitions feel weird in air
 #define MG_PLAYER_CROUCH_TIME_AIR   0.0f
 #define MG_PLAYER_UNCROUCH_TIME_AIR 0.0f
+#define MG_PLAYER_STEP_HEIGHT	    16.0f
 
 typedef struct mg_player_camera_t
 {

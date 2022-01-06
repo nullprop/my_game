@@ -21,33 +21,34 @@
 mg_player_t *mg_player_new()
 {
 	mg_player_t *player = gs_malloc_init(mg_player_t);
-	*player		    = (mg_player_t){
-		    .transform = gs_vqs_default(),
-		    .camera    = {
-			       .cam = {
-				       .aspect_ratio = 4 / 3,
-				       .far_plane    = 3000.0f,
-				       .fov	     = 110.0f,
-				       .near_plane   = 0.1f,
-				       .proj_type    = GS_PROJECTION_TYPE_PERSPECTIVE,
-			       },
-		       },
-		    .viewmodel_camera = {
-			    .aspect_ratio = 4 / 3,
-			    .far_plane	  = 200.0f,
-			    .fov	  = 60.0f,
-			    .near_plane	  = 0,
-			    .proj_type	  = GS_PROJECTION_TYPE_PERSPECTIVE,
-		    },
-		    .health		 = 100,
-		    .eye_pos		 = gs_v3(0, 0, MG_PLAYER_HEIGHT - MG_PLAYER_EYE_OFFSET),
-		    .mins		 = gs_v3(-MG_PLAYER_HALF_WIDTH, -MG_PLAYER_HALF_WIDTH, 0),
-		    .maxs		 = gs_v3(MG_PLAYER_HALF_WIDTH, MG_PLAYER_HALF_WIDTH, MG_PLAYER_HEIGHT),
-		    .viewmodel_transform = gs_vqs_default(),
-	    };
 
-	//mg_model_t *model = mg_model_manager_find("models/Suzanne/glTF/suzanne.gltf");
-	//player->viewmodel_handle = mg_renderer_create_renderable(*model, &player->viewmodel_transform);
+	*player = (mg_player_t){
+		.transform = gs_vqs_default(),
+		.camera	   = {
+			   .cam = {
+				   .aspect_ratio = 4 / 3,
+				   .far_plane	 = 3000.0f,
+				   .fov		 = 110.0f,
+				   .near_plane	 = 0.1f,
+				   .proj_type	 = GS_PROJECTION_TYPE_PERSPECTIVE,
+			   },
+		   },
+		.viewmodel_camera = {
+			.aspect_ratio = 4 / 3,
+			.far_plane    = 200.0f,
+			.fov	      = 60.0f,
+			.near_plane   = 0,
+			.proj_type    = GS_PROJECTION_TYPE_PERSPECTIVE,
+		},
+		.health		     = 100,
+		.eye_pos	     = gs_v3(0, 0, MG_PLAYER_HEIGHT - MG_PLAYER_EYE_OFFSET),
+		.mins		     = gs_v3(-MG_PLAYER_HALF_WIDTH, -MG_PLAYER_HALF_WIDTH, 0),
+		.maxs		     = gs_v3(MG_PLAYER_HALF_WIDTH, MG_PLAYER_HALF_WIDTH, MG_PLAYER_HEIGHT),
+		.viewmodel_transform = gs_vqs_default(),
+	};
+
+	// mg_model_t *model = mg_model_manager_find("models/Suzanne/glTF/suzanne.gltf");
+	// player->viewmodel_handle = mg_renderer_create_renderable(*model, &player->viewmodel_transform);
 
 	_mg_player_camera_update(player);
 
@@ -56,7 +57,7 @@ mg_player_t *mg_player_new()
 
 void mg_player_free(mg_player_t *player)
 {
-	//mg_renderer_remove_renderable(player->viewmodel_handle);
+	// mg_renderer_remove_renderable(player->viewmodel_handle);
 	gs_free(player);
 	player = NULL;
 }
@@ -438,16 +439,87 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 			player->transform.position = trace->end;
 		}
 
+		bool is_done	= false;
+		gs_vec3 end_pos = trace->end;
+
 		if (trace->fraction == 1.0f)
 		{
 			// Moved all the way
-			break;
+			delta_time = 0;
+			is_done	   = true;
+			goto step_down;
 		}
 
 		delta_time -= delta_time * trace->fraction;
 
-		// Slide along the plane, modify velocity for next loop
-		player->velocity = mg_clip_velocity(player->velocity, trace->normal, 1.001f);
+		// Colliding with something, check if we can move further
+		// by stepping up or down before clipping velocity to the plane.
+		gs_vec3 hit_normal = trace->normal;
+
+		// Check above
+		bsp_trace_box(
+			trace,
+			end_pos,
+			gs_vec3_add(end_pos, gs_v3(0, 0, MG_PLAYER_STEP_HEIGHT)),
+			player->mins,
+			player->maxs,
+			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
+		if (trace->fraction < BSP_TRACE_EPSILON)
+			goto step_down;
+
+		// Check forward
+		bsp_trace_box(
+			trace,
+			trace->end,
+			gs_vec3_add(trace->end, gs_vec3_scale(player->velocity, delta_time)),
+			player->mins,
+			player->maxs,
+			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
+		if (trace->fraction < BSP_TRACE_EPSILON)
+			goto step_down;
+
+		float forward_frac = trace->fraction;
+
+		// Move down
+		bsp_trace_box(
+			trace,
+			trace->end,
+			gs_vec3_add(trace->end, gs_v3(0, 0, -MG_PLAYER_STEP_HEIGHT)),
+			player->mins,
+			player->maxs,
+			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
+		if (trace->fraction == 1.0f || trace->end.z <= end_pos.z || trace->normal.z <= 0.7f)
+			goto step_down;
+
+		player->transform.position = trace->end;
+		delta_time -= delta_time * forward_frac;
+		continue;
+
+	step_down:
+		// We're already going 'forward' as much as we can,
+		// try to stick to the floor if grounded before.
+		if (!player->grounded)
+			goto slide;
+
+		// Move down
+		bsp_trace_box(
+			trace,
+			end_pos,
+			gs_vec3_add(end_pos, gs_v3(0, 0, -MG_PLAYER_STEP_HEIGHT)),
+			player->mins,
+			player->maxs,
+			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
+		if (trace->fraction == 1.0f || trace->end.z >= end_pos.z || trace->normal.z <= 0.7f)
+			goto slide;
+
+		player->transform.position = trace->end;
+		continue;
+
+	slide:
+		if (is_done) break; // if getting here from frac = 1.0 -> step_down
+
+		// Can't step, slide along the plane, modify velocity for next loop
+		player->velocity = mg_clip_velocity(player->velocity, hit_normal, 1.001f);
 	}
 }
 
