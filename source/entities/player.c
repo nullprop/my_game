@@ -464,18 +464,28 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 			player->mins,
 			player->maxs,
 			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
-		if (trace->fraction < BSP_TRACE_EPSILON)
+		if (trace->fraction <= 0)
 			goto step_down;
 
 		// Check forward
+		gs_vec3 horizontal_vel = player->velocity;
+		horizontal_vel.z       = 0;
+		horizontal_vel	       = gs_vec3_scale(horizontal_vel, delta_time);
+		// Can be epsilon from the edge, and need to go epsilon over it
+		// for downwards trace to hit anything. Possible to still get stuck
+		// at high framerates when moving diagonally.
+		// TODO: check each horizontal axis separately as well?
+		if (gs_vec3_len(horizontal_vel) < BSP_TRACE_EPSILON * 2.0f)
+			horizontal_vel = gs_vec3_scale(gs_vec3_norm(horizontal_vel), BSP_TRACE_EPSILON * 2.0f);
+
 		bsp_trace_box(
 			trace,
 			trace->end,
-			gs_vec3_add(trace->end, gs_vec3_scale(player->velocity, delta_time)),
+			gs_vec3_add(trace->end, horizontal_vel),
 			player->mins,
 			player->maxs,
 			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
-		if (trace->fraction < BSP_TRACE_EPSILON)
+		if (trace->fraction <= 0)
 			goto step_down;
 
 		float forward_frac = trace->fraction;
