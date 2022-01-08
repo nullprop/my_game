@@ -456,6 +456,15 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 		// by stepping up or down before clipping velocity to the plane.
 		gs_vec3 hit_normal = trace->normal;
 
+	step_up:
+		// TODO
+		// Known issues:
+		// 	Hugging a wall stops player from going up stairs.
+		// 	The forward trace will collide with the wall if velocity
+		// 	is angled towards it.
+		// 	Potential solution: If forward trace collides with anything,
+		// 	project velocity to normal and try again?
+
 		// Check above
 		bsp_trace_box(
 			trace,
@@ -471,12 +480,16 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 		gs_vec3 horizontal_vel = player->velocity;
 		horizontal_vel.z       = 0;
 		horizontal_vel	       = gs_vec3_scale(horizontal_vel, delta_time);
-		// Can be epsilon from the edge, and need to go epsilon over it
-		// for downwards trace to hit anything. Possible to still get stuck
-		// at high framerates when moving diagonally.
-		// TODO: check each horizontal axis separately as well?
-		if (gs_vec3_len(horizontal_vel) < BSP_TRACE_EPSILON * 2.0f)
-			horizontal_vel = gs_vec3_scale(gs_vec3_norm(horizontal_vel), BSP_TRACE_EPSILON * 2.0f);
+		// Player can be epsilon from an edge on either axis,
+		// and will need to go epsilon over it for downwards trace to hit anything.
+		// Scaling both axes to a min of 2 * epsilon (if not 0) allows player to
+		// step up stairs even if moving at a very shallow angle towards them.
+		// While this can make the player move a very tiny distance further,
+		// it's imperceptible in testing and preferred to getting stuck on a stair.
+		if (fabs(horizontal_vel.x) > GS_EPSILON && fabs(horizontal_vel.x) < BSP_TRACE_EPSILON * 2.0f)
+			horizontal_vel.x = (horizontal_vel.x / fabs(horizontal_vel.x)) * BSP_TRACE_EPSILON * 2.0f;
+		if (fabs(horizontal_vel.y) > GS_EPSILON && fabs(horizontal_vel.y) < BSP_TRACE_EPSILON * 2.0f)
+			horizontal_vel.y = (horizontal_vel.y / fabs(horizontal_vel.y)) * BSP_TRACE_EPSILON * 2.0f;
 
 		bsp_trace_box(
 			trace,
