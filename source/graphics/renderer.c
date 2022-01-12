@@ -14,12 +14,12 @@
 
 mg_renderer_t *g_renderer;
 
-void mg_renderer_init()
+void mg_renderer_init(uint32_t window_handle)
 {
 	// Allocate
 	g_renderer		 = gs_malloc_init(mg_renderer_t);
 	g_renderer->cb		 = gs_command_buffer_new();
-	g_renderer->gsi		 = gs_immediate_draw_new();
+	g_renderer->gsi		 = gs_immediate_draw_new(window_handle);
 	g_renderer->renderables	 = gs_slot_array_new(mg_renderable_t);
 	g_renderer->shaders	 = gs_dyn_array_new(gs_handle_gs_graphics_shader_t);
 	g_renderer->shader_names = gs_dyn_array_new(char *);

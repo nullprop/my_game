@@ -62,7 +62,7 @@ void app_init()
 	mg_audio_manager_init();
 	mg_texture_manager_init();
 	mg_model_manager_init();
-	mg_renderer_init();
+	mg_renderer_init(gs_platform_main_window());
 	mg_ui_manager_init();
 
 	// Lock mouse at start by default

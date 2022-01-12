@@ -80,7 +80,7 @@ void mg_ui_manager_render(gs_vec2 fb)
 	// Texts
 	if (gs_slot_array_size(g_ui_manager->texts) > 0)
 	{
-		gs_asset_font_t *fp	= &g_renderer->gsi.font_default;
+		gs_asset_font_t *fp	= gsi_default_font();
 		stbtt_bakedchar *glyphs = (stbtt_bakedchar *)fp->glyphs;
 		float char_width	= glyphs->xadvance;
 		float char_height	= 16.0f;
@@ -167,7 +167,7 @@ void mg_ui_manager_add_dialogue(char *text, float32_t duration)
 	float pos_x		= fb.x * pos_x_pct;
 	float cur_pos_x		= pos_x;
 	uint32_t max_width	= 512;
-	gs_asset_font_t *fp	= &g_renderer->gsi.font_default;
+	gs_asset_font_t *fp	= gsi_default_font();
 	stbtt_bakedchar *glyphs = (stbtt_bakedchar *)fp->glyphs;
 	float char_width	= glyphs->xadvance;
 	float char_height	= 16.0f;

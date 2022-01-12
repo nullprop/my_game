@@ -47,7 +47,7 @@ typedef struct mg_renderer_t
 	gs_handle(gs_graphics_texture_t) missing_texture;
 } mg_renderer_t;
 
-void mg_renderer_init();
+void mg_renderer_init(uint32_t window_handle);
 void mg_renderer_update();
 void mg_renderer_free();
 uint32_t mg_renderer_create_renderable(mg_model_t model, gs_vqs *transform);
