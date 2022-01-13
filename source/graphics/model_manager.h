@@ -11,7 +11,6 @@
 #define MG_MODEL_MANAGER_H
 
 #include <gs/gs.h>
-#include <gs/util/gs_gfxt.h>
 
 #include "model.h"
 

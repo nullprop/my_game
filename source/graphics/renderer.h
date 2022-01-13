@@ -10,8 +10,11 @@
 #ifndef MG_RENDERER_H
 #define MG_RENDERER_H
 
+// clang-format off
 #include <gs/gs.h>
 #include <gs/util/gs_idraw.h>
+#include <gs/util/gs_gui.h>
+// clang-format on
 
 #include "../bsp/bsp_map.h"
 #include "../entities/player.h"
@@ -33,6 +36,7 @@ typedef struct mg_renderer_t
 {
 	gs_command_buffer_t cb;
 	gs_immediate_draw_t gsi;
+	gs_gui_context_t gui;
 	gs_camera_t *cam;
 	bsp_map_t *bsp;
 	mg_player_t *player;

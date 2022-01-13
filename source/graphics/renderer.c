@@ -17,9 +17,10 @@ mg_renderer_t *g_renderer;
 void mg_renderer_init(uint32_t window_handle)
 {
 	// Allocate
-	g_renderer		 = gs_malloc_init(mg_renderer_t);
-	g_renderer->cb		 = gs_command_buffer_new();
-	g_renderer->gsi		 = gs_immediate_draw_new(window_handle);
+	g_renderer	= gs_malloc_init(mg_renderer_t);
+	g_renderer->cb	= gs_command_buffer_new();
+	g_renderer->gsi = gs_immediate_draw_new(window_handle);
+	gs_gui_init(&g_renderer->gui, window_handle);
 	g_renderer->renderables	 = gs_slot_array_new(mg_renderable_t);
 	g_renderer->shaders	 = gs_dyn_array_new(gs_handle_gs_graphics_shader_t);
 	g_renderer->shader_names = gs_dyn_array_new(char *);
@@ -273,9 +274,9 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
 		// Light
 		mg_renderer_light_t light = bsp_sample_lightvol(g_renderer->bsp, renderable->transform->position);
 		uniforms[2]		  = (gs_graphics_bind_uniform_desc_t){
-			      .uniform = g_renderer->u_light,
-			      .data    = &light,
-			      .binding = 0, // FRAGMENT
+				      .uniform = g_renderer->u_light,
+				      .data    = &light,
+				      .binding = 0, // FRAGMENT
 		      };
 
 		// Draw each surface

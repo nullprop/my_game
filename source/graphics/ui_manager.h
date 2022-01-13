@@ -10,10 +10,25 @@
 #ifndef MG_UI_MANAGER_H
 #define MG_UI_MANAGER_H
 
+// clang-format off
 #include <gs/gs.h>
-#include <gs/util/gs_gfxt.h>
+#include <gs/util/gs_idraw.h>
+#include <gs/util/gs_gui.h>
+// clang-format on
 
 #include "model.h"
+
+enum
+{
+	GUI_STYLE_ROOT = 0x00,
+	GUI_STYLE_COUNT
+};
+
+enum
+{
+	GUI_FONT_DEFAULT = 0x00,
+	GUI_FONT_COUNT
+};
 
 typedef struct mg_ui_element_t
 {
@@ -42,27 +57,28 @@ typedef struct mg_ui_rect_t
 
 typedef struct mg_ui_manager_t
 {
-	gs_slot_array(mg_ui_text_t) texts;
-	gs_slot_array(mg_ui_rect_t) rects;
+	gs_gui_style_t styles[GUI_STYLE_COUNT][GS_GUI_ELEMENT_STATE_COUNT];
+	gs_asset_font_t fonts[GUI_FONT_COUNT];
+	gs_gui_style_sheet_t default_style_sheet;
+	gs_gui_style_sheet_t console_style_sheet;
+	bool menu_open;
+	bool debug_open;
+	bool console_open;
+	bool show_cursor;
 } mg_ui_manager_t;
 
 void mg_ui_manager_init();
 void mg_ui_manager_free();
 
-void mg_ui_manager_render(gs_vec2 fb);
-void _mg_ui_manager_pass(gs_vec2 fb);
+void mg_ui_manager_render(gs_vec2 fbs);
 
 void mg_ui_manager_add_dialogue(char *text, float32_t duration);
 
-uint32_t mg_ui_manager_add_text(mg_ui_text_t text);
-void mg_ui_manager_remove_text(uint32_t id);
-mg_ui_text_t *mg_ui_manager_get_text(uint32_t id);
+void _mg_ui_manager_debug_overlay(gs_vec2 fbs);
 
-uint32_t mg_ui_manager_add_rect(mg_ui_rect_t rect);
-void mg_ui_manager_remove_rect(uint32_t id);
-mg_ui_rect_t *mg_ui_manager_get_rect(uint32_t id);
+void _mg_ui_manager_menu_window(gs_vec2 fbs);
 
-void _mg_ui_manager_draw_debug_overlay();
+bool _mg_ui_manager_custom_button(const char *str);
 
 extern mg_ui_manager_t *g_ui_manager;
 

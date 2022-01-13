@@ -11,8 +11,8 @@
 #include <gs/gs.h>
 #define GS_IMMEDIATE_DRAW_IMPL
 #include <gs/util/gs_idraw.h>
-#define GS_GFXT_IMPL
-#include <gs/util/gs_gfxt.h>
+#define GS_GUI_IMPL
+#include <gs/util/gs_gui.h>
 
 #include "audio/audio_manager.h"
 #include "bsp/bsp_loader.h"
@@ -120,9 +120,6 @@ void app_init()
 
 void app_update()
 {
-	if (gs_platform_key_pressed(GS_KEYCODE_ESC))
-		gs_engine_quit();
-
 	if (gs_platform_key_pressed(GS_KEYCODE_R))
 		app_spawn();
 
@@ -157,7 +154,7 @@ void app_update()
 	}
 
 	// If click, then lock again (in case lost)
-	if (gs_platform_mouse_pressed(GS_MOUSE_LBUTTON) && !gs_platform_mouse_locked())
+	if (gs_platform_mouse_pressed(GS_MOUSE_LBUTTON) && !gs_platform_mouse_locked() && !g_ui_manager->show_cursor)
 	{
 		gs_platform_lock_mouse(gs_platform_main_window(), true);
 		if (glfwRawMouseMotionSupported())

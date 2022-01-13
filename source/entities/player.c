@@ -12,6 +12,7 @@
 #include "../bsp/bsp_trace.h"
 #include "../graphics/model_manager.h"
 #include "../graphics/renderer.h"
+#include "../graphics/ui_manager.h"
 #include "../util/camera.h"
 #include "../util/config.h"
 #include "../util/math.h"
@@ -64,6 +65,8 @@ void mg_player_free(mg_player_t *player)
 
 void mg_player_update(mg_player_t *player)
 {
+	if (g_ui_manager->show_cursor) return;
+
 	gs_platform_t *platform = gs_engine_subsystem(platform);
 	float dt		= platform->time.delta;
 
