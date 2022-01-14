@@ -131,18 +131,16 @@ void app_update()
 		GLFWvidmode *vid_mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
 		bool32_t want_fullscreen = !gs_platform_window_fullscreen(main_window);
-		gs_platform_set_window_fullscreen(main_window, want_fullscreen);
 
 		if (!want_fullscreen)
 		{
+			// Going back to windowed mode, set to 800x600
+			gs_platform_set_window_fullscreen(main_window, false);
 			gs_platform_set_window_size(main_window, 800, 600);
 
-			// Going back to windowed mode,
-			// restore window to center of screen.
+			// Restore window to center of screen.
 			gs_vec2 window_size  = gs_platform_window_sizev(main_window);
 			gs_vec2 monitor_size = gs_v2(vid_mode->width, vid_mode->height);
-
-			// Set position
 			gs_vec2 top_left = gs_vec2_scale(gs_vec2_sub(monitor_size, window_size), 0.5f);
 			gs_platform_set_window_positionv(main_window, top_left);
 		}
@@ -150,6 +148,7 @@ void app_update()
 		{
 			// Set to fullscreen res
 			gs_platform_set_window_size(main_window, vid_mode->width, vid_mode->height);
+			gs_platform_set_window_fullscreen(main_window, true);
 		}
 	}
 
