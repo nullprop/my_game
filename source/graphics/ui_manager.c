@@ -18,17 +18,19 @@ void mg_ui_manager_init()
 	g_ui_manager = gs_malloc_init(mg_ui_manager_t);
 
 	// Load fonts
-	gs_asset_font_load_from_file("./fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_DEFAULT], 14);
+	gs_asset_font_load_from_file("./fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_SMALL], 14);
+	gs_asset_font_load_from_file("./fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_MEDIUM], 18);
+	gs_asset_font_load_from_file("./fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_LARGE], 24);
 
 	// Default style sheet
 	gs_gui_style_element_t panel_style[] = {
-		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_DEFAULT]},
+		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_SMALL]},
 		{GS_GUI_STYLE_PADDING_TOP, 20},
 		{GS_GUI_STYLE_BORDER_COLOR, .color = gs_color(0, 0, 0, 0)},
 		{GS_GUI_STYLE_BACKGROUND_COLOR, .color = gs_color(0, 0, 0, 0)}};
 
 	gs_gui_style_element_t button_style[] = {
-		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_DEFAULT]},
+		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_SMALL]},
 		{GS_GUI_STYLE_ALIGN_CONTENT, GS_GUI_ALIGN_CENTER},
 		{GS_GUI_STYLE_JUSTIFY_CONTENT, GS_GUI_JUSTIFY_CENTER},
 		{GS_GUI_STYLE_WIDTH, 200},
@@ -46,21 +48,21 @@ void mg_ui_manager_init()
 		{GS_GUI_STYLE_BACKGROUND_COLOR, .color = gs_color(198, 198, 198, 255)}};
 
 	gs_gui_style_element_t button_hover_style[] = {
-		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_DEFAULT]},
+		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_SMALL]},
 		{GS_GUI_STYLE_BACKGROUND_COLOR, .color = gs_color(168, 168, 168, 255)}};
 
 	gs_gui_style_element_t button_focus_style[] = {
-		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_DEFAULT]},
+		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_SMALL]},
 		{GS_GUI_STYLE_CONTENT_COLOR, .color = gs_color(255, 255, 255, 255)},
 		{GS_GUI_STYLE_BACKGROUND_COLOR, .color = gs_color(49, 174, 31, 255)}};
 
 	gs_gui_style_element_t label_style[] = {
-		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_DEFAULT]},
+		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_SMALL]},
 		{GS_GUI_STYLE_ALIGN_CONTENT, GS_GUI_ALIGN_CENTER},
 		{GS_GUI_STYLE_JUSTIFY_CONTENT, GS_GUI_JUSTIFY_END}};
 
 	gs_gui_style_element_t text_style[] = {
-		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_DEFAULT]},
+		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_SMALL]},
 		{GS_GUI_STYLE_ALIGN_CONTENT, GS_GUI_ALIGN_CENTER},
 		{GS_GUI_STYLE_JUSTIFY_CONTENT, GS_GUI_JUSTIFY_START}};
 
@@ -85,31 +87,40 @@ void mg_ui_manager_init()
 
 	// Console style sheet
 	gs_gui_style_element_t console_text_style[] = {
-		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_DEFAULT]},
+		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_SMALL]},
 		{GS_GUI_STYLE_ALIGN_CONTENT, GS_GUI_ALIGN_START},
 		{GS_GUI_STYLE_JUSTIFY_CONTENT, GS_GUI_JUSTIFY_START}};
 
 	g_ui_manager->console_style_sheet = gs_gui_style_sheet_new(
 		&g_renderer->gui,
 		&(gs_gui_style_sheet_desc_t){
-			.button = {
-				.all   = {button_style, sizeof(button_style)},
-				.hover = {button_hover_style, sizeof(button_hover_style)},
-				.focus = {button_focus_style, sizeof(button_focus_style)},
-			},
 			.panel = {
 				.all = {panel_style, sizeof(panel_style)},
-			},
-			.label = {
-				.all = {label_style, sizeof(label_style)},
 			},
 			.text = {
 				.all = {console_text_style, sizeof(console_text_style)},
 			},
 		});
 
+	// Dialogue style sheet
+	gs_gui_style_element_t dialogue_text_style[] = {
+		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_MEDIUM]},
+		{GS_GUI_STYLE_ALIGN_CONTENT, GS_GUI_ALIGN_START},
+		{GS_GUI_STYLE_JUSTIFY_CONTENT, GS_GUI_JUSTIFY_START}};
+
+	g_ui_manager->dialogue_style_sheet = gs_gui_style_sheet_new(
+		&g_renderer->gui,
+		&(gs_gui_style_sheet_desc_t){
+			.panel = {
+				.all = {panel_style, sizeof(panel_style)},
+			},
+			.text = {
+				.all = {dialogue_text_style, sizeof(dialogue_text_style)},
+			},
+		});
+
 	// Test
-	// mg_ui_manager_add_dialogue("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", 5.0f);
+	mg_ui_manager_set_dialogue("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", -1);
 }
 
 void mg_ui_manager_free()
@@ -131,9 +142,14 @@ void mg_ui_manager_render(gs_vec2 fbs)
 	if (g_ui_manager->show_cursor != show_cursor_prev)
 	{
 		if (g_ui_manager->show_cursor)
+		{
 			gs_platform_lock_mouse(gs_platform_main_window(), false);
+			gs_platform_mouse_set_position(gs_platform_main_window(), fbs.x * 0.5f, fbs.y * 0.5f);
+		}
 		else
+		{
 			gs_platform_lock_mouse(gs_platform_main_window(), true);
+		}
 	}
 
 	double pt = gs_platform_elapsed_time();
@@ -157,12 +173,10 @@ void mg_ui_manager_render(gs_vec2 fbs)
 				    GS_GUI_OPT_NODOCK |
 				    GS_GUI_OPT_NOBRINGTOFRONT))
 		{
-			gs_gui_container_t *cnt = gs_gui_get_current_container(&g_renderer->gui);
-			// gs_gui_layout_t *l	= gs_gui_get_layout(gui);
-			gs_gui_layout_t *l = &g_renderer->gui.layout_stack.items[g_renderer->gui.layout_stack.idx - 1];
-
-			_mg_ui_manager_menu_window(fbs);
-			_mg_ui_manager_debug_overlay(fbs);
+			gs_gui_container_t *root = gs_gui_get_current_container(&g_renderer->gui);
+			_mg_ui_manager_dialogue_window(fbs, root);
+			_mg_ui_manager_menu_window(fbs, root);
+			_mg_ui_manager_debug_overlay(fbs, root);
 
 			gs_gui_end_window(&g_renderer->gui);
 		}
@@ -177,88 +191,27 @@ void mg_ui_manager_render(gs_vec2 fbs)
 	}
 }
 
-/*
-// TODO: port for gs_gui
-void mg_ui_manager_add_dialogue(char *text, float32_t duration)
+void mg_ui_manager_set_dialogue(const char *text, float32_t duration)
 {
-	const gs_vec2 fb	= gs_platform_framebuffer_sizev(gs_platform_main_window());
-	float pos_x_pct		= 0.5f;
-	float pos_y_pct		= 0.85f;
-	float pos_x		= fb.x * pos_x_pct;
-	float cur_pos_x		= pos_x;
-	uint32_t max_width	= 512;
-	gs_asset_font_t *fp	= gsi_default_font();
-	stbtt_bakedchar *glyphs = (stbtt_bakedchar *)fp->glyphs;
-	float char_width	= glyphs->xadvance;
-	float char_height	= 16.0f;
-	uint32_t num_lines	= 1;
-	char *word;
-	char modifiable[gs_string_length(text) + 1];
-	strcpy(modifiable, text);
-
-	word = strtok(modifiable, " ");
-	while (word)
-	{
-		uint32_t word_width = char_width * gs_string_length(word);
-
-		if (cur_pos_x > pos_x + FLT_EPSILON)
-		{
-			cur_pos_x += char_width;
-			if (cur_pos_x + word_width - pos_x > max_width)
-			{
-				num_lines++;
-				cur_pos_x = pos_x;
-			}
-		}
-
-		cur_pos_x += (float)word_width;
-		word = strtok(NULL, " ");
-	}
-
-	uint32_t element_height = (num_lines + 1) * char_height;
-
-	mg_ui_text_t text_el = {
-		.element = {
-			.height	  = element_height,
-			.width	  = max_width,
-			.position = {.x = pos_x_pct, .y = pos_y_pct},
-			.center_x = true,
-			.center_y = true,
-			.duration = duration,
-		},
-		.font_size = 16.0f,
-		.content   = text,
-		.color	   = {.r = 255, .g = 255, .b = 255, .a = 255},
-
+	mg_ui_dialogue_t diag = {
+		.content     = gs_malloc(gs_string_length(text) + 1),
+		.duration    = duration,
+		._start_time = gs_platform_elapsed_time(),
 	};
-	mg_ui_manager_add_text(text_el);
+	memcpy(diag.content, text, gs_string_length(text) + 1);
 
-	mg_ui_rect_t rect = {
-		.element = {
-			.height	  = element_height, // same height for center_y
-			.width	  = max_width + 16,
-			.position = {.x = pos_x_pct, .y = pos_y_pct},
-			.center_x = true,
-			.center_y = true,
-			.duration = duration,
-		},
-		.color = {.r = 0, .g = 0, .b = 0, .a = 80},
-	};
-	mg_ui_manager_add_rect(rect);
+	g_ui_manager->current_dialogue = diag;
+	g_ui_manager->dialogue_open    = true;
 }
-*/
 
-void _mg_ui_manager_debug_overlay(gs_vec2 fbs)
+void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 {
 	if (!g_ui_manager->debug_open) return;
 
 	char tmp[64];
 
-	// gs_gui_layout_t *l	= gs_gui_get_layout(gui);
-	gs_gui_layout_t *l = &g_renderer->gui.layout_stack.items[g_renderer->gui.layout_stack.idx - 1];
-
 	gs_gui_set_style_sheet(&g_renderer->gui, &g_ui_manager->console_style_sheet);
-	gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&l->body, fbs.x, fbs.y, 0, 0, GS_GUI_LAYOUT_ANCHOR_TOPLEFT), 0);
+	gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&root->body, fbs.x, fbs.y, 0, 0, GS_GUI_LAYOUT_ANCHOR_TOPLEFT), 0);
 	gs_gui_begin_panel_ex(&g_renderer->gui, "#debug", GS_GUI_OPT_NOSCROLL);
 	{
 		gs_gui_container_t *cnt = gs_gui_get_current_container(&g_renderer->gui);
@@ -308,23 +261,49 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs)
 	gs_gui_end_panel(&g_renderer->gui);
 }
 
-void _mg_ui_manager_menu_window(gs_vec2 fbs)
+void _mg_ui_manager_dialogue_window(gs_vec2 fbs, gs_gui_container_t *root)
+{
+	if (!g_ui_manager->dialogue_open) return;
+
+	mg_ui_dialogue_t diag = g_ui_manager->current_dialogue;
+
+	gs_gui_set_style_sheet(&g_renderer->gui, &g_ui_manager->dialogue_style_sheet);
+
+	gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&root->body, fbs.x, fbs.y, 0, 0, GS_GUI_LAYOUT_ANCHOR_CENTER), 0);
+	gs_gui_begin_panel_ex(&g_renderer->gui, "#dialogue", GS_GUI_OPT_NOSCROLL);
+	{
+		gs_gui_container_t *dialogue = gs_gui_get_current_container(&g_renderer->gui);
+
+		// TODO: split text, get rect height from num of lines, draw word at a time
+
+		gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&dialogue->body, 600, 50, 0, -50, GS_GUI_LAYOUT_ANCHOR_BOTTOMCENTER), 0);
+		gs_gui_rect_t next = gs_gui_layout_next(&g_renderer->gui);
+
+		gs_gui_draw_rect(&g_renderer->gui, next, gs_color(0, 0, 0, 100));
+		gs_gui_draw_control_text(&g_renderer->gui, diag.content, g_renderer->gui.last_rect, GS_GUI_ELEMENT_TEXT, 0x00, 0x00);
+	}
+	gs_gui_end_panel(&g_renderer->gui);
+
+	double pt = gs_platform_elapsed_time();
+	if (diag.duration > 0 && pt - diag._start_time > diag.duration * 1000)
+		g_ui_manager->dialogue_open = false;
+}
+
+void _mg_ui_manager_menu_window(gs_vec2 fbs, gs_gui_container_t *root)
 {
 	if (!g_ui_manager->menu_open) return;
 
-	// gs_gui_layout_t *l	= gs_gui_get_layout(gui);
-	gs_gui_layout_t *l = &g_renderer->gui.layout_stack.items[g_renderer->gui.layout_stack.idx - 1];
+	gs_gui_set_style_sheet(&g_renderer->gui, &g_ui_manager->default_style_sheet);
 
-	gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&l->body, fbs.x, fbs.y, 0, 0, GS_GUI_LAYOUT_ANCHOR_CENTER), 0);
+	gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&root->body, fbs.x, fbs.y, 0, 0, GS_GUI_LAYOUT_ANCHOR_CENTER), 0);
 	gs_gui_begin_panel_ex(&g_renderer->gui, "#menu", GS_GUI_OPT_NOSCROLL);
 	{
+		gs_gui_container_t *menu = gs_gui_get_current_container(&g_renderer->gui);
+
 		// buttons panel
-		gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&l->body, 500, 500, 0, 0, GS_GUI_LAYOUT_ANCHOR_BOTTOMCENTER), 0);
+		gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&menu->body, 500, 500, 0, 0, GS_GUI_LAYOUT_ANCHOR_BOTTOMCENTER), 0);
 		gs_gui_begin_panel_ex(&g_renderer->gui, "#buttons", GS_GUI_OPT_NOSCROLL);
 		{
-			//l = gs_gui_get_layout(&g_renderer->gui);
-			l = &g_renderer->gui.layout_stack.items[g_renderer->gui.layout_stack.idx - 1];
-
 			gs_gui_layout_row(&g_renderer->gui, 1, (int[]){-1}, 0);
 			_mg_ui_manager_custom_button("Test 1");
 			_mg_ui_manager_custom_button("Test 2");
