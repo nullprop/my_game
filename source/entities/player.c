@@ -46,6 +46,7 @@ mg_player_t *mg_player_new()
 		.mins		     = gs_v3(-MG_PLAYER_HALF_WIDTH, -MG_PLAYER_HALF_WIDTH, 0),
 		.maxs		     = gs_v3(MG_PLAYER_HALF_WIDTH, MG_PLAYER_HALF_WIDTH, MG_PLAYER_HEIGHT),
 		.viewmodel_transform = gs_vqs_default(),
+		.last_ground_time    = 0,
 	};
 
 	// mg_model_t *model = mg_model_manager_find("models/Suzanne/glTF/suzanne.gltf");
@@ -69,6 +70,7 @@ void mg_player_update(mg_player_t *player)
 
 	gs_platform_t *platform = gs_engine_subsystem(platform);
 	float dt		= platform->time.delta;
+	double pt		= gs_platform_elapsed_time();
 
 	_mg_player_check_floor(player);
 	_mg_player_get_input(player, dt);
@@ -78,10 +80,7 @@ void mg_player_update(mg_player_t *player)
 	{
 		if (player->wish_jump)
 		{
-			player->velocity.z = MG_PLAYER_JUMP_SPEED;
-			player->grounded   = false;
-			if (g_audio_manager != NULL)
-				mg_audio_manager_play("sound/player/jump1.wav", 0.03f);
+			_mg_player_do_jump(player);
 		}
 		else
 		{
@@ -90,7 +89,14 @@ void mg_player_update(mg_player_t *player)
 	}
 	else
 	{
+		// gravity
 		player->velocity = gs_vec3_add(player->velocity, gs_vec3_scale(MG_AXIS_DOWN, 800.0f * dt));
+
+		// coyote
+		if (player->wish_jump && !player->has_jumped && pt - player->last_ground_time <= MG_PLAYER_COYOTE_TIME * 1000)
+		{
+			_mg_player_do_jump(player);
+		}
 	}
 
 	// Crouching
@@ -142,6 +148,15 @@ void mg_player_update(mg_player_t *player)
 	}
 }
 
+void _mg_player_do_jump(mg_player_t *player)
+{
+	player->velocity.z = MG_PLAYER_JUMP_SPEED;
+	player->grounded   = false;
+	player->has_jumped = true;
+	if (g_audio_manager != NULL)
+		mg_audio_manager_play("sound/player/jump1.wav", 0.03f);
+}
+
 void _mg_player_check_floor(mg_player_t *player)
 {
 	bsp_trace_t *trace = &(bsp_trace_t){.map = player->map};
@@ -160,8 +175,10 @@ void _mg_player_check_floor(mg_player_t *player)
 
 	if (trace->fraction < 1.0f && trace->normal.z > 0.7f && relative_velocity < MG_PLAYER_SLIDE_LIMIT)
 	{
-		player->grounded      = true;
-		player->ground_normal = trace->normal;
+		player->grounded	 = true;
+		player->has_jumped	 = false;
+		player->ground_normal	 = trace->normal;
+		player->last_ground_time = gs_platform_elapsed_time();
 
 		uint32_t leaf_index   = player->map->stats.current_leaf;
 		int32_t cluster_index = player->map->leaves.data[leaf_index].cluster;

@@ -34,6 +34,7 @@
 #define MG_PLAYER_CROUCH_TIME_AIR   0.0f
 #define MG_PLAYER_UNCROUCH_TIME_AIR 0.0f
 #define MG_PLAYER_STEP_HEIGHT	    16.0f
+#define MG_PLAYER_COYOTE_TIME	    0.2f
 
 typedef struct mg_player_camera_t
 {
@@ -60,10 +61,12 @@ typedef struct mg_player_t
 	bool32_t wish_crouch;
 	bool32_t crouched;
 	bool32_t grounded;
+	bool32_t has_jumped;
 	float32_t crouch_fraction;
 	gs_vec3 last_valid_pos;
 	gs_vqs viewmodel_transform;
 	uint32_t viewmodel_handle;
+	double last_ground_time;
 } mg_player_t;
 
 mg_player_t *mg_player_new();
@@ -77,6 +80,7 @@ void _mg_player_accelerate(mg_player_t *player, float delta_time, float move_spe
 void _mg_player_friction(mg_player_t *player, float delta_time);
 void _mg_player_camera_update(mg_player_t *player);
 void _mg_player_get_input(mg_player_t *player, float delta_time);
+void _mg_player_do_jump(mg_player_t *player);
 void _mg_player_check_floor(mg_player_t *player);
 
 #endif // MG_PLAYER_H
