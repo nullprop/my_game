@@ -8,6 +8,7 @@
 =================================================================*/
 
 #include "ui_manager.h"
+#include "../util/render.h"
 #include "renderer.h"
 
 mg_ui_manager_t *g_ui_manager;
@@ -108,11 +109,16 @@ void mg_ui_manager_init()
 		{GS_GUI_STYLE_ALIGN_CONTENT, GS_GUI_ALIGN_START},
 		{GS_GUI_STYLE_JUSTIFY_CONTENT, GS_GUI_JUSTIFY_START}};
 
+	gs_gui_style_element_t dialogue_panel_style[] = {
+		{GS_GUI_STYLE_FONT, .data = &g_ui_manager->fonts[GUI_FONT_MEDIUM]},
+		{GS_GUI_STYLE_BORDER_COLOR, .color = gs_color(0, 0, 0, 0)},
+		{GS_GUI_STYLE_BACKGROUND_COLOR, .color = gs_color(0, 0, 0, 0)}};
+
 	g_ui_manager->dialogue_style_sheet = gs_gui_style_sheet_new(
 		&g_renderer->gui,
 		&(gs_gui_style_sheet_desc_t){
 			.panel = {
-				.all = {panel_style, sizeof(panel_style)},
+				.all = {dialogue_panel_style, sizeof(dialogue_panel_style)},
 			},
 			.text = {
 				.all = {dialogue_text_style, sizeof(dialogue_text_style)},
@@ -274,13 +280,38 @@ void _mg_ui_manager_dialogue_window(gs_vec2 fbs, gs_gui_container_t *root)
 	{
 		gs_gui_container_t *dialogue = gs_gui_get_current_container(&g_renderer->gui);
 
-		// TODO: split text, get rect height from num of lines, draw word at a time
+		// split text to lines
+		uint32_t max_width    = 600;
+		int32_t offset_y      = -50;
+		gs_asset_font_t *font = g_ui_manager->dialogue_style_sheet.styles[GS_GUI_ELEMENT_TEXT][GS_GUI_ELEMENT_STATE_DEFAULT].font;
+		float32_t line_height = gs_asset_font_max_height(font);
+		uint32_t *num_lines   = gs_malloc_init(uint32_t);
+		char **lines	      = gs_malloc(sizeof(char *) * 64);
+		mg_text_to_lines(font, diag.content, max_width, lines, num_lines);
+		float32_t pad_y	 = 1.0f * line_height;
+		float32_t pad_x	 = 2.0f * gs_asset_font_text_dimensions(font, " ", -1).x;
+		float32_t height = (*num_lines) * line_height;
 
-		gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&dialogue->body, 600, 50, 0, -50, GS_GUI_LAYOUT_ANCHOR_BOTTOMCENTER), 0);
+		// draw background
+		gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&dialogue->body, max_width + 2.0f * pad_x, height + 2.0f * pad_y, 0, offset_y, GS_GUI_LAYOUT_ANCHOR_BOTTOMCENTER), 0);
 		gs_gui_rect_t next = gs_gui_layout_next(&g_renderer->gui);
-
 		gs_gui_draw_rect(&g_renderer->gui, next, gs_color(0, 0, 0, 100));
-		gs_gui_draw_control_text(&g_renderer->gui, diag.content, g_renderer->gui.last_rect, GS_GUI_ELEMENT_TEXT, 0x00, 0x00);
+		gs_gui_rect_t bg = g_renderer->gui.last_rect;
+
+		// draw lines
+		for (size_t i = 0; i < *num_lines; i++)
+		{
+			float32_t magic = -0.4f * line_height; // texts are too low by roughly this much, TODO: why?
+			float32_t off_y = i * line_height + pad_y + magic;
+			gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&dialogue->body, max_width, line_height, bg.x + pad_x, bg.y + off_y, GS_GUI_LAYOUT_ANCHOR_TOPLEFT), 0);
+			gs_gui_rect_t next = gs_gui_layout_next(&g_renderer->gui);
+			gs_gui_draw_control_text(&g_renderer->gui, lines[i], next, GS_GUI_ELEMENT_TEXT, 0x00, 0x00);
+
+			gs_free(lines[i]);
+		}
+
+		gs_free(lines);
+		gs_free(num_lines);
 	}
 	gs_gui_end_panel(&g_renderer->gui);
 
