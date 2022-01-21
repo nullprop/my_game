@@ -38,7 +38,7 @@ bool mg_load_md3(char *filename, md3_t *model)
 	gs_byte_buffer_read(&buffer, md3_header_t, &model->header);
 
 	// validate header
-	if (!gs_string_compare_equal_n(model->header.magic, MD3_MAGIC, 4) || model->header.version != MD3_VERSION)
+	if (memcmp(model->header.magic, MD3_MAGIC, 4) != 0 || model->header.version != MD3_VERSION)
 		return _mg_load_md3_fail(&buffer, "invalid header");
 
 	// read frames
@@ -69,7 +69,7 @@ bool mg_load_md3(char *filename, md3_t *model)
 		gs_byte_buffer_read_bulk(&buffer, &surf->magic, 4);
 
 		// validate magic
-		if (!gs_string_compare_equal_n(surf->magic, MD3_MAGIC, 4))
+		if (memcmp(surf->magic, MD3_MAGIC, 4) != 0)
 			return _mg_load_md3_fail(&buffer, "invalid magic in surface");
 
 		surf->name = gs_malloc(64);
@@ -282,6 +282,7 @@ void mg_free_md3(md3_t *model)
 	for (size_t i = 0; i < model->header.num_surfaces; i++)
 	{
 		gs_graphics_index_buffer_destroy(model->surfaces[i].ibo);
+
 		for (size_t j = 0; j < model->surfaces[i].num_frames; j++)
 		{
 			gs_graphics_vertex_buffer_destroy(model->surfaces[i].vbos[j]);

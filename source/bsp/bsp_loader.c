@@ -40,7 +40,7 @@ b32 load_bsp(char *filename, bsp_map_t *map)
 		return _load_bsp_fail(&buffer, "failed to read header");
 
 	// validate header
-	if (!gs_string_compare_equal_n(map->header.magic, "IBSP", 4) || map->header.version != 46)
+	if (memcmp(map->header.magic, "IBSP", 4) != 0 || map->header.version != 46)
 		return _load_bsp_fail(&buffer, "invalid header");
 
 	// read entity lump
