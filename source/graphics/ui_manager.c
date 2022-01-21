@@ -131,6 +131,13 @@ void mg_ui_manager_init()
 
 void mg_ui_manager_free()
 {
+	for (size_t i = 0; i < GUI_FONT_COUNT; i++)
+	{
+		gs_free(g_ui_manager->fonts[i].font_info);
+		gs_free(g_ui_manager->fonts[i].texture.desc.data);
+		gs_graphics_texture_destroy(g_ui_manager->fonts[i].texture.hndl);
+	}
+
 	gs_free(g_ui_manager);
 	g_ui_manager = NULL;
 }

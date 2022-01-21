@@ -179,8 +179,8 @@ void _bsp_trace_check_brush(bsp_trace_t *trace, bsp_brush_lump_t brush, gs_vec3 
 {
 	float32_t start_fraction = -1.0f;
 	float end_fraction	 = 1.0f;
-	bool32_t starts_out;
-	bool32_t ends_out;
+	bool32_t starts_out	 = false;
+	bool32_t ends_out	 = false;
 
 	bsp_brush_side_lump_t brush_side;
 	bsp_brush_side_lump_t clip_brush_side;

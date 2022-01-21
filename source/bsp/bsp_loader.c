@@ -121,8 +121,9 @@ b32 load_bsp(char *filename, bsp_map_t *map)
 
 	// Get map name from filepath
 	char *name = mg_get_filename_from_path(filename);
-	map->name  = gs_malloc(strlen(name) + 1);
-	strcat(map->name, name);
+	size_t sz  = strlen(name) + 1;
+	map->name  = gs_malloc(sz);
+	memcpy(map->name, name, sz);
 
 	gs_println("load_bsp() done loading '%s'", map->name);
 

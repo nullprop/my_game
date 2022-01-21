@@ -272,6 +272,8 @@ bool mg_load_md3(char *filename, md3_t *model)
 	gs_free(dir_path);
 	gs_free(cfg_path);
 
+	gs_byte_buffer_free(&buffer);
+
 	return true;
 }
 
@@ -279,6 +281,12 @@ void mg_free_md3(md3_t *model)
 {
 	for (size_t i = 0; i < model->header.num_surfaces; i++)
 	{
+		gs_graphics_index_buffer_destroy(model->surfaces[i].ibo);
+		for (size_t j = 0; j < model->surfaces[i].num_frames; j++)
+		{
+			gs_graphics_vertex_buffer_destroy(model->surfaces[i].vbos[j]);
+		}
+
 		gs_free(model->surfaces[i].magic);
 		gs_free(model->surfaces[i].name);
 		gs_free(model->surfaces[i].shaders);
@@ -286,6 +294,7 @@ void mg_free_md3(md3_t *model)
 		gs_free(model->surfaces[i].texcoords);
 		gs_free(model->surfaces[i].vertices);
 		gs_free(model->surfaces[i].render_vertices);
+		// contents will be freed by texture manager
 		gs_free(model->surfaces[i].textures);
 
 		model->surfaces[i].magic	   = NULL;

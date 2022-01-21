@@ -377,7 +377,7 @@ void bsp_map_render_immediate(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camer
 {
 	gsi_camera(gsi, cam);
 	gsi_depth_enabled(gsi, true);
-	//gsi_face_cull_enabled(gsi, true);
+	// gsi_face_cull_enabled(gsi, true);
 
 	for (size_t i = 0; i < gs_dyn_array_size(map->visible_faces); i++)
 	{
@@ -529,11 +529,11 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
 		texture_index = map->faces.data[container[i].index].texture;
 		lm_index      = map->faces.data[container[i].index].lm_index;
 
-		if (map->texture_assets.data[texture_index] == NULL || !gs_handle_is_valid(map->texture_assets.data[texture_index]->hndl))
+		if (texture_index >= 0 && map->texture_assets.data[texture_index] == NULL || !gs_handle_is_valid(map->texture_assets.data[texture_index]->hndl))
 		{
 			texture_index = -1;
 		}
-		if (!gs_handle_is_valid(map->lightmap_textures.data[lm_index]))
+		if (lm_index >= 0 && !gs_handle_is_valid(map->lightmap_textures.data[lm_index]))
 		{
 			lm_index = -1;
 		}
@@ -601,8 +601,8 @@ gs_vec3 bsp_map_find_spawn_point(bsp_map_t *map, gs_vec3 *position, float32_t *y
 	char *temp = bsp_entity_get_value(&spawns[spawn_index], "origin");
 	gs_assert(temp != NULL);
 
-	char *vec3_str	   = mg_duplicate_string(temp);
-	char *num_str	   = strtok(vec3_str, " ");
+	char *temp2	   = mg_duplicate_string(temp);
+	char *num_str	   = strtok(temp2, " ");
 	uint32_t vec_index = 0;
 
 	while (num_str != NULL)
@@ -612,6 +612,7 @@ gs_vec3 bsp_map_find_spawn_point(bsp_map_t *map, gs_vec3 *position, float32_t *y
 		vec_index++;
 		num_str = strtok(0, " ");
 	}
+	gs_free(temp2);
 	gs_assert(vec_index == 3);
 
 	// Get yaw
@@ -631,13 +632,25 @@ void bsp_map_free(bsp_map_t *map)
 		return;
 	}
 
+	/*==== Statics ====*/
+
+	gs_command_buffer_free(&bsp_graphics_cb);
+	gs_graphics_vertex_buffer_destroy(bsp_graphics_vbo);
+	gs_graphics_index_buffer_destroy(bsp_graphics_ibo);
+	gs_graphics_pipeline_destroy(bsp_graphics_pipe);
+	gs_graphics_uniform_destroy(bsp_graphics_u_proj);
+	gs_graphics_uniform_destroy(bsp_graphics_u_tex);
+	gs_graphics_uniform_destroy(bsp_graphics_u_lm);
+	gs_dyn_array_free(bsp_graphics_index_arr);
+	gs_dyn_array_free(bsp_graphics_vert_arr);
+
+	/*==== Runtime data ====*/
+
 	for (size_t i = 0; i < gs_dyn_array_size(map->entities); i++)
 	{
 		bsp_entity_free(&map->entities[i]);
 	}
 	gs_dyn_array_free(map->entities);
-
-	gs_dyn_array_free(bsp_graphics_index_arr);
 
 	for (size_t i = 0; i < gs_dyn_array_size(map->patches); i++)
 	{
@@ -651,8 +664,19 @@ void bsp_map_free(bsp_map_t *map)
 	map->visible_faces = NULL;
 	map->render_faces  = NULL;
 
+	for (size_t i = 0; i < map->lightmap_textures.count; i++)
+	{
+		gs_graphics_texture_destroy(map->lightmap_textures.data[i]);
+	}
+
+	// data contents will be freed by texture manager
 	gs_free(map->texture_assets.data);
 	map->texture_assets.data = NULL;
+
+	gs_graphics_texture_destroy(map->missing_texture);
+	gs_graphics_texture_destroy(map->missing_lm_texture);
+
+	/*==== File data ====*/
 
 	gs_free(map->entity_lump.ents);
 	gs_free(map->textures.data);

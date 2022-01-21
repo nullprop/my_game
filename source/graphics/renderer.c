@@ -143,12 +143,25 @@ void mg_renderer_free()
 	{
 		gs_free(g_renderer->shader_names[i]);
 		g_renderer->shader_names[i] = NULL;
+		gs_graphics_shader_destroy(g_renderer->shaders[i]);
 	}
 
-	gs_immediate_draw_free(&g_renderer->gsi);
-	gs_command_buffer_free(&g_renderer->cb);
+	gs_dyn_array_free(g_renderer->shader_names);
+	gs_dyn_array_free(g_renderer->shaders);
 
 	gs_slot_array_free(g_renderer->renderables);
+
+	gs_graphics_uniform_destroy(g_renderer->u_proj);
+	gs_graphics_uniform_destroy(g_renderer->u_view);
+	gs_graphics_uniform_destroy(g_renderer->u_light);
+	gs_graphics_uniform_destroy(g_renderer->u_tex);
+
+	gs_graphics_texture_destroy(g_renderer->missing_texture);
+
+	gs_command_buffer_free(&g_renderer->cb);
+	gs_immediate_draw_free(&g_renderer->gsi);
+	gs_immediate_draw_free(&g_renderer->gui.gsi);
+	gs_graphics_pipeline_destroy(g_renderer->pipe);
 
 	gs_free(g_renderer);
 	g_renderer = NULL;
