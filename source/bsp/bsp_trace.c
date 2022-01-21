@@ -96,7 +96,7 @@ void _bsp_trace_check_node(bsp_trace_t *trace, int32_t node_index, float32_t sta
 	bsp_node_lump_t node   = trace->map->nodes.data[node_index];
 	bsp_plane_lump_t plane = trace->map->planes.data[node.plane];
 
-	float32_t offset;
+	float32_t offset	 = 0;
 	float32_t start_distance = gs_vec3_dot(start, plane.normal) - plane.dist;
 	float32_t end_distance	 = gs_vec3_dot(end, plane.normal) - plane.dist;
 
@@ -186,10 +186,10 @@ void _bsp_trace_check_brush(bsp_trace_t *trace, bsp_brush_lump_t brush, gs_vec3 
 	bsp_brush_side_lump_t clip_brush_side;
 	bsp_plane_lump_t plane;
 	bsp_plane_lump_t clip_plane;
-	gs_vec3 offset = gs_v3(0, 0, 0);
-	float32_t start_distance;
-	float32_t end_distance;
-	float32_t fraction;
+	gs_vec3 offset		 = gs_v3(0, 0, 0);
+	float32_t start_distance = 0;
+	float32_t end_distance	 = 0;
+	float32_t fraction	 = 0;
 
 	for (size_t i = 0; i < brush.num_brush_sides; i++)
 	{
