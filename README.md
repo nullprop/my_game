@@ -36,9 +36,9 @@ BSP loading and rendering based on work by Krzysztof Kondrak.
 
 ```
 file(s):
-  source/bsp/bsp_loader.c
-  source/bsp/bsp_map.c
-  source/bsp/bsp_patch.c
+  src/bsp/bsp_loader.c
+  src/bsp/bsp_map.c
+  src/bsp/bsp_patch.c
 ```
 
 ```
