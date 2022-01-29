@@ -130,6 +130,14 @@ void mg_renderer_update()
 		bsp_map_update(g_renderer->bsp, g_renderer->cam->transform.position);
 		bsp_map_render(g_renderer->bsp, g_renderer->cam);
 	}
+	else
+	{
+		// Not clearing in bsp pass
+		gs_graphics_clear_desc_t clear = (gs_graphics_clear_desc_t){
+			.actions = &(gs_graphics_clear_action_t){.color = {0, 0, 0, 1.0f}},
+		};
+		gs_graphics_clear(&g_renderer->cb, &clear);
+	}
 	_mg_renderer_renderable_pass(fb);
 	mg_ui_manager_render(fb);
 
@@ -285,12 +293,24 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
 		       };
 
 		// Light
-		mg_renderer_light_t light = bsp_sample_lightvol(g_renderer->bsp, renderable->transform->position);
-		uniforms[2]		  = (gs_graphics_bind_uniform_desc_t){
-				      .uniform = g_renderer->u_light,
-				      .data    = &light,
-				      .binding = 0, // FRAGMENT
-		      };
+		mg_renderer_light_t light = {};
+		if (g_renderer->bsp != NULL && g_renderer->bsp->valid)
+		{
+			light = bsp_sample_lightvol(g_renderer->bsp, renderable->transform->position);
+		}
+		else
+		{
+			light = (mg_renderer_light_t){
+				.ambient     = gs_v3(0.4f, 0.4f, 0.4f),
+				.directional = gs_v3(0.8f, 0.8f, 0.8f),
+				.direction   = gs_vec3_norm(gs_v3(0.3f, 0.5f, -0.5f)),
+			};
+		}
+		uniforms[2] = (gs_graphics_bind_uniform_desc_t){
+			.uniform = g_renderer->u_light,
+			.data	 = &light,
+			.binding = 0, // FRAGMENT
+		};
 
 		// Draw each surface
 		for (size_t i = 0; i < renderable->model.data->header.num_surfaces; i++)

@@ -115,6 +115,9 @@ void app_init()
 	mg_renderer_play_animation(id_2, "LEGS_WALK");
 	// - - - -
 
+	// UI test
+	mg_ui_manager_set_dialogue("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", -1);
+
 	app_spawn();
 }
 
@@ -141,7 +144,7 @@ void app_update()
 			// Restore window to center of screen.
 			gs_vec2 window_size  = gs_platform_window_sizev(main_window);
 			gs_vec2 monitor_size = gs_v2(vid_mode->width, vid_mode->height);
-			gs_vec2 top_left = gs_vec2_scale(gs_vec2_sub(monitor_size, window_size), 0.5f);
+			gs_vec2 top_left     = gs_vec2_scale(gs_vec2_sub(monitor_size, window_size), 0.5f);
 			gs_platform_set_window_positionv(main_window, top_left);
 		}
 		else
@@ -151,6 +154,10 @@ void app_update()
 			gs_platform_set_window_fullscreen(main_window, true);
 		}
 	}
+
+	if (gs_platform_key_pressed(GS_KEYCODE_ESC)) g_ui_manager->menu_open = !g_ui_manager->menu_open;
+	if (gs_platform_key_pressed(GS_KEYCODE_F2)) g_ui_manager->console_open = !g_ui_manager->console_open;
+	if (gs_platform_key_pressed(GS_KEYCODE_F3)) g_ui_manager->debug_open = !g_ui_manager->debug_open;
 
 	// If click, then lock again (in case lost)
 	if (gs_platform_mouse_pressed(GS_MOUSE_LBUTTON) && !gs_platform_mouse_locked() && !g_ui_manager->show_cursor)

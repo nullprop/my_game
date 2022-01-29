@@ -124,9 +124,6 @@ void mg_ui_manager_init()
 				.all = {dialogue_text_style, sizeof(dialogue_text_style)},
 			},
 		});
-
-	// Test
-	mg_ui_manager_set_dialogue("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", -1);
 }
 
 void mg_ui_manager_free()
@@ -145,10 +142,6 @@ void mg_ui_manager_free()
 void mg_ui_manager_render(gs_vec2 fbs)
 {
 	bool show_cursor_prev = g_ui_manager->show_cursor;
-
-	if (gs_platform_key_pressed(GS_KEYCODE_ESC)) g_ui_manager->menu_open = !g_ui_manager->menu_open;
-	if (gs_platform_key_pressed(GS_KEYCODE_F2)) g_ui_manager->console_open = !g_ui_manager->console_open;
-	if (gs_platform_key_pressed(GS_KEYCODE_F3)) g_ui_manager->debug_open = !g_ui_manager->debug_open;
 
 	g_ui_manager->show_cursor = g_ui_manager->menu_open || g_ui_manager->console_open;
 
@@ -269,6 +262,17 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 			DRAW_TMP(10, 140)
 			sprintf(tmp, "vel_abs: %f, h: %f", gs_vec3_len(g_renderer->player->velocity), gs_vec3_len(gs_v3(g_renderer->player->velocity.x, g_renderer->player->velocity.y, 0)));
 			DRAW_TMP(10, 155)
+		}
+		else if (g_renderer->cam)
+		{
+			// use renderer camera directly
+			sprintf(tmp, "camera:");
+			DRAW_TMP(5, 95)
+			sprintf(tmp, "pos: [%f, %f, %f]", g_renderer->cam->transform.position.x, g_renderer->cam->transform.position.y, g_renderer->cam->transform.position.z);
+			DRAW_TMP(10, 110)
+			// TODO: yaw/pitch/roll conversion
+			// sprintf(tmp, "ang: [%f, %f, %f]", gs_rad2deg(g_renderer->cam->transform.rotation.x), gs_rad2deg(g_renderer->cam->transform.rotation.y), gs_rad2deg(g_renderer->cam->transform.rotation.z));
+			// DRAW_TMP(10, 125)
 		}
 	}
 	gs_gui_end_panel(&g_renderer->gui);
