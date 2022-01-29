@@ -163,12 +163,13 @@ bool mg_load_md3(char *filename, md3_t *model)
 		buffer.position = off_start + surf->off_end;
 	}
 
-	// Animations from animation.cfg
+	// Animations from <model>_animation.cfg
 	model->animations = gs_dyn_array_new(mg_md3_animation_t);
-
-	char *dir_path = mg_get_directory_from_path(filename);
-	char *cfg_name = "animation.cfg";
-	char *cfg_path = mg_append_string(dir_path, cfg_name);
+	char *model_path  = mg_path_remove_ext(filename);
+	char *cfg_path	  = gs_malloc(gs_string_length(model_path) + 15);
+	memset(cfg_path, '\0', sizeof(cfg_path));
+	strcat(cfg_path, model_path);
+	strcat(cfg_path, "_animation.cfg");
 
 	if (gs_util_file_exists(cfg_path))
 	{
@@ -269,7 +270,7 @@ bool mg_load_md3(char *filename, md3_t *model)
 		gs_println("mg_load_md3(): no animation.cfg for model '%s' (%s)", filename, cfg_path);
 	}
 
-	gs_free(dir_path);
+	gs_free(model_path);
 	gs_free(cfg_path);
 
 	gs_byte_buffer_free(&buffer);
