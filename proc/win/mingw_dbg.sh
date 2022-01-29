@@ -4,22 +4,12 @@ rm -rf bin
 mkdir bin
 cd bin
 
-proj_name=App
-proj_root_dir=$(pwd)/../
-
 flags=(
 	-std=gnu99 -w -g
 )
 
-# Include directories
 inc=(
-	-I ../third_party/include/             # gs
-)
-
-# Source files
-src=(
-	../source/*.c
-	../source/**/*.c
+	-I ../third_party/include/
 )
 
 libs=(
@@ -32,14 +22,29 @@ libs=(
 	-lAdvapi32
 )
 
-# Build
-echo gcc -O0 ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -lm -o ${proj_name}
-gcc -O0 ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -lm -o ${proj_name}
+# Build game
+proj_name=Game
+echo Building ${proj_name}...
+src=(
+	../src/main.c
+	../src/**/*.c
+)
+build_cmd="gcc -O0 ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -lm -o ${proj_name}"
+echo ${build_cmd}
+${build_cmd}
 
+# Build model viewer
+proj_name=ModelViewer
+echo Building ${proj_name}...
+src=(
+	../src/model_viewer.c
+	../src/**/*.c
+)
+build_cmd="gcc -O0 ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -lm -o ${proj_name}"
+echo ${build_cmd}
+${build_cmd}
+
+# Copy assets
 cd ..
-
-# Assets
 cp ./assets/* ./bin -r
-
-# Shaders
-cp ./source/shaders ./bin -r
+cp ./src/shaders ./bin -r

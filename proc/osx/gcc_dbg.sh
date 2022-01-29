@@ -4,7 +4,7 @@ rm -rf bin
 mkdir bin
 cd bin
 
-proj_name=App
+proj_name=Game
 proj_root_dir=$(pwd)/../
 
 flags=(
@@ -18,7 +18,8 @@ inc=(
 
 # Source files
 src=(
-	../source/main.c
+	../src/main.c
+	../src/**/*.c
 )
 
 fworks=(

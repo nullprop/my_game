@@ -4,16 +4,16 @@ mkdir bin
 pushd bin
 
 rem Name
-set name=App
+set name=Game
 
 rem Include directories 
 set inc=/I ..\third_party\include\
 
 rem Source files
-set src_dir=..\source
+set src_dir=..\src
 
 rem All source together
-set src_all=%src_dir%\*.c ^
+set src_all=%src_dir%\main.c ^
 %src_dir%\audio\*.c ^
 %src_dir%\bsp\*.c ^
 %src_dir%\entities\*.c ^
@@ -45,5 +45,5 @@ if %ERRORLEVEL% EQU 0 (
     echo Copying assets:
     robocopy .\assets .\bin /E /NFL /NDL /NJH /NP
     echo Copying shaders:
-    robocopy .\source\shaders .\bin\shaders /E /NFL /NDL /NJH /NP
+    robocopy .\src\shaders .\bin\shaders /E /NFL /NDL /NJH /NP
 )
