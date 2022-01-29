@@ -234,6 +234,7 @@ bool32_t mg_renderer_play_animation(uint32_t id, char *name)
 	{
 		if (strcmp(renderable->model.data->animations[i].name, name) == 0)
 		{
+			renderable->prev_frame_time   = gs_platform_elapsed_time();
 			renderable->current_animation = &renderable->model.data->animations[i];
 			renderable->frame	      = renderable->current_animation->first_frame;
 			found			      = true;
@@ -361,11 +362,13 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
 				{
 					if (renderable->current_animation->loop)
 					{
+						// Reset to first frame
 						renderable->frame = renderable->current_animation->first_frame;
 					}
 					else
 					{
-						renderable->current_animation = NULL;
+						// Freeze at final frame
+						renderable->frame = renderable->current_animation->first_frame + renderable->current_animation->num_frames - 1;
 					}
 				}
 
