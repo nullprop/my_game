@@ -39,6 +39,13 @@ typedef struct mg_ui_dialogue_t
 	double _start_time;
 } mg_ui_dialogue_t;
 
+typedef struct mg_ui_text_t
+{
+	char *content;
+	gs_vec2 pos;
+	size_t sz;
+} mg_ui_text_t;
+
 typedef struct mg_ui_manager_t
 {
 	gs_gui_style_t styles[GUI_STYLE_COUNT][GS_GUI_ELEMENT_STATE_COUNT];
@@ -52,6 +59,7 @@ typedef struct mg_ui_manager_t
 	bool debug_open;
 	bool console_open;
 	bool show_cursor;
+	gs_slot_array(mg_ui_text_t) texts;
 } mg_ui_manager_t;
 
 void mg_ui_manager_init();
@@ -61,6 +69,11 @@ void mg_ui_manager_render(gs_vec2 fbs);
 
 void mg_ui_manager_set_dialogue(const char *text, float32_t duration);
 
+uint32_t mg_ui_manager_add_text(const char *text, const gs_vec2 pos, size_t sz);
+void mg_ui_manager_update_text(const uint32_t id, const char *text);
+void mg_ui_manager_remove_text(const uint32_t id);
+
+void _mg_ui_manager_text_overlay(gs_vec2 fbs, gs_gui_container_t *root);
 void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root);
 void _mg_ui_manager_dialogue_window(gs_vec2 fbs, gs_gui_container_t *root);
 void _mg_ui_manager_menu_window(gs_vec2 fbs, gs_gui_container_t *root);

@@ -135,6 +135,17 @@ void mg_ui_manager_free()
 		gs_graphics_texture_destroy(g_ui_manager->fonts[i].texture.hndl);
 	}
 
+	for (
+		gs_slot_array_iter it = gs_slot_array_iter_new(g_ui_manager->texts);
+		gs_slot_array_iter_valid(g_ui_manager->texts, it);
+		gs_slot_array_iter_advance(g_ui_manager->texts, it))
+	{
+		mg_ui_text_t text = gs_slot_array_iter_get(g_ui_manager->texts, it);
+		gs_free(text.content);
+	}
+	gs_slot_array_clear(g_ui_manager->texts);
+
+	gs_free(g_ui_manager->current_dialogue.content);
 	gs_free(g_ui_manager);
 	g_ui_manager = NULL;
 }
@@ -180,6 +191,7 @@ void mg_ui_manager_render(gs_vec2 fbs)
 				    GS_GUI_OPT_NOBRINGTOFRONT))
 		{
 			gs_gui_container_t *root = gs_gui_get_current_container(&g_renderer->gui);
+			_mg_ui_manager_text_overlay(fbs, root);
 			_mg_ui_manager_dialogue_window(fbs, root);
 			_mg_ui_manager_menu_window(fbs, root);
 			_mg_ui_manager_debug_overlay(fbs, root);
@@ -199,6 +211,8 @@ void mg_ui_manager_render(gs_vec2 fbs)
 
 void mg_ui_manager_set_dialogue(const char *text, float32_t duration)
 {
+	gs_free(g_ui_manager->current_dialogue.content);
+
 	mg_ui_dialogue_t diag = {
 		.content     = gs_malloc(gs_string_length(text) + 1),
 		.duration    = duration,
@@ -208,6 +222,76 @@ void mg_ui_manager_set_dialogue(const char *text, float32_t duration)
 
 	g_ui_manager->current_dialogue = diag;
 	g_ui_manager->dialogue_open    = true;
+}
+
+// Use sz > 0 to reserve a longer string for future calls to mg_ui_manager_update_text.
+uint32_t mg_ui_manager_add_text(const char *text, const gs_vec2 pos, size_t sz)
+{
+	if (sz <= 0) sz = gs_string_length(text) + 1;
+
+	mg_ui_text_t t = {
+		.content = gs_malloc(sz),
+		.pos	 = pos,
+		.sz	 = sz,
+	};
+	memcpy(t.content, text, sz);
+	return gs_slot_array_insert(g_ui_manager->texts, t);
+}
+
+void mg_ui_manager_update_text(const uint32_t id, const char *text)
+{
+	if (gs_slot_array_handle_valid(g_ui_manager->texts, id))
+	{
+		mg_ui_text_t t = gs_slot_array_get(g_ui_manager->texts, id);
+		size_t sz_old  = t.sz;
+		size_t sz_new  = gs_string_length(text) + 1;
+		if (sz_new > sz_old)
+		{
+			gs_println("WARN: mg_ui_manager_update_text new text size larger than old (%zu > %zu)", sz_new, sz_old);
+			memcpy(t.content, text, sz_old);
+			// Ensure null-terminated since we are clipping new string
+			memset(t.content + sz_old - 1, '\0', 1);
+		}
+		else
+		{
+			memcpy(t.content, text, sz_new);
+		}
+	}
+}
+
+void mg_ui_manager_remove_text(const uint32_t id)
+{
+	if (gs_slot_array_handle_valid(g_ui_manager->texts, id))
+	{
+		mg_ui_text_t t = gs_slot_array_get(g_ui_manager->texts, id);
+		gs_free(t.content);
+		gs_slot_array_erase(g_ui_manager->texts, id);
+	}
+}
+
+void _mg_ui_manager_text_overlay(gs_vec2 fbs, gs_gui_container_t *root)
+{
+	if (gs_slot_array_size(g_ui_manager->texts) <= 0) return;
+
+	gs_gui_set_style_sheet(&g_renderer->gui, &g_ui_manager->console_style_sheet);
+	gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&root->body, fbs.x, fbs.y, 0, 0, GS_GUI_LAYOUT_ANCHOR_TOPLEFT), 0);
+	gs_gui_begin_panel_ex(&g_renderer->gui, "#texts", GS_GUI_OPT_NOSCROLL);
+	{
+		gs_gui_container_t *cnt = gs_gui_get_current_container(&g_renderer->gui);
+		gs_gui_rect_t next	= {};
+
+		for (
+			gs_slot_array_iter it = gs_slot_array_iter_new(g_ui_manager->texts);
+			gs_slot_array_iter_valid(g_ui_manager->texts, it);
+			gs_slot_array_iter_advance(g_ui_manager->texts, it))
+		{
+			mg_ui_text_t text = gs_slot_array_iter_get(g_ui_manager->texts, it);
+			gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&cnt->body, fbs.x, fbs.y, text.pos.x, text.pos.y, GS_GUI_LAYOUT_ANCHOR_TOPLEFT), 0);
+			next = gs_gui_layout_next(&g_renderer->gui);
+			gs_gui_draw_control_text(&g_renderer->gui, text.content, next, GS_GUI_ELEMENT_TEXT, 0x00, 0x00);
+		}
+	}
+	gs_gui_end_panel(&g_renderer->gui);
 }
 
 void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
