@@ -2,16 +2,13 @@
 
 The source code release of my_game.
 
----
-
 ## Table of contents
 
 - [Status](#Status)
 - [License](#License)
 - [Assets](#Assets)
 - [Compiling](#Compiling)
-
----
+- [Tools](#Tools)
 
 ## Status
 
@@ -20,8 +17,6 @@ In development.
 ![game screenshot](/docs/screenshots/game_2022-01-05.png)
 
 <p align="center">Testing with Q3 assets.</p>
-
----
 
 ## License
 
@@ -74,19 +69,27 @@ All projects contained in `third_party` are copyright of their respective owners
 - File(s): `third_party/include/gs/*`
 - License: [third_party/include/gs/LICENSE](third_party/include/gs/LICENSE)
 
----
-
 ## Assets
 
 // TODO
 
 ## Compiling
 
+### Windows
+
 // TODO
 
 ### Linux
+
+Tested on Ubuntu 20.04.3 LTS (Desktop).
 
 ```sh
 sudo apt install gcc mesa-common-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev
 bash proc/linux/gcc_dbg.sh
 ```
+
+## Tools
+
+### ModelViewer
+
+// TODO
