@@ -197,6 +197,7 @@ gs_app_desc_t gs_main(int32_t argc, char **argv)
 		.init	       = app_init,
 		.update	       = app_update,
 		.shutdown      = app_shutdown,
+		.window_title  = "Game",
 		.window_flags  = g_config->video.fullscreen ? GS_WINDOW_FLAGS_FULLSCREEN : 0,
 		.window_width  = g_config->video.width,
 		.window_height = g_config->video.height,
