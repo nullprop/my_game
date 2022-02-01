@@ -34,10 +34,12 @@ uint32_t animation_index    = 0;
 uint32_t animation_count    = 0;
 bool32_t animation_paused   = false;
 bool32_t animation_loop	    = true;
-
-void app_spawn()
-{
-}
+uint32_t text_fps	    = GS_SLOT_ARRAY_INVALID_HANDLE;
+uint32_t text_animation	    = GS_SLOT_ARRAY_INVALID_HANDLE;
+uint32_t text_anim_fps	    = GS_SLOT_ARRAY_INVALID_HANDLE;
+uint32_t text_anim_frame    = GS_SLOT_ARRAY_INVALID_HANDLE;
+uint32_t text_anim_pause    = GS_SLOT_ARRAY_INVALID_HANDLE;
+uint32_t text_anim_loop	    = GS_SLOT_ARRAY_INVALID_HANDLE;
 
 void on_window_resize(GLFWwindow *window, int width, int height)
 {
@@ -92,9 +94,50 @@ void app_init()
 	renderable		  = mg_renderer_get_renderable(model_id);
 	animation_count		  = gs_dyn_array_size(renderable->model.data->animations);
 
-	g_ui_manager->debug_open = true;
+	char tmp[256];
 
-	app_spawn();
+	int32_t text_y = 5;
+	int32_t text_h = 15;
+	text_fps       = mg_ui_manager_add_text("FPS: 0", gs_v2(5, text_y), 32);
+
+	int32_t num_surfaces = renderable->model.data->header.num_surfaces;
+	int32_t num_verts    = 0;
+	int32_t num_tris     = 0;
+	for (size_t i = 0; i < num_surfaces; i++)
+	{
+		md3_surface_t surf = renderable->model.data->surfaces[i];
+		num_verts += surf.num_verts;
+		num_tris += surf.num_tris;
+	}
+
+	text_y += text_h;
+	sprintf(tmp, "Model: %s", model_path);
+	mg_ui_manager_add_text(tmp, gs_v2(5, (text_y += text_h)), 0);
+	sprintf(tmp, "Surfaces: %d", num_surfaces);
+	mg_ui_manager_add_text(tmp, gs_v2(10, (text_y += text_h)), 32);
+	sprintf(tmp, "Verts: %d", num_verts);
+	mg_ui_manager_add_text(tmp, gs_v2(10, (text_y += text_h)), 32);
+	sprintf(tmp, "Tris: %d", num_tris);
+	mg_ui_manager_add_text(tmp, gs_v2(10, (text_y += text_h)), 32);
+
+	text_y += text_h;
+	text_animation	= mg_ui_manager_add_text("Animation: None", gs_v2(5, (text_y += text_h)), 64);
+	text_anim_fps	= mg_ui_manager_add_text("Anim FPS: 0", gs_v2(10, (text_y += text_h)), 32);
+	text_anim_frame = mg_ui_manager_add_text("Frame: 0 / 0", gs_v2(10, (text_y += text_h)), 32);
+	sprintf(tmp, "Pause: %d", animation_paused);
+	text_anim_pause = mg_ui_manager_add_text(tmp, gs_v2(10, (text_y += text_h)), 0);
+	sprintf(tmp, "Loop: %d", animation_loop);
+	text_anim_loop = mg_ui_manager_add_text(tmp, gs_v2(10, (text_y += text_h)), 0);
+
+	text_y += text_h;
+	mg_ui_manager_add_text("Controls:", gs_v2(5, (text_y += text_h)), 0);
+	mg_ui_manager_add_text("WASD - Move", gs_v2(10, (text_y += text_h)), 0);
+	mg_ui_manager_add_text("Mouse - Look", gs_v2(10, (text_y += text_h)), 0);
+	mg_ui_manager_add_text("P - Pause", gs_v2(10, (text_y += text_h)), 0);
+	mg_ui_manager_add_text("L - Loop", gs_v2(10, (text_y += text_h)), 0);
+	mg_ui_manager_add_text("R - Restart animation", gs_v2(10, (text_y += text_h)), 0);
+	mg_ui_manager_add_text("Up/Down - Next/Prev animation", gs_v2(10, (text_y += text_h)), 0);
+	mg_ui_manager_add_text("Left/Right - Skip frame", gs_v2(10, (text_y += text_h)), 0);
 }
 
 void app_update()
@@ -102,6 +145,7 @@ void app_update()
 	gs_platform_t *platform = gs_engine_subsystem(platform);
 	float delta_time	= platform->time.delta;
 	double plat_time	= gs_platform_elapsed_time();
+	char tmp[64];
 
 	// If click, then lock again (in case lost)
 	if (gs_platform_mouse_pressed(GS_MOUSE_LBUTTON) && !gs_platform_mouse_locked() && !g_ui_manager->show_cursor)
@@ -159,6 +203,11 @@ void app_update()
 			renderable->current_animation->loop = animation_loop;
 			if (animation_paused)
 				renderable->prev_frame_time = DBL_MAX;
+
+			sprintf(tmp, "Animation: %s", renderable->current_animation->name);
+			mg_ui_manager_update_text(text_animation, tmp);
+			sprintf(tmp, "Anim FPS: %d", renderable->current_animation->fps);
+			mg_ui_manager_update_text(text_anim_fps, tmp);
 		}
 	}
 
@@ -176,6 +225,11 @@ void app_update()
 			renderable->current_animation->loop = animation_loop;
 			if (animation_paused)
 				renderable->prev_frame_time = DBL_MAX;
+
+			sprintf(tmp, "Animation: %s", renderable->current_animation->name);
+			mg_ui_manager_update_text(text_animation, tmp);
+			sprintf(tmp, "Anim FPS: %d", renderable->current_animation->fps);
+			mg_ui_manager_update_text(text_anim_fps, tmp);
 		}
 	}
 
@@ -188,6 +242,9 @@ void app_update()
 			renderable->prev_frame_time = DBL_MAX;
 		else
 			renderable->prev_frame_time = plat_time;
+
+		sprintf(tmp, "Pause: %d", animation_paused);
+		mg_ui_manager_update_text(text_anim_pause, tmp);
 	}
 
 	// Restart animation
@@ -208,6 +265,8 @@ void app_update()
 		{
 			renderable->current_animation->loop = animation_loop;
 		}
+		sprintf(tmp, "Loop: %d", animation_loop);
+		mg_ui_manager_update_text(text_anim_loop, tmp);
 	}
 
 	// Frame skip forwards
@@ -235,6 +294,14 @@ void app_update()
 				renderable->frame = renderable->current_animation->first_frame;
 		}
 	}
+
+	sprintf(tmp, "FPS: %d", (int)gs_round(1.0f / delta_time));
+	mg_ui_manager_update_text(text_fps, tmp);
+
+	sprintf(tmp, "Frame: %d / %d",
+		renderable->current_animation != NULL ? renderable->frame - renderable->current_animation->first_frame + 1 : 0,
+		renderable->current_animation != NULL ? renderable->current_animation->num_frames : 0);
+	mg_ui_manager_update_text(text_anim_frame, tmp);
 
 	mg_renderer_update();
 }
@@ -267,6 +334,7 @@ gs_app_desc_t gs_main(int32_t argc, char **argv)
 		.init	       = app_init,
 		.update	       = app_update,
 		.shutdown      = app_shutdown,
+		.window_title  = "ModelViewer",
 		.window_flags  = 0,
 		.window_width  = 800,
 		.window_height = 600,
