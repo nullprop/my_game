@@ -92,6 +92,12 @@ bash proc/linux/gcc_dbg.sh
 
 ### ModelViewer
 
-// TODO
+Tool for checking .md3 models and custom animation.cfg files.
+
+Load models with a relative path, e.g.:
+```sh
+cd bin
+./ModelViewer models/players/sarge/upper.md3 
+```
 
 ![modelviewer screenshot](/docs/screenshots/modelviewer_2022-03-11.png)
