@@ -42,8 +42,7 @@ void bsp_entity_free(bsp_entity_t *ent)
 		v = NULL;
 	}
 
-	// FIXME
-	//gs_slot_map_free(ent->slot_map);
+	gs_slot_map_free(ent->slot_map);
 	gs_free(ent->content);
 }
 
@@ -110,11 +109,11 @@ void _bsp_entity_load_keys(bsp_entity_t *ent)
 #define KEY_MAX_SIZE 128
 #define VAL_MAX_SIZE 128
 
-	char state = 0;
-	char key[KEY_MAX_SIZE];
-	char value[VAL_MAX_SIZE];
-	uint32_t key_index   = 0;
-	uint32_t value_index = 0;
+	char state		 = 0;
+	char key[KEY_MAX_SIZE]	 = {0};
+	char value[VAL_MAX_SIZE] = {0};
+	uint32_t key_index	 = 0;
+	uint32_t value_index	 = 0;
 
 	char c = 0;
 	for (size_t i = 0; i < gs_string_length(ent->content); i++)
@@ -145,7 +144,7 @@ void _bsp_entity_load_keys(bsp_entity_t *ent)
 				gs_assert(value_index < VAL_MAX_SIZE);
 				value[value_index] = '\0';
 
-				uint32_t key_len = gs_string_length(key) + 1;
+				uint32_t key_len   = gs_string_length(key) + 1;
 				uint32_t value_len = gs_string_length(value) + 1;
 
 				char *k = gs_malloc(key_len);

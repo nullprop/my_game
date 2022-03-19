@@ -39,7 +39,7 @@ void bsp_map_init(bsp_map_t *map)
 	// Init dynamic arrays
 	gs_dyn_array_reserve(map->render_faces, map->faces.count);
 	gs_dyn_array_reserve(map->visible_faces, map->faces.count);
-	uint32_t patch_count;
+	uint32_t patch_count = 0;
 	for (size_t i = 0; i < map->faces.count; i++)
 	{
 		if (map->faces.data[i].type == BSP_FACE_TYPE_PATCH)
