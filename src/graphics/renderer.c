@@ -428,6 +428,7 @@ void _mg_renderer_load_shader(char *name)
 	}
 
 	// Read from files
+	// FIXME: leak
 	char *vert_src = gs_platform_read_file_contents(vert, "r", &sz);
 	gs_println("_mg_renderer_load_shader read %zu bytes from %s", sz, vert);
 

@@ -646,6 +646,9 @@ void bsp_map_free(bsp_map_t *map)
 
 	/*==== Runtime data ====*/
 
+	gs_free(map->name);
+	map->name = NULL;
+
 	for (size_t i = 0; i < gs_dyn_array_size(map->entities); i++)
 	{
 		bsp_entity_free(&map->entities[i]);
@@ -664,14 +667,16 @@ void bsp_map_free(bsp_map_t *map)
 	map->visible_faces = NULL;
 	map->render_faces  = NULL;
 
+	// data contents will be freed by texture manager
+	gs_free(map->texture_assets.data);
+	map->texture_assets.data = NULL;
+
 	for (size_t i = 0; i < map->lightmap_textures.count; i++)
 	{
 		gs_graphics_texture_destroy(map->lightmap_textures.data[i]);
 	}
-
-	// data contents will be freed by texture manager
-	gs_free(map->texture_assets.data);
-	map->texture_assets.data = NULL;
+	gs_free(map->lightmap_textures.data);
+	map->lightmap_textures.data = NULL;
 
 	gs_graphics_texture_destroy(map->missing_texture);
 	gs_graphics_texture_destroy(map->missing_lm_texture);

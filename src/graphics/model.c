@@ -296,6 +296,7 @@ void mg_free_md3(md3_t *model)
 		gs_free(model->surfaces[i].texcoords);
 		gs_free(model->surfaces[i].vertices);
 		gs_free(model->surfaces[i].render_vertices);
+		gs_free(model->surfaces[i].vbos);
 		// contents will be freed by texture manager
 		gs_free(model->surfaces[i].textures);
 
@@ -306,6 +307,7 @@ void mg_free_md3(md3_t *model)
 		model->surfaces[i].texcoords	   = NULL;
 		model->surfaces[i].vertices	   = NULL;
 		model->surfaces[i].render_vertices = NULL;
+		model->surfaces[i].vbos		   = NULL;
 		model->surfaces[i].textures	   = NULL;
 	}
 
@@ -318,4 +320,7 @@ void mg_free_md3(md3_t *model)
 	model->surfaces = NULL;
 
 	gs_dyn_array_free(model->animations);
+
+	gs_free(model);
+	model = NULL;
 }

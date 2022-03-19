@@ -28,7 +28,6 @@ void mg_model_manager_free()
 	for (size_t i = 0; i < gs_dyn_array_size(g_model_manager->models); i++)
 	{
 		mg_free_md3(g_model_manager->models[i].data);
-		g_model_manager->models[i].data = NULL;
 	}
 
 	gs_dyn_array_free(g_model_manager->models);
@@ -58,7 +57,6 @@ void _mg_model_manager_load(char *filename, char *shader)
 	{
 		gs_println("WARN: _mg_model_manager_load failed, model %s", filename);
 		mg_free_md3(data);
-		data = NULL;
 		return;
 	}
 

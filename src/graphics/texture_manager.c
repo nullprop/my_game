@@ -25,6 +25,7 @@ void mg_texture_manager_free()
 		gs_graphics_texture_destroy(g_texture_manager->textures[i].asset->hndl);
 		g_texture_manager->textures[i].asset->hndl = gs_handle_invalid(gs_graphics_texture_t);
 		gs_free(g_texture_manager->textures[i].asset);
+		gs_free(g_texture_manager->textures[i].filename);
 	}
 
 	gs_dyn_array_free(g_texture_manager->textures);

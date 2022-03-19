@@ -159,9 +159,9 @@ void _mg_player_do_jump(mg_player_t *player)
 
 void _mg_player_check_floor(mg_player_t *player)
 {
-	bsp_trace_t *trace = &(bsp_trace_t){.map = player->map};
+	bsp_trace_t trace = {.map = player->map};
 	bsp_trace_box(
-		trace,
+		&trace,
 		player->transform.position,
 		gs_vec3_add(player->transform.position, gs_vec3_scale(MG_AXIS_DOWN, 2.0f)),
 		player->mins,
@@ -173,11 +173,11 @@ void _mg_player_check_floor(mg_player_t *player)
 	// TODO: relative velocity between player and floor if moving
 	float relative_velocity = player->velocity.z;
 
-	if (trace->fraction < 1.0f && trace->normal.z > 0.7f && relative_velocity < MG_PLAYER_SLIDE_LIMIT)
+	if (trace.fraction < 1.0f && trace.normal.z > 0.7f && relative_velocity < MG_PLAYER_SLIDE_LIMIT)
 	{
 		player->grounded	 = true;
 		player->has_jumped	 = false;
-		player->ground_normal	 = trace->normal;
+		player->ground_normal	 = trace.normal;
 		player->last_ground_time = gs_platform_elapsed_time();
 
 		uint32_t leaf_index   = player->map->stats.current_leaf;
@@ -341,34 +341,34 @@ void _mg_player_uncrouch(mg_player_t *player, float delta_time)
 {
 	if (player->crouch_fraction == 0.0f) return;
 
-	bsp_trace_t *trace = &(bsp_trace_t){.map = player->map};
-	gs_vec3 origin	   = player->transform.position;
-	bool32_t grounded  = player->grounded;
+	bsp_trace_t trace = {.map = player->map};
+	gs_vec3 origin	  = player->transform.position;
+	bool32_t grounded = player->grounded;
 
 	if (!grounded)
 	{
 		// Feet will go down if in air, check how much room below player.
 		bsp_trace_box(
-			trace,
+			&trace,
 			player->transform.position,
 			gs_vec3_scale(mg_get_down(player->transform.rotation), (MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT) * 0.5f * player->crouch_fraction),
 			player->mins,
 			player->maxs,
 			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
 
-		origin	 = trace->end;
-		grounded = trace->fraction < 1.0f && trace->normal.z > 0.7f;
+		origin	 = trace.end;
+		grounded = trace.fraction < 1.0f && trace.normal.z > 0.7f;
 	}
 
 	// Check above from potential new position.
 	bsp_trace_box(
-		trace,
+		&trace,
 		origin,
 		gs_vec3_add(origin, gs_vec3_scale(mg_get_up(player->transform.rotation), (MG_PLAYER_HEIGHT - MG_PLAYER_CROUCH_HEIGHT) * player->crouch_fraction)),
 		player->mins, player->maxs,
 		BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
 
-	if (trace->fraction == 1.0f)
+	if (trace.fraction == 1.0f)
 	{
 		// Got room to uncrouch
 		float32_t uncrouch_time = MG_PLAYER_UNCROUCH_TIME;
@@ -407,7 +407,7 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 	uint16_t max_iter     = 10;
 	gs_vec3 start;
 	gs_vec3 end;
-	bsp_trace_t *trace = &(bsp_trace_t){.map = player->map};
+	bsp_trace_t trace = {.map = player->map};
 	float32_t prev_frac;
 	gs_vec3 prev_normal;
 
@@ -430,39 +430,46 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 		end   = gs_vec3_add(start, gs_vec3_scale(player->velocity, delta_time));
 
 		bsp_trace_box(
-			trace,
+			&trace,
 			start,
 			end,
 			player->mins,
 			player->maxs,
 			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
 
-		if (trace->start_solid)
+		if (trace.start_solid)
 		{
 			// Stuck in a solid, try to get out
-			if (trace->all_solid)
+			if (trace.all_solid)
 			{
 				_mg_player_unstuck(player);
 			}
 			else
 			{
-				gs_println("WARN: player start solid but not stuck: [%f, %f, %f] -> [%f, %f, %f]", player->transform.position.x, player->transform.position.y, player->transform.position.z, trace->end.x, trace->end.y, trace->end.z);
-				player->transform.position = trace->end;
+				gs_println(
+					"WARN: player start solid but not stuck: [%f, %f, %f] -> [%f, %f, %f]",
+					player->transform.position.x,
+					player->transform.position.y,
+					player->transform.position.z,
+					trace.end.x,
+					trace.end.y,
+					trace.end.z);
+				player->transform.position = trace.end;
 				player->velocity	   = gs_v3(0, 0, 0);
 			}
 			break;
 		}
 
-		if (trace->fraction > 0)
+		if (trace.fraction > 0)
 		{
 			// Move as far as we can
-			player->transform.position = trace->end;
+			player->transform.position = trace.end;
 		}
 
 		bool is_done	= false;
-		gs_vec3 end_pos = trace->end;
+		gs_vec3 end_pos = trace.end;
 
-		if (trace->fraction == 1.0f)
+		if (trace.fraction == 1.0f)
 		{
 			// Moved all the way
 			delta_time = 0;
@@ -470,11 +477,11 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 			goto step_down;
 		}
 
-		delta_time -= delta_time * trace->fraction;
+		delta_time -= delta_time * trace.fraction;
 
 		// Colliding with something, check if we can move further
 		// by stepping up or down before clipping velocity to the plane.
-		gs_vec3 hit_normal = trace->normal;
+		gs_vec3 hit_normal = trace.normal;
 
 	step_up:
 		// TODO
@@ -487,13 +494,13 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 
 		// Check above
 		bsp_trace_box(
-			trace,
+			&trace,
 			end_pos,
 			gs_vec3_add(end_pos, gs_v3(0, 0, MG_PLAYER_STEP_HEIGHT)),
 			player->mins,
 			player->maxs,
 			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
-		if (trace->fraction <= 0)
+		if (trace.fraction <= 0)
 			goto step_down;
 
 		// Check forward
@@ -512,29 +519,29 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 			horizontal_vel.y = (horizontal_vel.y / fabs(horizontal_vel.y)) * BSP_TRACE_EPSILON * 2.0f;
 
 		bsp_trace_box(
-			trace,
-			trace->end,
-			gs_vec3_add(trace->end, horizontal_vel),
+			&trace,
+			trace.end,
+			gs_vec3_add(trace.end, horizontal_vel),
 			player->mins,
 			player->maxs,
 			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
-		if (trace->fraction <= 0)
+		if (trace.fraction <= 0)
 			goto step_down;
 
-		float forward_frac = trace->fraction;
+		float forward_frac = trace.fraction;
 
 		// Move down
 		bsp_trace_box(
-			trace,
-			trace->end,
-			gs_vec3_add(trace->end, gs_v3(0, 0, -MG_PLAYER_STEP_HEIGHT)),
+			&trace,
+			trace.end,
+			gs_vec3_add(trace.end, gs_v3(0, 0, -MG_PLAYER_STEP_HEIGHT)),
 			player->mins,
 			player->maxs,
 			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
-		if (trace->fraction == 1.0f || trace->end.z <= end_pos.z || trace->normal.z <= 0.7f)
+		if (trace.fraction == 1.0f || trace.end.z <= end_pos.z || trace.normal.z <= 0.7f)
 			goto step_down;
 
-		player->transform.position = trace->end;
+		player->transform.position = trace.end;
 		delta_time -= delta_time * forward_frac;
 		continue;
 
@@ -546,16 +553,16 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 
 		// Move down
 		bsp_trace_box(
-			trace,
+			&trace,
 			end_pos,
 			gs_vec3_add(end_pos, gs_v3(0, 0, -MG_PLAYER_STEP_HEIGHT)),
 			player->mins,
 			player->maxs,
 			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
-		if (trace->fraction == 1.0f || trace->end.z >= end_pos.z || trace->normal.z <= 0.7f)
+		if (trace.fraction == 1.0f || trace.end.z >= end_pos.z || trace.normal.z <= 0.7f)
 			goto slide;
 
-		player->transform.position = trace->end;
+		player->transform.position = trace.end;
 		continue;
 
 	slide:
@@ -585,31 +592,38 @@ void _mg_player_unstuck(mg_player_t *player)
 	float increment	   = 64.0f;
 	float max_distance = increment * 10;
 	uint32_t dir	   = 0;
-	gs_vec3 start;
-	gs_vec3 end;
-	bsp_trace_t *trace = &(bsp_trace_t){.map = player->map};
+	gs_vec3 start	   = gs_v3(0, 0, 0);
+	gs_vec3 end	   = gs_v3(0, 0, 0);
+	bsp_trace_t trace  = {.map = player->map};
 
 	while (true)
 	{
 		// Sweep player aabb by 1 unit
 		start = gs_vec3_add(player->transform.position, gs_vec3_scale(directions[dir], distance));
 		end   = gs_vec3_add(start, directions[dir]);
-		bsp_trace_box(trace, start, end, player->mins, player->maxs, BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
+		bsp_trace_box(&trace, start, end, player->mins, player->maxs, BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
 
-		if (trace->fraction > 0.0f && !trace->all_solid)
+		if (trace.fraction > 0.0f && !trace.all_solid)
 		{
 			// Trace ends in a valid position.
 			// Trace back towards start so we move
 			// the minimum distance to get unstuck.
-			gs_vec3 valid_pos = trace->end;
-			bsp_trace_box(trace, trace->end, player->transform.position, player->mins, player->maxs, BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
-			if (trace->fraction < 1.0f && !trace->all_solid)
+			gs_vec3 valid_pos = trace.end;
+			bsp_trace_box(&trace, trace.end, player->transform.position, player->mins, player->maxs, BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
+			if (trace.fraction < 1.0f && !trace.all_solid)
 			{
-				valid_pos = trace->end;
+				valid_pos = trace.end;
 			}
 
+			gs_println(
+				"WARN: player stuck in solid at [%f, %f, %f], freeing to [%f, %f, %f].",
+				player->transform.position.x,
+				player->transform.position.y,
+				player->transform.position.z,
+				valid_pos.x,
+				valid_pos.y,
+				valid_pos.z);
 			player->transform.position = valid_pos;
-			gs_println("WARN: player stuck in solid at [%f, %f, %f], freeing to [%f, %f, %f].", player->transform.position.x, player->transform.position.y, player->transform.position.z, valid_pos.x, valid_pos.y, valid_pos.z);
 			break;
 		}
 
@@ -622,7 +636,11 @@ void _mg_player_unstuck(mg_player_t *player)
 			dir++;
 			if (dir >= 6)
 			{
-				gs_println("WARN: player stuck in solid at [%f, %f, %f], could not unstuck.", player->transform.position.x, player->transform.position.y, player->transform.position.z);
+				gs_println(
+					"WARN: player stuck in solid at [%f, %f, %f], could not unstuck.",
+					player->transform.position.x,
+					player->transform.position.y,
+					player->transform.position.z);
 				break;
 			}
 		}
