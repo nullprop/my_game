@@ -154,7 +154,7 @@ void _bsp_load_entities(bsp_map_t *map)
 {
 	map->entities = gs_dyn_array_new(bsp_entity_t);
 
-	uint32_t sz = gs_string_length(map->entity_lump.ents + 1);
+	uint32_t sz = gs_string_length(map->entity_lump.ents) + 1;
 	char *ents  = gs_malloc(sz);
 	memcpy(ents, map->entity_lump.ents, sz);
 

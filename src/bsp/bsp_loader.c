@@ -154,10 +154,13 @@ b32 _load_entity_lump(gs_byte_buffer_t *buffer, bsp_map_t *map)
 {
 	int32_t size = map->header.dir_entries[BSP_LUMP_TYPE_ENTITIES].length;
 
-	map->entity_lump.ents = gs_malloc(size);
+	// not sure if the lump is null terminated,
+	// malloc extra byte for \0 at the end.
+	map->entity_lump.ents = gs_malloc(size + 1);
 
 	buffer->position = map->header.dir_entries[BSP_LUMP_TYPE_ENTITIES].offset;
 	gs_byte_buffer_read_bulk(buffer, &map->entity_lump.ents, size);
+	map->entity_lump.ents[size] = '\0';
 
 	return true;
 }

@@ -18,6 +18,7 @@ bsp_entity_t bsp_entity_from_string(char *content)
 		.content  = gs_malloc(sz),
 	};
 
+	memset(ent.content, 0, sz);
 	gs_util_string_remove_character(content, ent.content, sz, '\n');
 
 	_bsp_entity_load_keys(&ent);
@@ -144,10 +145,13 @@ void _bsp_entity_load_keys(bsp_entity_t *ent)
 				gs_assert(value_index < VAL_MAX_SIZE);
 				value[value_index] = '\0';
 
-				char *k = gs_malloc(gs_string_length(key) + 1);
-				memcpy(k, key, gs_string_length(key) + 1);
-				char *v = gs_malloc(gs_string_length(value) + 1);
-				memcpy(v, value, gs_string_length(value) + 1);
+				uint32_t key_len = gs_string_length(key) + 1;
+				uint32_t value_len = gs_string_length(value) + 1;
+
+				char *k = gs_malloc(key_len);
+				memcpy(k, key, key_len);
+				char *v = gs_malloc(value_len);
+				memcpy(v, value, value_len);
 
 				gs_slot_map_insert(ent->slot_map, k, v);
 			}
