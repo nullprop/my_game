@@ -588,7 +588,7 @@ void _mg_player_unstuck(mg_player_t *player)
 		MG_AXIS_DOWN,
 	};
 
-	float distance;
+	float distance	   = 0.0f;
 	float increment	   = 64.0f;
 	float max_distance = increment * 10;
 	uint32_t dir	   = 0;
@@ -627,14 +627,14 @@ void _mg_player_unstuck(mg_player_t *player)
 			break;
 		}
 
-		// Increment distance in current direction,
-		// or swap to the next direction.
-		distance += increment;
-		if (distance > max_distance)
+		// Swap to the next direction,
+		// increment distance if looped through all.
+		dir++;
+		if (dir >= 6)
 		{
-			distance = 0;
-			dir++;
-			if (dir >= 6)
+			dir = 0;
+			distance += increment;
+			if (distance > max_distance)
 			{
 				gs_println(
 					"WARN: player stuck in solid at [%f, %f, %f], could not unstuck.",
