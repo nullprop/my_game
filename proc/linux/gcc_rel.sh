@@ -27,6 +27,10 @@ build_cmd="gcc -O3 ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -lm -o ${proj_name
 echo ${build_cmd}
 ${build_cmd}
 
+if [ "$?" -ne "0" ]; then
+	exit 1
+fi
+
 # Build model viewer
 proj_name=ModelViewer
 echo Building ${proj_name}...
