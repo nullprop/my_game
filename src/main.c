@@ -106,6 +106,11 @@ void app_init()
 
 void app_update()
 {
+	if (gs_platform_key_pressed(GS_KEYCODE_B))
+	{
+		g_config->graphics.barrel_enabled = !g_config->graphics.barrel_enabled;
+		gs_println("barrel_enabled: %d", g_config->graphics.barrel_enabled);
+	}
 	if (gs_platform_key_pressed(GS_KEYCODE_T))
 	{
 		g_config->graphics.barrel_strength += 0.1;

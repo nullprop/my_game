@@ -61,6 +61,7 @@ typedef struct mg_renderer_t
 	gs_handle(gs_graphics_uniform_t) u_view;
 	gs_handle(gs_graphics_uniform_t) u_light;
 	gs_handle(gs_graphics_uniform_t) u_tex;
+	gs_handle(gs_graphics_uniform_t) u_barrel_enabled;
 	gs_handle(gs_graphics_uniform_t) u_barrel_strength;
 	gs_handle(gs_graphics_uniform_t) u_barrel_height;
 	gs_handle(gs_graphics_uniform_t) u_barrel_aspect;

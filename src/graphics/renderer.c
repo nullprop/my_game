@@ -121,6 +121,14 @@ void mg_renderer_init(uint32_t window_handle)
 			},
 			.stage = GS_GRAPHICS_SHADER_STAGE_FRAGMENT,
 		});
+	g_renderer->u_barrel_enabled = gs_graphics_uniform_create(
+		&(gs_graphics_uniform_desc_t){
+			.name	= "u_barrel_enabled",
+			.layout = &(gs_graphics_uniform_layout_desc_t){
+				.type = GS_GRAPHICS_UNIFORM_INT,
+			},
+			.stage = GS_GRAPHICS_SHADER_STAGE_VERTEX,
+		});
 	g_renderer->u_barrel_strength = gs_graphics_uniform_create(
 		&(gs_graphics_uniform_desc_t){
 			.name	= "u_barrel_strength",
@@ -274,6 +282,7 @@ void mg_renderer_free()
 	gs_graphics_uniform_destroy(g_renderer->u_view);
 	gs_graphics_uniform_destroy(g_renderer->u_light);
 	gs_graphics_uniform_destroy(g_renderer->u_tex);
+	gs_graphics_uniform_destroy(g_renderer->u_barrel_enabled);
 	gs_graphics_uniform_destroy(g_renderer->u_barrel_strength);
 	gs_graphics_uniform_destroy(g_renderer->u_barrel_height);
 	gs_graphics_uniform_destroy(g_renderer->u_barrel_aspect);
@@ -593,24 +602,29 @@ void _mg_renderer_post_pass()
 			.binding = 0, // FRAGMENT
 		},
 		(gs_graphics_bind_uniform_desc_t){
+			.uniform = g_renderer->u_barrel_enabled,
+			.data	 = &g_config->graphics.barrel_enabled,
+			.binding = 1, // VERTEX
+		},
+		(gs_graphics_bind_uniform_desc_t){
 			.uniform = g_renderer->u_barrel_strength,
 			.data	 = &g_config->graphics.barrel_strength,
-			.binding = 0, // VERTEX
+			.binding = 1, // VERTEX
 		},
 		(gs_graphics_bind_uniform_desc_t){
 			.uniform = g_renderer->u_barrel_height,
 			.data	 = &barrel_height,
-			.binding = 1, // VERTEX
+			.binding = 2, // VERTEX
 		},
 		(gs_graphics_bind_uniform_desc_t){
 			.uniform = g_renderer->u_barrel_aspect,
 			.data	 = &g_renderer->cam->aspect_ratio,
-			.binding = 2, // VERTEX
+			.binding = 3, // VERTEX
 		},
 		(gs_graphics_bind_uniform_desc_t){
 			.uniform = g_renderer->u_barrel_cyl_ratio,
 			.data	 = &g_config->graphics.barrel_cyl_ratio,
-			.binding = 3, // VERTEX
+			.binding = 4, // VERTEX
 		},
 	};
 

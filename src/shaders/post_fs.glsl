@@ -12,6 +12,7 @@
 
 #version 330 core
 
+flat in int barrel_enabled;
 in vec3 uv;
 in vec2 uv_dot;
 
@@ -21,6 +22,13 @@ out vec4 frag_color;
 
 void main()
 {
-	vec3 tex_coord = dot(uv_dot, uv_dot) * vec3(-0.5, -0.5, -1.0) + uv;
-	frag_color = texture2DProj(u_tex, tex_coord);
+	if (barrel_enabled == 1)
+	{
+		vec3 tex_coord = dot(uv_dot, uv_dot) * vec3(-0.5, -0.5, -1.0) + uv;
+		frag_color = texture2DProj(u_tex, tex_coord);
+	}
+	else
+	{
+		frag_color = texture(u_tex, uv.xy);
+	}	
 }
