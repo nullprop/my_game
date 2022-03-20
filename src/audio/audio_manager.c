@@ -60,7 +60,9 @@ void mg_audio_manager_play(char *name, float pitch_var)
 	}
 
 	gs_audio_instance_decl_t data = gs_audio_get_instance_data(asset->instance);
-	data.pitch		      = pitch;
+#ifdef PITCH
+	data.pitch = pitch;
+#endif
 	gs_audio_set_instance_data(asset->instance, data);
 
 	// FIXME: playing instance doesn't work here
@@ -71,7 +73,11 @@ void mg_audio_manager_play(char *name, float pitch_var)
 	else
 	{
 		// gs_audio_play(asset->instance);
+#ifdef PITCH
 		gs_audio_play_source(asset->source, g_audio_manager->master_vol * g_audio_manager->mixer_vol[asset->type] * asset->volume, pitch);
+#else
+		gs_audio_play_source(asset->source, g_audio_manager->master_vol * g_audio_manager->mixer_vol[asset->type] * asset->volume);
+#endif
 	}
 }
 

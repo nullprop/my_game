@@ -68,7 +68,7 @@ void mg_player_update(mg_player_t *player)
 {
 	if (g_ui_manager->show_cursor) return;
 
-	gs_platform_t *platform = gs_engine_subsystem(platform);
+	gs_platform_t *platform = gs_subsystem(platform);
 	float dt		= platform->time.delta;
 	double pt		= gs_platform_elapsed_time();
 

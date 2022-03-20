@@ -44,7 +44,7 @@ void _mg_config_load(char *filepath)
 {
 	// Known config keys
 	// TODO: could make a macro to simplify these
-#define NUM_KEYS 11
+#define NUM_KEYS 14
 	char *known_keys[NUM_KEYS] = {
 		// Video
 		"vid_fullscreen",
@@ -59,6 +59,9 @@ void _mg_config_load(char *filepath)
 		"snd_ambient",
 		// Graphics
 		"r_fov",
+		"r_barrel_enabled",
+		"r_barrel_strength",
+		"r_barrel_cyl_ratio",
 		// Controls
 		"cl_sensitivity",
 	};
@@ -76,6 +79,9 @@ void _mg_config_load(char *filepath)
 		&g_config->sound.ambient,
 		// Graphics
 		&g_config->graphics.fov,
+		&g_config->graphics.barrel_enabled,
+		&g_config->graphics.barrel_strength,
+		&g_config->graphics.barrel_cyl_ratio,
 		// Controls
 		&g_config->controls.sensitivity,
 	};
@@ -93,6 +99,9 @@ void _mg_config_load(char *filepath)
 		MG_CONFIG_TYPE_FLOAT,
 		// Graphics
 		MG_CONFIG_TYPE_INT,
+		MG_CONFIG_TYPE_INT,
+		MG_CONFIG_TYPE_FLOAT,
+		MG_CONFIG_TYPE_FLOAT,
 		// Controls
 		MG_CONFIG_TYPE_FLOAT,
 	};
@@ -234,6 +243,9 @@ void _mg_config_save(char *filepath)
 	fprintf(file, "\n");
 	fprintf(file, "// Graphics\n");
 	fprintf(file, "r_fov %zu\n", g_config->graphics.fov);
+	fprintf(file, "r_barrel_enabled %zu\n", g_config->graphics.barrel_enabled);
+	fprintf(file, "r_barrel_strength %f\n", g_config->graphics.barrel_strength);
+	fprintf(file, "r_barrel_cyl_ratio %f\n", g_config->graphics.barrel_cyl_ratio);
 
 	fprintf(file, "\n");
 	fprintf(file, "// Controls\n");
@@ -260,7 +272,10 @@ void _mg_config_set_default()
 	g_config->sound.ambient = 0.6f;
 
 	// Graphics
-	g_config->graphics.fov = 110;
+	g_config->graphics.fov		    = 110;
+	g_config->graphics.barrel_enabled   = true;
+	g_config->graphics.barrel_strength  = 0.5f;
+	g_config->graphics.barrel_cyl_ratio = 1.0f;
 
 	// Controls
 	g_config->controls.sensitivity = 2.0f;

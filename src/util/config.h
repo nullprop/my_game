@@ -32,6 +32,9 @@ typedef struct mg_config_video_t
 typedef struct mg_config_graphics_t
 {
 	uint32_t fov;
+	bool32_t barrel_enabled;
+	float32_t barrel_strength;
+	float32_t barrel_cyl_ratio;
 } mg_config_graphics_t;
 
 typedef struct mg_config_sound_t

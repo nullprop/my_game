@@ -17,7 +17,6 @@
 #include "../util/render.h"
 #include "../util/transform.h"
 
-static gs_command_buffer_t bsp_graphics_cb		       = {0};
 static gs_handle(gs_graphics_vertex_buffer_t) bsp_graphics_vbo = {0};
 static gs_handle(gs_graphics_index_buffer_t) bsp_graphics_ibo  = {0};
 static gs_handle(gs_graphics_pipeline_t) bsp_graphics_pipe     = {0};
@@ -81,9 +80,6 @@ void bsp_map_init(bsp_map_t *map)
 
 		gs_dyn_array_push(map->render_faces, face);
 	}
-
-	// Command buffer
-	bsp_graphics_cb = gs_command_buffer_new();
 
 	// Index & Vertex buffers
 	_bsp_map_create_buffers(map);
@@ -194,6 +190,7 @@ void _bsp_load_textures(bsp_map_t *map)
 
 	map->missing_texture = gs_graphics_texture_create(
 		&(gs_graphics_texture_desc_t){
+			.type	    = GS_GRAPHICS_TEXTURE_2D,
 			.width	    = missing_size,
 			.height	    = missing_size,
 			.format	    = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
@@ -209,6 +206,7 @@ void _bsp_load_lightmaps(bsp_map_t *map)
 	gs_color_t gray		= gs_color(100, 100, 100, 255);
 	map->missing_lm_texture = gs_graphics_texture_create(
 		&(gs_graphics_texture_desc_t){
+			.type	    = GS_GRAPHICS_TEXTURE_2D,
 			.width	    = 1,
 			.height	    = 1,
 			.format	    = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
@@ -223,6 +221,7 @@ void _bsp_load_lightmaps(bsp_map_t *map)
 	{
 		map->lightmap_textures.data[i] = gs_graphics_texture_create(
 			&(gs_graphics_texture_desc_t){
+				.type	    = GS_GRAPHICS_TEXTURE_2D,
 				.width	    = 128,
 				.height	    = 128,
 				.format	    = GS_GRAPHICS_TEXTURE_FORMAT_RGB8,
@@ -375,7 +374,7 @@ void bsp_map_update(bsp_map_t *map, gs_vec3 view_position)
 
 void bsp_map_render_immediate(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camera_t *cam)
 {
-	gsi_camera(gsi, cam);
+	gsi_camera(gsi, cam, g_renderer->fb_size.x, g_renderer->fb_size.y);
 	gsi_depth_enabled(gsi, true);
 	// gsi_face_cull_enabled(gsi, true);
 
@@ -463,15 +462,17 @@ void bsp_map_render_immediate(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camer
 	}
 }
 
-void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
+void bsp_map_render(bsp_map_t *map, gs_camera_t *cam, gs_handle(gs_graphics_renderpass_t) rp, gs_command_buffer_t *cb, const gs_vec2 fb)
 {
-	// Framebuffer size
-	const gs_vec2 fb = gs_platform_framebuffer_sizev(gs_platform_main_window());
-
 	// Clear desc
-	gs_graphics_clear_desc_t clear = {
+	gs_graphics_clear_desc_t clear = (gs_graphics_clear_desc_t){
 		.actions = &(gs_graphics_clear_action_t){
-			.color = {0, 0, 0, 1.0f},
+			.color = {
+				g_renderer->clear_color[0],
+				g_renderer->clear_color[1],
+				g_renderer->clear_color[2],
+				g_renderer->clear_color[3],
+			},
 		},
 	};
 
@@ -514,11 +515,11 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
 	};
 
 	// Render
-	gs_graphics_begin_render_pass(&bsp_graphics_cb, GS_GRAPHICS_RENDER_PASS_DEFAULT);
-	gs_graphics_set_viewport(&bsp_graphics_cb, 0, 0, (int32_t)fb.x, (int32_t)fb.y);
-	gs_graphics_clear(&bsp_graphics_cb, &clear);
-	gs_graphics_bind_pipeline(&bsp_graphics_cb, bsp_graphics_pipe);
-	gs_graphics_apply_bindings(&bsp_graphics_cb, &binds);
+	gs_graphics_renderpass_begin(cb, rp);
+	gs_graphics_set_viewport(cb, 0, 0, (int32_t)fb.x, (int32_t)fb.y);
+	gs_graphics_clear(cb, &clear);
+	gs_graphics_pipeline_bind(cb, bsp_graphics_pipe);
+	gs_graphics_apply_bindings(cb, &binds);
 
 	// Draw faces
 	int32_t texture_index;
@@ -560,19 +561,18 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam)
 				.size = sizeof(face_uniforms),
 			},
 		};
-		gs_graphics_apply_bindings(&bsp_graphics_cb, &face_binds);
+		gs_graphics_apply_bindings(cb, &face_binds);
 
 		// Draw face
-		gs_graphics_draw(&bsp_graphics_cb, &(gs_graphics_draw_desc_t){
-							   .start = (size_t)(intptr_t)(container[i].first_ibo_index * sizeof(uint32_t)),
-							   .count = (size_t)container[i].num_ibo_indices,
-						   });
+		gs_graphics_draw(
+			cb,
+			&(gs_graphics_draw_desc_t){
+				.start = (size_t)(intptr_t)(container[i].first_ibo_index * sizeof(uint32_t)),
+				.count = (size_t)container[i].num_ibo_indices,
+			});
 	}
 
-	gs_graphics_end_render_pass(&bsp_graphics_cb);
-
-	// Submit command buffer
-	gs_graphics_submit_command_buffer(&bsp_graphics_cb);
+	gs_graphics_renderpass_end(cb);
 }
 
 gs_vec3 bsp_map_find_spawn_point(bsp_map_t *map, gs_vec3 *position, float32_t *yaw)
@@ -634,7 +634,6 @@ void bsp_map_free(bsp_map_t *map)
 
 	/*==== Statics ====*/
 
-	gs_command_buffer_free(&bsp_graphics_cb);
 	gs_graphics_vertex_buffer_destroy(bsp_graphics_vbo);
 	gs_graphics_index_buffer_destroy(bsp_graphics_ibo);
 	gs_graphics_pipeline_destroy(bsp_graphics_pipe);

@@ -65,7 +65,7 @@ typedef struct mg_ui_manager_t
 void mg_ui_manager_init();
 void mg_ui_manager_free();
 
-void mg_ui_manager_render(gs_vec2 fbs);
+void mg_ui_manager_render(gs_vec2 fbs, bool32_t clear);
 
 void mg_ui_manager_set_dialogue(const char *text, float32_t duration);
 

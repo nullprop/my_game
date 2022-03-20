@@ -9,6 +9,7 @@
 
 #include "renderer.h"
 #include "../util/camera.h"
+#include "../util/config.h"
 #include "../util/render.h"
 #include "ui_manager.h"
 
@@ -21,13 +22,59 @@ void mg_renderer_init(uint32_t window_handle)
 	g_renderer->cb	= gs_command_buffer_new();
 	g_renderer->gsi = gs_immediate_draw_new(window_handle);
 	gs_gui_init(&g_renderer->gui, window_handle);
-	g_renderer->renderables	 = gs_slot_array_new(mg_renderable_t);
-	g_renderer->shaders	 = gs_dyn_array_new(gs_handle_gs_graphics_shader_t);
-	g_renderer->shader_names = gs_dyn_array_new(char *);
+	g_renderer->renderables		= gs_slot_array_new(mg_renderable_t);
+	g_renderer->shaders		= gs_dyn_array_new(gs_handle_gs_graphics_shader_t);
+	g_renderer->shader_names	= gs_dyn_array_new(char *);
+	g_renderer->shader_sources_frag = gs_dyn_array_new(char *);
+	g_renderer->shader_sources_vert = gs_dyn_array_new(char *);
 
 	_mg_renderer_load_shader("basic");
 	_mg_renderer_load_shader("basic_unlit");
 	_mg_renderer_load_shader("bsp");
+	_mg_renderer_load_shader("post");
+
+	g_renderer->clear_color[0] = 0;
+	g_renderer->clear_color[1] = 0;
+	g_renderer->clear_color[2] = 0;
+	g_renderer->clear_color[3] = 1.0f;
+
+	// Create offscreen render objects
+	g_renderer->offscreen_fbo = gs_graphics_framebuffer_create(NULL);
+	g_renderer->offscreen_rt  = gs_handle_invalid(gs_graphics_texture_t);
+	g_renderer->offscreen_dt  = gs_handle_invalid(gs_graphics_texture_t);
+	_mg_renderer_resize(gs_platform_framebuffer_sizev(gs_platform_main_window()));
+	g_renderer->offscreen_rp = gs_graphics_renderpass_create(
+		&(gs_graphics_renderpass_desc_t){
+			.fbo	    = g_renderer->offscreen_fbo,
+			.color	    = &g_renderer->offscreen_rt,
+			.color_size = sizeof(g_renderer->offscreen_rt),
+			.depth	    = g_renderer->offscreen_dt});
+
+	// Create buffers for full-screen quad
+	g_renderer->screen_indices = gs_malloc(sizeof(int32_t) * 6);
+	// 1st triangle
+	g_renderer->screen_indices[0] = 1;
+	g_renderer->screen_indices[1] = 0;
+	g_renderer->screen_indices[2] = 3;
+	// 2nd triangle
+	g_renderer->screen_indices[3] = 1;
+	g_renderer->screen_indices[4] = 3;
+	g_renderer->screen_indices[5] = 2;
+	g_renderer->screen_ibo	      = gs_graphics_index_buffer_create(
+		       &(gs_graphics_index_buffer_desc_t){
+			       .data = g_renderer->screen_indices,
+			       .size = sizeof(int32_t) * 6,
+		       });
+	g_renderer->screen_vertices    = gs_malloc(sizeof(gs_vec2) * 4);
+	g_renderer->screen_vertices[0] = gs_v2(-1.0f, -1.0f);
+	g_renderer->screen_vertices[1] = gs_v2(-1.0f, 1.0f);
+	g_renderer->screen_vertices[2] = gs_v2(1.0f, 1.0f);
+	g_renderer->screen_vertices[3] = gs_v2(1.0f, -1.0f);
+	g_renderer->screen_vbo	       = gs_graphics_vertex_buffer_create(
+			&(gs_graphics_vertex_buffer_desc_t){
+				.data = g_renderer->screen_vertices,
+				.size = sizeof(gs_vec2) * 4,
+		});
 
 	// Create uniforms
 	g_renderer->u_proj = gs_graphics_uniform_create(
@@ -74,6 +121,38 @@ void mg_renderer_init(uint32_t window_handle)
 			},
 			.stage = GS_GRAPHICS_SHADER_STAGE_FRAGMENT,
 		});
+	g_renderer->u_barrel_strength = gs_graphics_uniform_create(
+		&(gs_graphics_uniform_desc_t){
+			.name	= "u_barrel_strength",
+			.layout = &(gs_graphics_uniform_layout_desc_t){
+				.type = GS_GRAPHICS_UNIFORM_FLOAT,
+			},
+			.stage = GS_GRAPHICS_SHADER_STAGE_VERTEX,
+		});
+	g_renderer->u_barrel_height = gs_graphics_uniform_create(
+		&(gs_graphics_uniform_desc_t){
+			.name	= "u_barrel_height",
+			.layout = &(gs_graphics_uniform_layout_desc_t){
+				.type = GS_GRAPHICS_UNIFORM_FLOAT,
+			},
+			.stage = GS_GRAPHICS_SHADER_STAGE_VERTEX,
+		});
+	g_renderer->u_barrel_aspect = gs_graphics_uniform_create(
+		&(gs_graphics_uniform_desc_t){
+			.name	= "u_barrel_aspect",
+			.layout = &(gs_graphics_uniform_layout_desc_t){
+				.type = GS_GRAPHICS_UNIFORM_FLOAT,
+			},
+			.stage = GS_GRAPHICS_SHADER_STAGE_VERTEX,
+		});
+	g_renderer->u_barrel_cyl_ratio = gs_graphics_uniform_create(
+		&(gs_graphics_uniform_desc_t){
+			.name	= "u_barrel_cyl_ratio",
+			.layout = &(gs_graphics_uniform_layout_desc_t){
+				.type = GS_GRAPHICS_UNIFORM_FLOAT,
+			},
+			.stage = GS_GRAPHICS_SHADER_STAGE_VERTEX,
+		});
 
 	// Pipeline vertex attributes
 	gs_graphics_vertex_attribute_desc_t vattrs[] = {
@@ -81,8 +160,11 @@ void mg_renderer_init(uint32_t window_handle)
 		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT3, .name = "a_normal"},
 		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT2, .name = "a_texcoord"},
 	};
+	gs_graphics_vertex_attribute_desc_t post_vattrs[] = {
+		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT2, .name = "a_pos"},
+	};
 
-	// Create pipeline
+	// Create pipelines
 	g_renderer->pipe = gs_graphics_pipeline_create(
 		&(gs_graphics_pipeline_desc_t){
 			.raster = {
@@ -102,6 +184,20 @@ void mg_renderer_init(uint32_t window_handle)
 				.size  = sizeof(vattrs),
 			},
 		});
+	g_renderer->post_pipe = gs_graphics_pipeline_create(
+		&(gs_graphics_pipeline_desc_t){
+			.raster = {
+				.shader			   = mg_renderer_get_shader("post"),
+				.index_buffer_element_size = sizeof(int32_t),
+			},
+			.depth = {
+				.func = GS_GRAPHICS_DEPTH_FUNC_ALWAYS,
+			},
+			.layout = {
+				.attrs = post_vattrs,
+				.size  = sizeof(post_vattrs),
+			},
+		});
 
 	// Create missing texture
 	uint32_t missing_size = 10;
@@ -109,6 +205,7 @@ void mg_renderer_init(uint32_t window_handle)
 
 	g_renderer->missing_texture = gs_graphics_texture_create(
 		&(gs_graphics_texture_desc_t){
+			.type	    = GS_GRAPHICS_TEXTURE_2D,
 			.width	    = missing_size,
 			.height	    = missing_size,
 			.format	    = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
@@ -123,26 +220,36 @@ void mg_renderer_update()
 {
 	// Framebuffer size
 	const gs_vec2 fb = gs_platform_framebuffer_sizev(gs_platform_main_window());
+	if (fb.x != g_renderer->fb_size.x || fb.y != g_renderer->fb_size.y)
+		_mg_renderer_resize(fb);
 
-	// Render passes
-	if (g_renderer->bsp != NULL && g_renderer->bsp->valid)
-	{
-		bsp_map_update(g_renderer->bsp, g_renderer->cam->transform.position);
-		bsp_map_render(g_renderer->bsp, g_renderer->cam);
-	}
-	else
-	{
-		// Not clearing in bsp pass
-		gs_graphics_clear_desc_t clear = (gs_graphics_clear_desc_t){
-			.actions = &(gs_graphics_clear_action_t){.color = {0, 0, 0, 1.0f}},
-		};
-		gs_graphics_clear(&g_renderer->cb, &clear);
-	}
-	_mg_renderer_renderable_pass(fb);
-	mg_ui_manager_render(fb);
+	bool32_t has_cam = g_renderer->cam != NULL;
 
-	// Submit command buffer (syncs to GPU, MUST be done on main thread where you have your GPU context created)
-	gs_graphics_submit_command_buffer(&g_renderer->cb);
+	if (has_cam)
+	{
+		g_renderer->cam->aspect_ratio = g_renderer->fb_size.x / g_renderer->fb_size.y;
+		g_renderer->offscreen_cleared = false;
+
+		// Render bsp to offscreen texture
+		if (g_renderer->bsp != NULL && g_renderer->bsp->valid)
+		{
+			bsp_map_update(g_renderer->bsp, g_renderer->cam->transform.position);
+			bsp_map_render(g_renderer->bsp, g_renderer->cam, g_renderer->offscreen_rp, &g_renderer->cb, g_renderer->fb_size);
+			g_renderer->offscreen_cleared = true;
+		}
+
+		// Render models to offscreen texture
+		//_mg_renderer_renderable_pass();
+
+		// Post-process offscreen texture and render to backbuffer.
+		_mg_renderer_post_pass();
+	}
+
+	// Render UI straight to backbuffer
+	mg_ui_manager_render(g_renderer->fb_size, !has_cam);
+
+	// Submit command buffer
+	gs_graphics_command_buffer_submit(&g_renderer->cb);
 }
 
 void mg_renderer_free()
@@ -152,10 +259,14 @@ void mg_renderer_free()
 		gs_free(g_renderer->shader_names[i]);
 		g_renderer->shader_names[i] = NULL;
 		gs_graphics_shader_destroy(g_renderer->shaders[i]);
+		gs_free(g_renderer->shader_sources_frag[i]);
+		gs_free(g_renderer->shader_sources_vert[i]);
 	}
 
 	gs_dyn_array_free(g_renderer->shader_names);
 	gs_dyn_array_free(g_renderer->shaders);
+	gs_dyn_array_free(g_renderer->shader_sources_frag);
+	gs_dyn_array_free(g_renderer->shader_sources_vert);
 
 	gs_slot_array_free(g_renderer->renderables);
 
@@ -163,13 +274,32 @@ void mg_renderer_free()
 	gs_graphics_uniform_destroy(g_renderer->u_view);
 	gs_graphics_uniform_destroy(g_renderer->u_light);
 	gs_graphics_uniform_destroy(g_renderer->u_tex);
+	gs_graphics_uniform_destroy(g_renderer->u_barrel_strength);
+	gs_graphics_uniform_destroy(g_renderer->u_barrel_height);
+	gs_graphics_uniform_destroy(g_renderer->u_barrel_aspect);
+	gs_graphics_uniform_destroy(g_renderer->u_barrel_cyl_ratio);
+
+	gs_graphics_renderpass_destroy(g_renderer->offscreen_rp);
+
+	gs_graphics_framebuffer_destroy(g_renderer->offscreen_fbo);
 
 	gs_graphics_texture_destroy(g_renderer->missing_texture);
+	gs_graphics_texture_destroy(g_renderer->offscreen_rt);
+	gs_graphics_texture_destroy(g_renderer->offscreen_dt);
 
 	gs_command_buffer_free(&g_renderer->cb);
 	gs_immediate_draw_free(&g_renderer->gsi);
+	// TODO: free other things in gui
+	// gs_gui_free(&g_renderer->gui);
 	gs_immediate_draw_free(&g_renderer->gui.gsi);
 	gs_graphics_pipeline_destroy(g_renderer->pipe);
+	gs_graphics_pipeline_destroy(g_renderer->post_pipe);
+
+	gs_graphics_index_buffer_destroy(g_renderer->screen_ibo);
+	gs_free(g_renderer->screen_indices);
+
+	gs_graphics_vertex_buffer_destroy(g_renderer->screen_vbo);
+	gs_free(g_renderer->screen_vertices);
 
 	gs_free(g_renderer);
 	g_renderer = NULL;
@@ -250,15 +380,56 @@ bool32_t mg_renderer_play_animation(uint32_t id, char *name)
 	return found;
 }
 
-void _mg_renderer_renderable_pass(gs_vec2 fb)
+void _mg_renderer_resize(const gs_vec2 fb_size)
+{
+	g_renderer->fb_size = fb_size;
+
+	if (gs_handle_is_valid(g_renderer->offscreen_rt))
+	{
+		gs_graphics_texture_destroy(g_renderer->offscreen_rt);
+		g_renderer->offscreen_rt = gs_handle_invalid(gs_graphics_texture_t);
+	}
+
+	if (gs_handle_is_valid(g_renderer->offscreen_dt))
+	{
+		gs_graphics_texture_destroy(g_renderer->offscreen_dt);
+		g_renderer->offscreen_dt = gs_handle_invalid(gs_graphics_texture_t);
+	}
+
+	g_renderer->offscreen_rt = gs_graphics_texture_create(
+		&(gs_graphics_texture_desc_t){
+			.type	    = GS_GRAPHICS_TEXTURE_2D,
+			.width	    = fb_size.x,
+			.height	    = fb_size.y,
+			.format	    = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
+			.wrap_s	    = GS_GRAPHICS_TEXTURE_WRAP_CLAMP_TO_BORDER,
+			.wrap_t	    = GS_GRAPHICS_TEXTURE_WRAP_CLAMP_TO_BORDER,
+			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+		});
+
+	g_renderer->offscreen_dt = gs_graphics_texture_create(
+		&(gs_graphics_texture_desc_t){
+			.type	    = GS_GRAPHICS_TEXTURE_2D,
+			.width	    = fb_size.x,
+			.height	    = fb_size.y,
+			.format	    = GS_GRAPHICS_TEXTURE_FORMAT_DEPTH32F,
+			.wrap_s	    = GS_GRAPHICS_TEXTURE_WRAP_CLAMP_TO_BORDER,
+			.wrap_t	    = GS_GRAPHICS_TEXTURE_WRAP_CLAMP_TO_BORDER,
+			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+		});
+}
+
+void _mg_renderer_renderable_pass()
 {
 	if (g_renderer->cam == NULL) return;
 	if (gs_slot_array_size(g_renderer->renderables) == 0) return;
 
 	gs_renderpass renderables_pass = gs_default_val();
 
-	// Uniforms that don't chang per renderable
-	gs_mat4 u_proj = mg_camera_get_view_projection(g_renderer->cam, (s32)fb.x, (s32)fb.y);
+	// Uniforms that don't change per renderable
+	gs_mat4 u_proj = mg_camera_get_view_projection(g_renderer->cam, (s32)g_renderer->fb_size.x, (s32)g_renderer->fb_size.y);
 
 	// Uniform binds
 	gs_graphics_bind_uniform_desc_t uniforms[] = {
@@ -273,9 +444,25 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
 	};
 
 	// Begin render
-	gs_graphics_begin_render_pass(&g_renderer->cb, GS_GRAPHICS_RENDER_PASS_DEFAULT);
-	gs_graphics_set_viewport(&g_renderer->cb, 0, 0, (int32_t)fb.x, (int32_t)fb.y);
-	gs_graphics_bind_pipeline(&g_renderer->cb, g_renderer->pipe);
+	gs_graphics_renderpass_begin(&g_renderer->cb, g_renderer->offscreen_rp);
+	gs_graphics_set_viewport(&g_renderer->cb, 0, 0, (int32_t)g_renderer->fb_size.x, (int32_t)g_renderer->fb_size.y);
+	gs_graphics_pipeline_bind(&g_renderer->cb, g_renderer->pipe);
+
+	if (!g_renderer->offscreen_cleared)
+	{
+		// Didn't clear in bsp pass
+		gs_graphics_clear_desc_t clear = (gs_graphics_clear_desc_t){
+			.actions = &(gs_graphics_clear_action_t){
+				.color = {
+					g_renderer->clear_color[0],
+					g_renderer->clear_color[1],
+					g_renderer->clear_color[2],
+					g_renderer->clear_color[3],
+				},
+			},
+		};
+		gs_graphics_clear(&g_renderer->cb, &clear);
+	}
 
 	// Draw all renderables
 	for (
@@ -387,7 +574,67 @@ void _mg_renderer_renderable_pass(gs_vec2 fb)
 		}
 	}
 
-	gs_graphics_end_render_pass(&g_renderer->cb);
+	gs_graphics_renderpass_end(&g_renderer->cb);
+}
+
+void _mg_renderer_post_pass()
+{
+	gs_graphics_renderpass_begin(&g_renderer->cb, GS_GRAPHICS_RENDER_PASS_DEFAULT);
+	gs_graphics_set_viewport(&g_renderer->cb, 0, 0, (int32_t)g_renderer->fb_size.x, (int32_t)g_renderer->fb_size.y);
+	gs_graphics_pipeline_bind(&g_renderer->cb, g_renderer->post_pipe);
+
+	float32_t barrel_height = tanf(0.5 * gs_deg2rad(g_config->graphics.fov / g_renderer->cam->aspect_ratio));
+
+	// Uniform binds
+	gs_graphics_bind_uniform_desc_t uniforms[] = {
+		(gs_graphics_bind_uniform_desc_t){
+			.uniform = g_renderer->u_tex,
+			.data	 = &g_renderer->offscreen_rt,
+			.binding = 0, // FRAGMENT
+		},
+		(gs_graphics_bind_uniform_desc_t){
+			.uniform = g_renderer->u_barrel_strength,
+			.data	 = &g_config->graphics.barrel_strength,
+			.binding = 0, // VERTEX
+		},
+		(gs_graphics_bind_uniform_desc_t){
+			.uniform = g_renderer->u_barrel_height,
+			.data	 = &barrel_height,
+			.binding = 1, // VERTEX
+		},
+		(gs_graphics_bind_uniform_desc_t){
+			.uniform = g_renderer->u_barrel_aspect,
+			.data	 = &g_renderer->cam->aspect_ratio,
+			.binding = 2, // VERTEX
+		},
+		(gs_graphics_bind_uniform_desc_t){
+			.uniform = g_renderer->u_barrel_cyl_ratio,
+			.data	 = &g_config->graphics.barrel_cyl_ratio,
+			.binding = 3, // VERTEX
+		},
+	};
+
+	// Construct binds
+	gs_graphics_bind_desc_t binds = {
+		.vertex_buffers = {
+			.desc = &(gs_graphics_bind_vertex_buffer_desc_t){
+				.buffer = g_renderer->screen_vbo,
+			},
+		},
+		.index_buffers = {
+			.desc = &(gs_graphics_bind_index_buffer_desc_t){
+				.buffer = g_renderer->screen_ibo,
+			},
+		},
+		.uniforms = {
+			.desc = uniforms,
+			.size = sizeof(uniforms),
+		},
+	};
+
+	gs_graphics_apply_bindings(&g_renderer->cb, &binds);
+	gs_graphics_draw(&g_renderer->cb, &(gs_graphics_draw_desc_t){.start = 0, .count = 6});
+	gs_graphics_renderpass_end(&g_renderer->cb);
 }
 
 void _mg_renderer_load_shader(char *name)
@@ -428,12 +675,13 @@ void _mg_renderer_load_shader(char *name)
 	}
 
 	// Read from files
-	// FIXME: leak
 	char *vert_src = gs_platform_read_file_contents(vert, "r", &sz);
 	gs_println("_mg_renderer_load_shader read %zu bytes from %s", sz, vert);
+	gs_dyn_array_push(g_renderer->shader_sources_vert, vert_src);
 
 	char *frag_src = gs_platform_read_file_contents(frag, "r", &sz);
 	gs_println("_mg_renderer_load_shader read %zu bytes from %s", sz, frag);
+	gs_dyn_array_push(g_renderer->shader_sources_frag, frag_src);
 
 	// Create description
 	gs_graphics_shader_source_desc_t sources[] = {

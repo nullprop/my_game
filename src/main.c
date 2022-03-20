@@ -39,25 +39,8 @@ void app_spawn()
 	}
 }
 
-void on_window_resize(GLFWwindow *window, int width, int height)
-{
-	if (player != NULL)
-	{
-		if (width == 0 || height == 0)
-		{
-			player->camera.cam.aspect_ratio = 1;
-		}
-		else
-		{
-			player->camera.cam.aspect_ratio = width / height;
-		}
-	}
-}
-
 void app_init()
 {
-	glfwSetWindowSizeCallback(gs_platform_raw_window_handle(gs_platform_main_window()), &on_window_resize);
-
 	// Init managers, free in app_shutdown if adding here
 	mg_audio_manager_init();
 	mg_texture_manager_init();
@@ -123,6 +106,27 @@ void app_init()
 
 void app_update()
 {
+	if (gs_platform_key_pressed(GS_KEYCODE_T))
+	{
+		g_config->graphics.barrel_strength += 0.1;
+		gs_println("barrel_strength: %f", g_config->graphics.barrel_strength);
+	}
+	if (gs_platform_key_pressed(GS_KEYCODE_G))
+	{
+		g_config->graphics.barrel_strength -= 0.1;
+		gs_println("barrel_strength: %f", g_config->graphics.barrel_strength);
+	}
+	if (gs_platform_key_pressed(GS_KEYCODE_Y))
+	{
+		g_config->graphics.barrel_cyl_ratio += 0.1;
+		gs_println("barrel_cyl_ratio: %f", g_config->graphics.barrel_cyl_ratio);
+	}
+	if (gs_platform_key_pressed(GS_KEYCODE_H))
+	{
+		g_config->graphics.barrel_cyl_ratio -= 0.1;
+		gs_println("barrel_cyl_ratio: %f", g_config->graphics.barrel_cyl_ratio);
+	}
+
 	if (gs_platform_key_pressed(GS_KEYCODE_R))
 		app_spawn();
 

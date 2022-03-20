@@ -22,6 +22,7 @@
 #include "graphics/texture_manager.h"
 #include "graphics/ui_manager.h"
 #include "util/transform.h"
+#include "util/config.h"
 
 gs_camera_t *camera	    = NULL;
 float32_t camera_yaw	    = 0;
@@ -142,7 +143,7 @@ void app_init()
 
 void app_update()
 {
-	gs_platform_t *platform = gs_engine_subsystem(platform);
+	gs_platform_t *platform = gs_subsystem(platform);
 	float delta_time	= platform->time.delta;
 	double plat_time	= gs_platform_elapsed_time();
 	char tmp[64];
@@ -159,7 +160,7 @@ void app_update()
 
 	if (gs_platform_key_down(GS_KEYCODE_ESC))
 	{
-		gs_engine_quit();
+		gs_quit();
 	}
 
 	gs_vec3 wish_move = gs_v3(0, 0, 0);
@@ -322,13 +323,15 @@ gs_app_desc_t gs_main(int32_t argc, char **argv)
 	if (argc < 2)
 	{
 		gs_println("Missing model path argument");
-		gs_engine_quit();
+		gs_quit();
 		return;
 	}
 
 	size_t sz  = gs_string_length(argv[1]) + 1;
 	model_path = gs_malloc(sz);
 	memcpy(model_path, argv[1], sz);
+
+	mg_config_init();
 
 	return (gs_app_desc_t){
 		.init	       = app_init,
