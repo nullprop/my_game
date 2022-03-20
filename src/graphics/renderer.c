@@ -235,6 +235,7 @@ void mg_renderer_update()
 
 	if (has_cam)
 	{
+		g_renderer->cam->fov = g_config->graphics.fov;
 		g_renderer->cam->aspect_ratio = g_renderer->fb_size.x / g_renderer->fb_size.y;
 		g_renderer->offscreen_cleared = false;
 
@@ -247,7 +248,7 @@ void mg_renderer_update()
 		}
 
 		// Render models to offscreen texture
-		//_mg_renderer_renderable_pass();
+		_mg_renderer_renderable_pass();
 
 		// Post-process offscreen texture and render to backbuffer.
 		_mg_renderer_post_pass();
@@ -432,7 +433,6 @@ void _mg_renderer_resize(const gs_vec2 fb_size)
 
 void _mg_renderer_renderable_pass()
 {
-	if (g_renderer->cam == NULL) return;
 	if (gs_slot_array_size(g_renderer->renderables) == 0) return;
 
 	gs_renderpass renderables_pass = gs_default_val();

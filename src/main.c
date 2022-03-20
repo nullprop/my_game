@@ -66,7 +66,6 @@ void app_init()
 
 	player		       = mg_player_new();
 	player->map	       = bsp_map;
-	player->camera.cam.fov = g_config->graphics.fov;
 
 	g_renderer->player = player;
 	g_renderer->cam	   = &player->camera.cam;
@@ -130,6 +129,16 @@ void app_update()
 	{
 		g_config->graphics.barrel_cyl_ratio -= 0.1;
 		gs_println("barrel_cyl_ratio: %f", g_config->graphics.barrel_cyl_ratio);
+	}
+	if (gs_platform_key_pressed(GS_KEYCODE_U))
+	{
+		g_config->graphics.fov += 5;
+		gs_println("fov: %zu", g_config->graphics.fov);
+	}
+	if (gs_platform_key_pressed(GS_KEYCODE_J))
+	{
+		g_config->graphics.fov -= 5;
+		gs_println("fov: %zu", g_config->graphics.fov);
 	}
 
 	if (gs_platform_key_pressed(GS_KEYCODE_R))

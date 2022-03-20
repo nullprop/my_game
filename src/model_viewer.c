@@ -42,29 +42,13 @@ uint32_t text_anim_frame    = GS_SLOT_ARRAY_INVALID_HANDLE;
 uint32_t text_anim_pause    = GS_SLOT_ARRAY_INVALID_HANDLE;
 uint32_t text_anim_loop	    = GS_SLOT_ARRAY_INVALID_HANDLE;
 
-void on_window_resize(GLFWwindow *window, int width, int height)
-{
-	if (width == 0 || height == 0)
-	{
-		camera->aspect_ratio = 1;
-	}
-	else
-	{
-		camera->aspect_ratio = width / height;
-	}
-}
-
 void app_init()
 {
 	camera			   = gs_malloc_init(gs_camera_t);
 	*camera			   = gs_camera_perspective();
-	camera->fov		   = 75.0f;
-	camera->aspect_ratio	   = 4.0f / 3.0f;
 	camera->near_plane	   = 0.1f;
 	camera->far_plane	   = 1000.0f;
 	camera->transform.position = gs_v3(0, -50.0f, 0);
-
-	glfwSetWindowSizeCallback(gs_platform_raw_window_handle(gs_platform_main_window()), &on_window_resize);
 
 	// Init managers, free in app_shutdown if adding here
 	mg_texture_manager_init();

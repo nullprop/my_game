@@ -27,15 +27,15 @@ mg_player_t *mg_player_new()
 		.transform = gs_vqs_default(),
 		.camera	   = {
 			   .cam = {
-				   .aspect_ratio = 4 / 3,
+				   .aspect_ratio = g_config->video.width / g_config->video.height,
 				   .far_plane	 = 3000.0f,
-				   .fov		 = 110.0f,
+				   .fov		 = g_config->graphics.fov,
 				   .near_plane	 = 0.1f,
 				   .proj_type	 = GS_PROJECTION_TYPE_PERSPECTIVE,
 			   },
 		   },
 		.viewmodel_camera = {
-			.aspect_ratio = 4 / 3,
+			.aspect_ratio = g_config->video.width / g_config->video.height,
 			.far_plane    = 200.0f,
 			.fov	      = 60.0f,
 			.near_plane   = 0,

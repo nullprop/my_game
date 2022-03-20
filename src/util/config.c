@@ -272,7 +272,7 @@ void _mg_config_set_default()
 	g_config->sound.ambient = 0.6f;
 
 	// Graphics
-	g_config->graphics.fov		    = 110;
+	g_config->graphics.fov		    = 115;
 	g_config->graphics.barrel_enabled   = true;
 	g_config->graphics.barrel_strength  = 0.5f;
 	g_config->graphics.barrel_cyl_ratio = 1.0f;
