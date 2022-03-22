@@ -34,8 +34,6 @@ typedef struct mg_audio_asset_t
 typedef struct mg_audio_manager_t
 {
 	gs_dyn_array(mg_audio_asset_t) assets;
-	float master_vol;
-	float mixer_vol[MG_AUDIO_TYPE_COUNT];
 } mg_audio_manager_t;
 
 void mg_audio_manager_init();

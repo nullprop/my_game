@@ -235,7 +235,7 @@ void mg_renderer_update()
 
 	if (has_cam)
 	{
-		g_renderer->cam->fov = g_config->graphics.fov;
+		g_renderer->cam->fov	      = mg_cvar("r_fov")->value.i;
 		g_renderer->cam->aspect_ratio = g_renderer->fb_size.x / g_renderer->fb_size.y;
 		g_renderer->offscreen_cleared = false;
 
@@ -592,7 +592,7 @@ void _mg_renderer_post_pass()
 	gs_graphics_set_viewport(&g_renderer->cb, 0, 0, (int32_t)g_renderer->fb_size.x, (int32_t)g_renderer->fb_size.y);
 	gs_graphics_pipeline_bind(&g_renderer->cb, g_renderer->post_pipe);
 
-	float32_t barrel_height = tanf(0.5 * gs_deg2rad(g_config->graphics.fov / g_renderer->cam->aspect_ratio));
+	float32_t barrel_height = tanf(0.5 * gs_deg2rad(mg_cvar("r_fov")->value.i / g_renderer->cam->aspect_ratio));
 
 	// Uniform binds
 	gs_graphics_bind_uniform_desc_t uniforms[] = {
@@ -603,12 +603,12 @@ void _mg_renderer_post_pass()
 		},
 		(gs_graphics_bind_uniform_desc_t){
 			.uniform = g_renderer->u_barrel_enabled,
-			.data	 = &g_config->graphics.barrel_enabled,
+			.data	 = &mg_cvar("r_barrel_enabled")->value.i,
 			.binding = 1, // VERTEX
 		},
 		(gs_graphics_bind_uniform_desc_t){
 			.uniform = g_renderer->u_barrel_strength,
-			.data	 = &g_config->graphics.barrel_strength,
+			.data	 = &mg_cvar("r_barrel_strength")->value.f,
 			.binding = 1, // VERTEX
 		},
 		(gs_graphics_bind_uniform_desc_t){
@@ -623,7 +623,7 @@ void _mg_renderer_post_pass()
 		},
 		(gs_graphics_bind_uniform_desc_t){
 			.uniform = g_renderer->u_barrel_cyl_ratio,
-			.data	 = &g_config->graphics.barrel_cyl_ratio,
+			.data	 = &mg_cvar("r_barrel_cyl_ratio")->value.f,
 			.binding = 4, // VERTEX
 		},
 	};

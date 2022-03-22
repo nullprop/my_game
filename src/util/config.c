@@ -15,11 +15,28 @@ mg_config_t *g_config;
 
 void mg_config_init()
 {
-	g_config = gs_malloc(sizeof(mg_config_t));
+	g_config	= gs_malloc(sizeof(mg_config_t));
+	g_config->cvars = gs_dyn_array_new(mg_cvar_t);
 
-	// Always set defaults before loading
-	// in case we add new config keys and use old file.
-	_mg_config_set_default();
+	mg_cvar_new("vid_fullscreen", MG_CONFIG_TYPE_INT, 0);
+	mg_cvar_new("vid_width", MG_CONFIG_TYPE_INT, 800);
+	mg_cvar_new("vid_height", MG_CONFIG_TYPE_INT, 600);
+	mg_cvar_new("vid_max_fps", MG_CONFIG_TYPE_INT, 240);
+	mg_cvar_new("vid_vsync", MG_CONFIG_TYPE_INT, 0);
+
+	mg_cvar_new("snd_master", MG_CONFIG_TYPE_FLOAT, 0.1f);
+	mg_cvar_new("snd_effect", MG_CONFIG_TYPE_FLOAT, 0.6f);
+	mg_cvar_new("snd_music", MG_CONFIG_TYPE_FLOAT, 1.0f);
+	mg_cvar_new("snd_ambient", MG_CONFIG_TYPE_FLOAT, 1.0f);
+
+	mg_cvar_new("r_fov", MG_CONFIG_TYPE_INT, 115);
+	mg_cvar_new("r_barrel_enabled", MG_CONFIG_TYPE_INT, 1);
+	mg_cvar_new("r_barrel_strength", MG_CONFIG_TYPE_FLOAT, 0.5f);
+	mg_cvar_new("r_barrel_cyl_ratio", MG_CONFIG_TYPE_FLOAT, 1.0f);
+
+	mg_cvar_new("cl_sensitivity", MG_CONFIG_TYPE_FLOAT, 2.0f);
+
+	mg_cvar_new_str("stringtest", MG_CONFIG_TYPE_STRING, "Sandvich make me strong!");
 
 	// Load config if exists
 	if (gs_util_file_exists("cfg/config.txt"))
@@ -35,77 +52,35 @@ void mg_config_init()
 
 void mg_config_free()
 {
+	for (size_t i = 0; i < gs_dyn_array_size(g_config->cvars); i++)
+	{
+		if (g_config->cvars->type == MG_CONFIG_TYPE_STRING)
+		{
+			gs_free(g_config->cvars[i].value.s);
+			g_config->cvars[i].value.s = NULL;
+		}
+	}
+	gs_dyn_array_free(g_config->cvars);
+
 	gs_free(g_config);
 	g_config = NULL;
+}
+
+mg_cvar_t *mg_config_get(char *name)
+{
+	for (size_t i = 0; i < gs_dyn_array_size(g_config->cvars); i++)
+	{
+		if (strcmp(g_config->cvars[i].name, name) == 0)
+		{
+			return &g_config->cvars[i];
+		}
+	}
+	return NULL;
 }
 
 // Load config from file
 void _mg_config_load(char *filepath)
 {
-	// Known config keys
-	// TODO: could make a macro to simplify these
-#define NUM_KEYS 14
-	char *known_keys[NUM_KEYS] = {
-		// Video
-		"vid_fullscreen",
-		"vid_width",
-		"vid_height",
-		"vid_max_fps",
-		"vid_vsync",
-		// Sound
-		"snd_master",
-		"snd_effect",
-		"snd_music",
-		"snd_ambient",
-		// Graphics
-		"r_fov",
-		"r_barrel_enabled",
-		"r_barrel_strength",
-		"r_barrel_cyl_ratio",
-		// Controls
-		"cl_sensitivity",
-	};
-	void *containers[NUM_KEYS] = {
-		// Video
-		&g_config->video.fullscreen,
-		&g_config->video.width,
-		&g_config->video.height,
-		&g_config->video.max_fps,
-		&g_config->video.vsync,
-		// Audio
-		&g_config->sound.master,
-		&g_config->sound.effect,
-		&g_config->sound.music,
-		&g_config->sound.ambient,
-		// Graphics
-		&g_config->graphics.fov,
-		&g_config->graphics.barrel_enabled,
-		&g_config->graphics.barrel_strength,
-		&g_config->graphics.barrel_cyl_ratio,
-		// Controls
-		&g_config->controls.sensitivity,
-	};
-	mg_config_type types[NUM_KEYS] = {
-		// Video
-		MG_CONFIG_TYPE_INT,
-		MG_CONFIG_TYPE_INT,
-		MG_CONFIG_TYPE_INT,
-		MG_CONFIG_TYPE_INT,
-		MG_CONFIG_TYPE_INT,
-		// Audio
-		MG_CONFIG_TYPE_FLOAT,
-		MG_CONFIG_TYPE_FLOAT,
-		MG_CONFIG_TYPE_FLOAT,
-		MG_CONFIG_TYPE_FLOAT,
-		// Graphics
-		MG_CONFIG_TYPE_INT,
-		MG_CONFIG_TYPE_INT,
-		MG_CONFIG_TYPE_FLOAT,
-		MG_CONFIG_TYPE_FLOAT,
-		// Controls
-		MG_CONFIG_TYPE_FLOAT,
-	};
-
 	gs_println("Loading config from '%s'", filepath);
 
 	FILE *file = fopen(filepath, "r");
@@ -116,11 +91,8 @@ void _mg_config_load(char *filepath)
 	}
 
 	char line[128];
-	char key[64];
-	char value[64];
 	char *token;
-	u8 num_parts = 0;
-	u8 num_line  = 0;
+	u8 num_line = 0;
 	while (fgets(line, sizeof(line), file))
 	{
 		num_line++;
@@ -137,72 +109,45 @@ void _mg_config_load(char *filepath)
 			continue;
 		}
 
-		// Clear previous
-		memset(&key, 0, 64);
-		memset(&value, 0, 64);
+		token = strtok(&line, " ");
+		if (!token) continue;
 
-		// Assign key and value
-		num_parts = 0;
-		token	  = strtok(&line, " ");
-		while (token)
+		mg_cvar_t *cvar = mg_cvar(token);
+		if (cvar == NULL)
 		{
-			switch (num_parts)
-			{
-			case 0:
-				strcat(&key, token);
-				break;
-
-			case 1:
-				strcat(&value, token);
-				break;
-
-			// Should never get here
-			default:
-				gs_println("WARN: config line %zu has too many arguments", num_line);
-				break;
-			}
-
-			num_parts++;
-
-			if (num_parts == 2)
-			{
-				// Ignore rest
-				break;
-			}
-
-			token = strtok(NULL, " ");
-		}
-
-		// Check we got both
-		if (num_parts < 2)
-		{
-			gs_println("WARN: config line %zu has too few arguments", num_line);
+			gs_println("WARN: _mg_config_load unknown cvar name %s", token);
 			continue;
 		}
 
-		// Find the key
-		bool32_t found_key = false;
-		for (size_t i = 0; i < NUM_KEYS; i++)
+		if (cvar->type == MG_CONFIG_TYPE_STRING)
 		{
-			if (gs_string_compare_equal(&key, known_keys[i]))
-			{
-				if (types[i] == MG_CONFIG_TYPE_INT)
-				{
-					*(int32_t *)containers[i] = strtol(value, (char **)NULL, 10);
-				}
-				else if (types[i] == MG_CONFIG_TYPE_FLOAT)
-				{
-					*(float32_t *)containers[i] = strtof(value, (char **)NULL);
-				}
-
-				found_key = true;
-				break;
-			}
+			token = strtok(NULL, "\n");
+		}
+		else
+		{
+			token = strtok(NULL, " ");
 		}
 
-		if (!found_key)
+		if (!token) continue;
+
+		switch (cvar->type)
 		{
-			gs_println("WARN: unknown config key %s", key);
+		case MG_CONFIG_TYPE_INT:
+			cvar->value.i = strtol(token, (char **)NULL, 10);
+			break;
+
+		case MG_CONFIG_TYPE_FLOAT:
+			cvar->value.f = strtof(token, (char **)NULL);
+			break;
+
+		case MG_CONFIG_TYPE_STRING:
+			memset(cvar->value.s, 0, MG_CVAR_STR_LEN);
+			memcpy(cvar->value.s, token, gs_min(MG_CVAR_STR_LEN - 1, gs_string_length(token)));
+			break;
+
+		default:
+			gs_println("WARN: _mg_config_load unknown cvar type %d", cvar->type);
+			break;
 		}
 	}
 
@@ -212,7 +157,7 @@ void _mg_config_load(char *filepath)
 
 // Save current config to filepath.
 // User formatting and replacing values is a hassle,
-// let's just overwrite the file with our format and comments.
+// let's just dump all cvars and overwrite.
 void _mg_config_save(char *filepath)
 {
 	gs_println("Saving config to '%s'", filepath);
@@ -220,63 +165,38 @@ void _mg_config_save(char *filepath)
 	FILE *file = fopen(filepath, "w");
 	if (file == NULL)
 	{
-		gs_println("WARN: couldn't save config to '%s'", filepath);
+		gs_println("WARN: _mg_config_save couldn't save config to '%s'", filepath);
 		return;
 	}
 
 	char line[128];
 
-	fprintf(file, "// Video\n");
-	fprintf(file, "vid_fullscreen %zu\n", g_config->video.fullscreen);
-	fprintf(file, "vid_width %zu\n", g_config->video.width);
-	fprintf(file, "vid_height %zu\n", g_config->video.height);
-	fprintf(file, "vid_max_fps %zu\n", g_config->video.max_fps);
-	fprintf(file, "vid_vsync %zu\n", g_config->video.vsync);
+	for (size_t i = 0; i < gs_dyn_array_size(g_config->cvars); i++)
+	{
+		mg_cvar_t cvar = g_config->cvars[i];
+		gs_fprintf(file, "%s ", g_config->cvars[i].name);
+		switch (g_config->cvars[i].type)
+		{
+		case MG_CONFIG_TYPE_INT:
+			gs_fprintf(file, "%d\n", g_config->cvars[i].value.i);
+			break;
 
-	fprintf(file, "\n");
-	fprintf(file, "// Audio\n");
-	fprintf(file, "snd_master %f\n", g_config->sound.master);
-	fprintf(file, "snd_effect %f\n", g_config->sound.effect);
-	fprintf(file, "snd_music %f\n", g_config->sound.music);
-	fprintf(file, "snd_ambient %f\n", g_config->sound.ambient);
+		case MG_CONFIG_TYPE_FLOAT:
+			gs_fprintf(file, "%f\n", g_config->cvars[i].value.f);
+			break;
 
-	fprintf(file, "\n");
-	fprintf(file, "// Graphics\n");
-	fprintf(file, "r_fov %zu\n", g_config->graphics.fov);
-	fprintf(file, "r_barrel_enabled %zu\n", g_config->graphics.barrel_enabled);
-	fprintf(file, "r_barrel_strength %f\n", g_config->graphics.barrel_strength);
-	fprintf(file, "r_barrel_cyl_ratio %f\n", g_config->graphics.barrel_cyl_ratio);
+		case MG_CONFIG_TYPE_STRING:
+			gs_fprintf(file, "%s\n", g_config->cvars[i].value.s);
+			break;
 
-	fprintf(file, "\n");
-	fprintf(file, "// Controls\n");
-	fprintf(file, "cl_sensitivity %f\n", g_config->controls.sensitivity);
+		default:
+			gs_println("WARN: _mg_config_save unknown cvar type %d", g_config->cvars[i].type);
+			gs_fprintf(file, "%d\n", g_config->cvars[i].value.i);
+			break;
+		}
+	}
 
 	fflush(file);
 	fclose(file);
 	gs_println("Config saved");
-}
-
-void _mg_config_set_default()
-{
-	// Video
-	g_config->video.fullscreen = false;
-	g_config->video.width	   = 800;
-	g_config->video.height	   = 600;
-	g_config->video.max_fps	   = 240;
-	g_config->video.vsync	   = false;
-
-	// Audio
-	g_config->sound.master	= 0.1f;
-	g_config->sound.effect	= 0.6f;
-	g_config->sound.music	= 1.0f;
-	g_config->sound.ambient = 0.6f;
-
-	// Graphics
-	g_config->graphics.fov		    = 115;
-	g_config->graphics.barrel_enabled   = true;
-	g_config->graphics.barrel_strength  = 0.5f;
-	g_config->graphics.barrel_cyl_ratio = 1.0f;
-
-	// Controls
-	g_config->controls.sensitivity = 2.0f;
 }

@@ -22,12 +22,6 @@ void mg_audio_manager_init()
 	g_audio_manager		= gs_malloc_init(mg_audio_manager_t);
 	g_audio_manager->assets = gs_dyn_array_new(mg_audio_asset_t);
 
-	// Config
-	g_audio_manager->master_vol			  = g_config->sound.master;
-	g_audio_manager->mixer_vol[MG_AUDIO_TYPE_EFFECT]  = g_config->sound.effect;
-	g_audio_manager->mixer_vol[MG_AUDIO_TYPE_MUSIC]	  = g_config->sound.music;
-	g_audio_manager->mixer_vol[MG_AUDIO_TYPE_AMBIENT] = g_config->sound.ambient;
-
 	// Player sounds
 	_mg_audio_manager_load("sound/player/jump1.wav", MG_AUDIO_TYPE_EFFECT, false, false, 1.0f);
 }
@@ -53,6 +47,28 @@ void mg_audio_manager_play(char *name, float pitch_var)
 		return;
 	}
 
+	mg_cvar_t *snd_master = mg_cvar("snd_master");
+	mg_cvar_t *snd_mixer  = NULL;
+	switch (asset->type)
+	{
+	case MG_AUDIO_TYPE_EFFECT:
+		snd_mixer = mg_cvar("snd_effect");
+		break;
+
+	case MG_AUDIO_TYPE_MUSIC:
+		snd_mixer = mg_cvar("snd_music");
+		break;
+
+	case MG_AUDIO_TYPE_AMBIENT:
+		snd_mixer = mg_cvar("snd_ambient");
+		break;
+
+	default:
+		gs_println("WARN: mg_audio_manager_play invalid type %d", asset->type);
+		snd_mixer = snd_master;
+		break;
+	}
+
 	float pitch = 0.0f;
 	if (pitch_var != 0.0f)
 	{
@@ -74,9 +90,9 @@ void mg_audio_manager_play(char *name, float pitch_var)
 	{
 		// gs_audio_play(asset->instance);
 #ifdef PITCH
-		gs_audio_play_source(asset->source, g_audio_manager->master_vol * g_audio_manager->mixer_vol[asset->type] * asset->volume, pitch);
+		gs_audio_play_source(asset->source, snd_master->value.f * snd_mixer->value.f * asset->volume, pitch);
 #else
-		gs_audio_play_source(asset->source, g_audio_manager->master_vol * g_audio_manager->mixer_vol[asset->type] * asset->volume);
+		gs_audio_play_source(asset->source, snd_master->value.f * snd_mixer->value.f * asset->volume);
 #endif
 	}
 }
@@ -150,7 +166,7 @@ void _mg_audio_manager_load(char *filename, mg_audio_type type, bool loop, bool 
 			.src	    = asset.source,
 			.persistent = persistent,
 			.loop	    = loop,
-			.volume	    = volume * g_audio_manager->master_vol * g_audio_manager->mixer_vol[type],
+			.volume	    = volume,
 		});
 
 	if (!gs_handle_is_valid(asset.instance))

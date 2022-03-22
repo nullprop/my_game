@@ -23,19 +23,22 @@ mg_player_t *mg_player_new()
 {
 	mg_player_t *player = gs_malloc_init(mg_player_t);
 
+	mg_cvar_t *vid_width  = mg_cvar("vid_width");
+	mg_cvar_t *vid_height = mg_cvar("vid_height");
+
 	*player = (mg_player_t){
 		.transform = gs_vqs_default(),
 		.camera	   = {
 			   .cam = {
-				   .aspect_ratio = g_config->video.width / g_config->video.height,
+				   .aspect_ratio = vid_width->value.f / vid_height->value.f,
 				   .far_plane	 = 3000.0f,
-				   .fov		 = g_config->graphics.fov,
+				   .fov		 = mg_cvar("r_fov")->value.i,
 				   .near_plane	 = 0.1f,
 				   .proj_type	 = GS_PROJECTION_TYPE_PERSPECTIVE,
 			   },
 		   },
 		.viewmodel_camera = {
-			.aspect_ratio = g_config->video.width / g_config->video.height,
+			.aspect_ratio = vid_width->value.f / vid_height->value.f,
 			.far_plane    = 200.0f,
 			.fov	      = 60.0f,
 			.near_plane   = 0,
@@ -199,7 +202,7 @@ void _mg_player_get_input(mg_player_t *player, float delta_time)
 	player->wish_jump   = false;
 	player->wish_crouch = false;
 
-	gs_vec2 dp = gs_vec2_scale(gs_platform_mouse_deltav(), g_config->controls.sensitivity * 0.022f);
+	gs_vec2 dp = gs_vec2_scale(gs_platform_mouse_deltav(), mg_cvar("cl_sensitivity")->value.f * 0.022f);
 
 	if (gs_platform_key_down(GS_KEYCODE_UP))
 		dp.y -= 150.0f * delta_time;

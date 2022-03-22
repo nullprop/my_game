@@ -64,8 +64,8 @@ void app_init()
 		g_renderer->bsp = bsp_map;
 	}
 
-	player		       = mg_player_new();
-	player->map	       = bsp_map;
+	player	    = mg_player_new();
+	player->map = bsp_map;
 
 	g_renderer->player = player;
 	g_renderer->cam	   = &player->camera.cam;
@@ -107,38 +107,45 @@ void app_update()
 {
 	if (gs_platform_key_pressed(GS_KEYCODE_B))
 	{
-		g_config->graphics.barrel_enabled = !g_config->graphics.barrel_enabled;
-		gs_println("barrel_enabled: %d", g_config->graphics.barrel_enabled);
+		mg_cvar_t *cvar = mg_cvar("r_barrel_enabled");
+		cvar->value.i	= !cvar->value.i;
+		gs_println("barrel_enabled: %d", cvar->value);
 	}
 	if (gs_platform_key_pressed(GS_KEYCODE_T))
 	{
-		g_config->graphics.barrel_strength += 0.1;
-		gs_println("barrel_strength: %f", g_config->graphics.barrel_strength);
+		mg_cvar_t *cvar = mg_cvar("r_barrel_strength");
+		cvar->value.f += 0.1;
+		gs_println("barrel_strength: %f", cvar->value);
 	}
 	if (gs_platform_key_pressed(GS_KEYCODE_G))
 	{
-		g_config->graphics.barrel_strength -= 0.1;
-		gs_println("barrel_strength: %f", g_config->graphics.barrel_strength);
+		mg_cvar_t *cvar = mg_cvar("r_barrel_strength");
+		cvar->value.f -= 0.1;
+		gs_println("barrel_strength: %f", cvar->value);
 	}
 	if (gs_platform_key_pressed(GS_KEYCODE_Y))
 	{
-		g_config->graphics.barrel_cyl_ratio += 0.1;
-		gs_println("barrel_cyl_ratio: %f", g_config->graphics.barrel_cyl_ratio);
+		mg_cvar_t *cvar = mg_cvar("r_barrel_cyl_ratio");
+		cvar->value.f += 0.1;
+		gs_println("barrel_cyl_ratio: %f", cvar->value);
 	}
 	if (gs_platform_key_pressed(GS_KEYCODE_H))
 	{
-		g_config->graphics.barrel_cyl_ratio -= 0.1;
-		gs_println("barrel_cyl_ratio: %f", g_config->graphics.barrel_cyl_ratio);
+		mg_cvar_t *cvar = mg_cvar("r_barrel_cyl_ratio");
+		cvar->value.f -= 0.1;
+		gs_println("barrel_cyl_ratio: %f", cvar->value);
 	}
 	if (gs_platform_key_pressed(GS_KEYCODE_U))
 	{
-		g_config->graphics.fov += 5;
-		gs_println("fov: %zu", g_config->graphics.fov);
+		mg_cvar_t *cvar = mg_cvar("r_fov");
+		cvar->value.i += 5;
+		gs_println("fov: %zu", cvar->value);
 	}
 	if (gs_platform_key_pressed(GS_KEYCODE_J))
 	{
-		g_config->graphics.fov -= 5;
-		gs_println("fov: %zu", g_config->graphics.fov);
+		mg_cvar_t *cvar = mg_cvar("r_fov");
+		cvar->value.i -= 5;
+		gs_println("fov: %zu", cvar->value);
 	}
 
 	if (gs_platform_key_pressed(GS_KEYCODE_R))
@@ -216,10 +223,10 @@ gs_app_desc_t gs_main(int32_t argc, char **argv)
 		.update	       = app_update,
 		.shutdown      = app_shutdown,
 		.window_title  = "Game",
-		.window_flags  = g_config->video.fullscreen ? GS_WINDOW_FLAGS_FULLSCREEN : 0,
-		.window_width  = g_config->video.width,
-		.window_height = g_config->video.height,
-		.enable_vsync  = g_config->video.vsync,
-		.frame_rate    = g_config->video.max_fps,
+		.window_flags  = mg_cvar("vid_fullscreen")->value.i ? GS_WINDOW_FLAGS_FULLSCREEN : 0,
+		.window_width  = mg_cvar("vid_width")->value.i,
+		.window_height = mg_cvar("vid_height")->value.i,
+		.enable_vsync  = mg_cvar("vid_vsync")->value.i,
+		.frame_rate    = mg_cvar("vid_max_fps")->value.i,
 	};
 }
