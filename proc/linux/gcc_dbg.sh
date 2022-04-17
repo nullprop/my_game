@@ -5,7 +5,7 @@ mkdir bin
 cd bin
 
 flags=(
-	-std=gnu99 -w -ldl -lGL -lX11 -pthread -lXi -g
+	-std=gnu99 -w -ldl -lGL -lX11 -pthread -lXi -g -O0
 )
 
 inc=(
@@ -13,17 +13,17 @@ inc=(
 )
 
 libs=(
-	
+	-lm
 )
 
 # Build game
-proj_name=Game
+proj_name=game
 echo Building ${proj_name}...
 src=(
 	../src/main.c
 	../src/**/*.c
 )
-build_cmd="gcc -O0 ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -lm -o ${proj_name}"
+build_cmd="gcc ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -o ${proj_name}"
 echo ${build_cmd}
 ${build_cmd}
 
@@ -32,13 +32,13 @@ if [ "$?" -ne "0" ]; then
 fi
 
 # Build model viewer
-proj_name=ModelViewer
+proj_name=modelviewer
 echo Building ${proj_name}...
 src=(
 	../src/model_viewer.c
 	../src/**/*.c
 )
-build_cmd="gcc -O0 ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -lm -o ${proj_name}"
+build_cmd="gcc ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -o ${proj_name}"
 echo ${build_cmd}
 ${build_cmd}
 
