@@ -8,6 +8,7 @@
 =================================================================*/
 
 #include "bsp_entity.h"
+#include "../util/console.h"
 
 bsp_entity_t bsp_entity_from_string(char *content)
 {
@@ -86,9 +87,9 @@ char *bsp_entity_get_value(bsp_entity_t *ent, char *key)
 
 void bsp_entity_print(bsp_entity_t *ent)
 {
-	gs_println("====================================");
-	gs_println("|            BSP ENTITY             ");
-	gs_println("| ----------------------------------");
+	mg_println("====================================");
+	mg_println("|            BSP ENTITY             ");
+	mg_println("| ----------------------------------");
 
 	for (
 		gs_slot_map_iter it = gs_slot_map_iter_new(ent->slot_map);
@@ -98,10 +99,10 @@ void bsp_entity_print(bsp_entity_t *ent)
 		char *k = gs_slot_map_iter_getk(ent->slot_map, it);
 		char *v = gs_slot_map_iter_get(ent->slot_map, it);
 
-		gs_println("| %s: %s", k, v);
+		mg_println("| %s: %s", k, v);
 	}
 
-	gs_println("====================================");
+	mg_println("====================================");
 }
 
 void _bsp_entity_load_keys(bsp_entity_t *ent)

@@ -10,6 +10,7 @@
 #include <gs/gs.h>
 
 #include "../util/config.h"
+#include "../util/console.h"
 #include "../util/math.h"
 #include "../util/string.h"
 #include "audio_manager.h"
@@ -43,7 +44,7 @@ void mg_audio_manager_play(char *name, float pitch_var)
 	mg_audio_asset_t *asset = _mg_audio_manager_find(name);
 	if (asset == NULL)
 	{
-		gs_println("WARN: mg_audio_manager_play invalid audio %s", name);
+		mg_println("WARN: mg_audio_manager_play invalid audio %s", name);
 		return;
 	}
 
@@ -64,7 +65,7 @@ void mg_audio_manager_play(char *name, float pitch_var)
 		break;
 
 	default:
-		gs_println("WARN: mg_audio_manager_play invalid type %d", asset->type);
+		mg_println("WARN: mg_audio_manager_play invalid type %d", asset->type);
 		snd_mixer = snd_master;
 		break;
 	}
@@ -102,7 +103,7 @@ void mg_audio_manager_stop(char *name)
 	mg_audio_asset_t *asset = _mg_audio_manager_find(name);
 	if (asset == NULL)
 	{
-		gs_println("WARN: mg_audio_manager_stop invalid audio %s", name);
+		mg_println("WARN: mg_audio_manager_stop invalid audio %s", name);
 		return;
 	}
 
@@ -114,7 +115,7 @@ void mg_audio_manager_pause(char *name)
 	mg_audio_asset_t *asset = _mg_audio_manager_find(name);
 	if (asset == NULL)
 	{
-		gs_println("WARN: mg_audio_manager_pause invalid audio %s", name);
+		mg_println("WARN: mg_audio_manager_pause invalid audio %s", name);
 		return;
 	}
 
@@ -126,7 +127,7 @@ void mg_audio_manager_restart(char *name)
 	mg_audio_asset_t *asset = _mg_audio_manager_find(name);
 	if (asset == NULL)
 	{
-		gs_println("WARN: mg_audio_manager_restart invalid audio %s", name);
+		mg_println("WARN: mg_audio_manager_restart invalid audio %s", name);
 		return;
 	}
 
@@ -138,7 +139,7 @@ bool mg_audio_manager_is_playing(char *name)
 	mg_audio_asset_t *asset = _mg_audio_manager_find(name);
 	if (asset == NULL)
 	{
-		gs_println("WARN: mg_audio_manager_is_playing invalid audio %s", name);
+		mg_println("WARN: mg_audio_manager_is_playing invalid audio %s", name);
 		return;
 	}
 

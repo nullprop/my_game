@@ -8,6 +8,7 @@
 =================================================================*/
 
 #include "model.h"
+#include "../util/console.h"
 #include "../util/render.h"
 #include "../util/string.h"
 #include "../util/transform.h"
@@ -16,18 +17,18 @@
 // shorthand util for failing during MD3 load
 b32 _mg_load_md3_fail(gs_byte_buffer_t *buffer, char *msg)
 {
-	gs_println("mg_load_md3() failed: %s", msg);
+	mg_println("mg_load_md3() failed: %s", msg);
 	gs_byte_buffer_free(buffer);
 	return false;
 }
 
 bool mg_load_md3(char *filename, md3_t *model)
 {
-	gs_println("mg_load_md3() loading: '%s'", filename);
+	mg_println("mg_load_md3() loading: '%s'", filename);
 
 	if (!gs_util_file_exists(filename))
 	{
-		gs_println("mg_load_md3() failed: file not found '%s'", filename);
+		mg_println("mg_load_md3() failed: file not found '%s'", filename);
 		return false;
 	}
 
@@ -173,12 +174,12 @@ bool mg_load_md3(char *filename, md3_t *model)
 
 	if (gs_util_file_exists(cfg_path))
 	{
-		gs_println("mg_load_md3(): loading animations from '%s'", cfg_path);
+		mg_println("mg_load_md3(): loading animations from '%s'", cfg_path);
 
 		FILE *file = fopen(cfg_path, "r");
 		if (file == NULL)
 		{
-			gs_println("WARN: failed to read animation file %s", cfg_path);
+			mg_println("WARN: failed to read animation file %s", cfg_path);
 			return;
 		}
 
@@ -243,7 +244,7 @@ bool mg_load_md3(char *filename, md3_t *model)
 					break;
 
 				default:
-					gs_println("WARN: animation config line %zu has too many arguments", num_line);
+					mg_println("WARN: animation config line %zu has too many arguments", num_line);
 					break;
 				}
 
@@ -255,7 +256,7 @@ bool mg_load_md3(char *filename, md3_t *model)
 			// Check we got all
 			if (num_parts < 5)
 			{
-				gs_println("WARN: animation config line %zu has too few arguments", num_line);
+				mg_println("WARN: animation config line %zu has too few arguments", num_line);
 				continue;
 			}
 
@@ -263,11 +264,11 @@ bool mg_load_md3(char *filename, md3_t *model)
 		}
 
 		fclose(file);
-		gs_println("Config loaded");
+		mg_println("Config loaded");
 	}
 	else
 	{
-		gs_println("mg_load_md3(): no animation.cfg for model '%s' (%s)", filename, cfg_path);
+		mg_println("mg_load_md3(): no animation.cfg for model '%s' (%s)", filename, cfg_path);
 	}
 
 	gs_free(model_path);

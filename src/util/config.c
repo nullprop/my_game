@@ -45,7 +45,7 @@ void mg_config_init()
 	}
 	else
 	{
-		gs_println("WARN: missing cfg/config.txt, saving default");
+		mg_println("WARN: missing cfg/config.txt, saving default");
 		_mg_config_save("cfg/config.txt");
 	}
 }
@@ -78,15 +78,23 @@ mg_cvar_t *mg_config_get(char *name)
 	return NULL;
 }
 
+void mg_config_print()
+{
+	for (size_t i = 0; i < gs_dyn_array_size(g_config->cvars); i++)
+	{
+		mg_cvar_print(&g_config->cvars[i]);
+	}
+}
+
 // Load config from file
 void _mg_config_load(char *filepath)
 {
-	gs_println("Loading config from '%s'", filepath);
+	mg_println("Loading config from '%s'", filepath);
 
 	FILE *file = fopen(filepath, "r");
 	if (file == NULL)
 	{
-		gs_println("WARN: failed to read config file %s", filepath);
+		mg_println("WARN: failed to read config file %s", filepath);
 		return;
 	}
 
@@ -115,7 +123,7 @@ void _mg_config_load(char *filepath)
 		mg_cvar_t *cvar = mg_cvar(token);
 		if (cvar == NULL)
 		{
-			gs_println("WARN: _mg_config_load unknown cvar name %s", token);
+			mg_println("WARN: _mg_config_load unknown cvar name %s", token);
 			continue;
 		}
 
@@ -146,13 +154,13 @@ void _mg_config_load(char *filepath)
 			break;
 
 		default:
-			gs_println("WARN: _mg_config_load unknown cvar type %d", cvar->type);
+			mg_println("WARN: _mg_config_load unknown cvar type %d", cvar->type);
 			break;
 		}
 	}
 
 	fclose(file);
-	gs_println("Config loaded");
+	mg_println("Config loaded");
 }
 
 // Save current config to filepath.
@@ -160,12 +168,12 @@ void _mg_config_load(char *filepath)
 // let's just dump all cvars and overwrite.
 void _mg_config_save(char *filepath)
 {
-	gs_println("Saving config to '%s'", filepath);
+	mg_println("Saving config to '%s'", filepath);
 
 	FILE *file = fopen(filepath, "w");
 	if (file == NULL)
 	{
-		gs_println("WARN: _mg_config_save couldn't save config to '%s'", filepath);
+		mg_println("WARN: _mg_config_save couldn't save config to '%s'", filepath);
 		return;
 	}
 
@@ -190,7 +198,7 @@ void _mg_config_save(char *filepath)
 			break;
 
 		default:
-			gs_println("WARN: _mg_config_save unknown cvar type %d", g_config->cvars[i].type);
+			mg_println("WARN: _mg_config_save unknown cvar type %d", g_config->cvars[i].type);
 			gs_fprintf(file, "%d\n", g_config->cvars[i].value.i);
 			break;
 		}
@@ -198,5 +206,5 @@ void _mg_config_save(char *filepath)
 
 	fflush(file);
 	fclose(file);
-	gs_println("Config saved");
+	mg_println("Config saved");
 }

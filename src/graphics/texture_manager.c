@@ -8,6 +8,7 @@
 =================================================================*/
 
 #include "texture_manager.h"
+#include "../util/console.h"
 #include "../util/string.h"
 
 mg_texture_manager_t *g_texture_manager;
@@ -106,12 +107,12 @@ bool32_t _mg_texture_manager_load(char *name, gs_asset_texture_t *asset)
 		}
 		else if (i == 1)
 		{
-			gs_println("WARN: _mg_texture_manager_load could not load texture: %s, file not found", name);
+			mg_println("WARN: _mg_texture_manager_load could not load texture: %s, file not found", name);
 		}
 
 		if (success)
 		{
-			gs_println("_mg_texture_manager_load: Loaded texture: %s", name);
+			mg_println("_mg_texture_manager_load: Loaded texture: %s", name);
 			break;
 		}
 		else

@@ -59,6 +59,9 @@ typedef struct mg_ui_manager_t
 	bool debug_open;
 	bool console_open;
 	bool show_cursor;
+	int console_scroll_y;
+	int console_scroll_x;
+	char console_input[256];
 	gs_slot_array(mg_ui_text_t) texts;
 } mg_ui_manager_t;
 
@@ -75,6 +78,7 @@ void mg_ui_manager_remove_text(const uint32_t id);
 
 void _mg_ui_manager_text_overlay(gs_vec2 fbs, gs_gui_container_t *root);
 void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root);
+void _mg_ui_manager_console_window(gs_vec2 fbs, gs_gui_container_t *root);
 void _mg_ui_manager_dialogue_window(gs_vec2 fbs, gs_gui_container_t *root);
 void _mg_ui_manager_menu_window(gs_vec2 fbs, gs_gui_container_t *root);
 

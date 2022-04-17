@@ -8,6 +8,7 @@
 =================================================================*/
 
 #include "ui_manager.h"
+#include "../util/console.h"
 #include "../util/render.h"
 #include "renderer.h"
 
@@ -205,6 +206,7 @@ void mg_ui_manager_render(gs_vec2 fbs, bool32_t clear)
 			_mg_ui_manager_dialogue_window(fbs, root);
 			_mg_ui_manager_menu_window(fbs, root);
 			_mg_ui_manager_debug_overlay(fbs, root);
+			_mg_ui_manager_console_window(fbs, root);
 
 			gs_gui_window_end(&g_renderer->gui);
 		}
@@ -271,7 +273,7 @@ void mg_ui_manager_update_text(const uint32_t id, const char *text)
 		size_t sz_new  = gs_string_length(text) + 1;
 		if (sz_new > sz_old)
 		{
-			gs_println("WARN: mg_ui_manager_update_text new text size larger than old (%zu > %zu)", sz_new, sz_old);
+			mg_println("WARN: mg_ui_manager_update_text new text size larger than old (%zu > %zu)", sz_new, sz_old);
 			memcpy(t.content, text, sz_old);
 			// Ensure null-terminated since we are clipping new string
 			memset(t.content + sz_old - 1, '\0', 1);
@@ -382,6 +384,71 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 			// sprintf(tmp, "ang: [%f, %f, %f]", gs_rad2deg(g_renderer->cam->transform.rotation.x), gs_rad2deg(g_renderer->cam->transform.rotation.y), gs_rad2deg(g_renderer->cam->transform.rotation.z));
 			// DRAW_TMP(10, 125)
 		}
+	}
+	gs_gui_panel_end(&g_renderer->gui);
+}
+
+void _mg_ui_manager_console_window(gs_vec2 fbs, gs_gui_container_t *root)
+{
+	if (!g_ui_manager->console_open) return;
+
+	char tmp[64];
+
+	gs_gui_set_style_sheet(&g_renderer->gui, &g_ui_manager->console_style_sheet);
+	gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&root->body, fbs.x, fbs.y, 0, 0, GS_GUI_LAYOUT_ANCHOR_TOPLEFT), 0);
+	gs_gui_panel_begin_ex(&g_renderer->gui, "#console", NULL, GS_GUI_OPT_NOSCROLL);
+	{
+		gs_gui_container_t *con = gs_gui_get_current_container(&g_renderer->gui);
+		gs_gui_rect_t next	= {};
+
+		// draw background
+		gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&con->body, fbs.x, fbs.y, 0, 0, GS_GUI_LAYOUT_ANCHOR_TOPLEFT), 0);
+		next = gs_gui_layout_next(&g_renderer->gui);
+		gs_gui_draw_rect(&g_renderer->gui, next, gs_color(0, 0, 0, 200));
+		gs_gui_rect_t bg = g_renderer->gui.last_rect;
+
+#define DRAW_CON(TEXT, POS_X, POS_Y)                                                                                                                                        \
+	{                                                                                                                                                                   \
+		gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&con->body, fbs.x, fbs.y, POS_X, POS_Y, GS_GUI_LAYOUT_ANCHOR_TOPLEFT), 0);                    \
+		next = gs_gui_layout_next(&g_renderer->gui);                                                                                                                \
+		gs_gui_draw_control_text(&g_renderer->gui, TEXT, next, &g_ui_manager->console_style_sheet.styles[GS_GUI_ELEMENT_TEXT][GS_GUI_ELEMENT_STATE_DEFAULT], 0x00); \
+	}
+
+		gs_asset_font_t *font = g_ui_manager->console_style_sheet.styles[GS_GUI_ELEMENT_TEXT][GS_GUI_ELEMENT_STATE_DEFAULT].font;
+		float32_t line_height = gs_asset_font_max_height(font);
+		float32_t char_width  = gs_asset_font_text_dimensions(font, "W", 1).x;
+
+		// Draw output
+		int32_t line_num     = 0;
+		int32_t input_height = line_height + 16;
+		int32_t line_offset  = input_height + line_height + 4;
+		for (size_t i = 0; i < MG_CON_LINES; i++)
+		{
+			if (g_console->output[i] == NULL)
+			{
+				continue;
+			}
+
+			if (line_num >= g_ui_manager->console_scroll_y)
+			{
+				DRAW_CON(
+					g_console->output[i],
+					g_ui_manager->console_scroll_x * char_width,
+					fbs.y - line_offset);
+				line_offset += line_height;
+			}
+
+			line_num++;
+		}
+
+		// Draw input
+		gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&con->body, fbs.x, input_height, 0, 0, GS_GUI_LAYOUT_ANCHOR_BOTTOMLEFT), 0);
+		gs_gui_panel_begin_ex(&g_renderer->gui, "#console-input", NULL, GS_GUI_OPT_NOSCROLL);
+		{
+			gs_gui_layout_row(&g_renderer->gui, 1, (int[]){-1}, input_height);
+			gs_gui_textbox(&g_renderer->gui, g_ui_manager->console_input, 256);
+		}
+		gs_gui_panel_end(&g_renderer->gui);
 	}
 	gs_gui_panel_end(&g_renderer->gui);
 }

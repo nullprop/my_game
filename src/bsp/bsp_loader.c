@@ -12,11 +12,12 @@
 =================================================================*/
 
 #include "bsp_loader.h"
+#include "../util/console.h"
 
 // shorthand util for failing during BSP load
 b32 _load_bsp_fail(gs_byte_buffer_t *buffer, char *msg)
 {
-	gs_println("load_bsp() failed: %s", msg);
+	mg_println("load_bsp() failed: %s", msg);
 	gs_byte_buffer_free(buffer);
 	return false;
 }
@@ -24,11 +25,11 @@ b32 _load_bsp_fail(gs_byte_buffer_t *buffer, char *msg)
 // load BSP from file
 b32 load_bsp(char *filename, bsp_map_t *map)
 {
-	gs_println("load_bsp() loading: '%s'", filename);
+	mg_println("load_bsp() loading: '%s'", filename);
 
 	if (!gs_util_file_exists(filename))
 	{
-		gs_println("load_bsp() failed: file not found '%s'", filename);
+		mg_println("load_bsp() failed: file not found '%s'", filename);
 		return false;
 	}
 
@@ -125,7 +126,7 @@ b32 load_bsp(char *filename, bsp_map_t *map)
 	map->name  = gs_malloc(sz);
 	memcpy(map->name, name, sz);
 
-	gs_println("load_bsp() done loading '%s'", map->name);
+	mg_println("load_bsp() done loading '%s'", map->name);
 
 	return true;
 }

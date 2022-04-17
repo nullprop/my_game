@@ -15,6 +15,7 @@
 #include "../graphics/ui_manager.h"
 #include "../util/camera.h"
 #include "../util/config.h"
+#include "../util/console.h"
 #include "../util/math.h"
 
 #include <gs/util/gs_idraw.h>
@@ -141,7 +142,7 @@ void mg_player_update(mg_player_t *player)
 	int32_t cluster_index = player->map->leaves.data[leaf_index].cluster;
 	if (cluster_index < 0)
 	{
-		gs_println(
+		mg_println(
 			"WARN: player in invalid leaf, reset to last valid pos: [%f, %f, %f]",
 			player->last_valid_pos.x,
 			player->last_valid_pos.y,
@@ -450,7 +451,7 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 			}
 			else
 			{
-				gs_println(
+				mg_println(
 					"WARN: player start solid but not stuck: [%f, %f, %f] -> [%f, %f, %f]",
 					player->transform.position.x,
 					player->transform.position.y,
@@ -619,7 +620,7 @@ void _mg_player_unstuck(mg_player_t *player)
 				valid_pos = trace.end;
 			}
 
-			gs_println(
+			mg_println(
 				"WARN: player stuck in solid at [%f, %f, %f], freeing to [%f, %f, %f].",
 				player->transform.position.x,
 				player->transform.position.y,
@@ -640,7 +641,7 @@ void _mg_player_unstuck(mg_player_t *player)
 			distance += increment;
 			if (distance > max_distance)
 			{
-				gs_println(
+				mg_println(
 					"WARN: player stuck in solid at [%f, %f, %f], could not unstuck.",
 					player->transform.position.x,
 					player->transform.position.y,

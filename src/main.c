@@ -23,6 +23,7 @@
 #include "graphics/texture_manager.h"
 #include "graphics/ui_manager.h"
 #include "util/config.h"
+#include "util/console.h"
 
 bsp_map_t *bsp_map  = NULL;
 mg_player_t *player = NULL;
@@ -105,53 +106,65 @@ void app_init()
 
 void app_update()
 {
-	if (gs_platform_key_pressed(GS_KEYCODE_B))
+	// TODO: move inputs to separate file
+	if (!g_ui_manager->console_open)
 	{
-		mg_cvar_t *cvar = mg_cvar("r_barrel_enabled");
-		cvar->value.i	= !cvar->value.i;
-		gs_println("barrel_enabled: %d", cvar->value);
-	}
-	if (gs_platform_key_pressed(GS_KEYCODE_T))
-	{
-		mg_cvar_t *cvar = mg_cvar("r_barrel_strength");
-		cvar->value.f += 0.1;
-		gs_println("barrel_strength: %f", cvar->value);
-	}
-	if (gs_platform_key_pressed(GS_KEYCODE_G))
-	{
-		mg_cvar_t *cvar = mg_cvar("r_barrel_strength");
-		cvar->value.f -= 0.1;
-		gs_println("barrel_strength: %f", cvar->value);
-	}
-	if (gs_platform_key_pressed(GS_KEYCODE_Y))
-	{
-		mg_cvar_t *cvar = mg_cvar("r_barrel_cyl_ratio");
-		cvar->value.f += 0.1;
-		gs_println("barrel_cyl_ratio: %f", cvar->value);
-	}
-	if (gs_platform_key_pressed(GS_KEYCODE_H))
-	{
-		mg_cvar_t *cvar = mg_cvar("r_barrel_cyl_ratio");
-		cvar->value.f -= 0.1;
-		gs_println("barrel_cyl_ratio: %f", cvar->value);
-	}
-	if (gs_platform_key_pressed(GS_KEYCODE_U))
-	{
-		mg_cvar_t *cvar = mg_cvar("r_fov");
-		cvar->value.i += 5;
-		gs_println("fov: %zu", cvar->value);
-	}
-	if (gs_platform_key_pressed(GS_KEYCODE_J))
-	{
-		mg_cvar_t *cvar = mg_cvar("r_fov");
-		cvar->value.i -= 5;
-		gs_println("fov: %zu", cvar->value);
+		if (gs_platform_key_pressed(GS_KEYCODE_B))
+		{
+			mg_cvar_t *cvar = mg_cvar("r_barrel_enabled");
+			cvar->value.i	= !cvar->value.i;
+			mg_println("barrel_enabled: %d", cvar->value.i);
+		}
+		if (gs_platform_key_pressed(GS_KEYCODE_T))
+		{
+			mg_cvar_t *cvar = mg_cvar("r_barrel_strength");
+			cvar->value.f += 0.1;
+			mg_println("barrel_strength: %f", cvar->value.f);
+		}
+		if (gs_platform_key_pressed(GS_KEYCODE_G))
+		{
+			mg_cvar_t *cvar = mg_cvar("r_barrel_strength");
+			cvar->value.f -= 0.1;
+			mg_println("barrel_strength: %f", cvar->value.f);
+		}
+		if (gs_platform_key_pressed(GS_KEYCODE_Y))
+		{
+			mg_cvar_t *cvar = mg_cvar("r_barrel_cyl_ratio");
+			cvar->value.f += 0.1;
+			mg_println("barrel_cyl_ratio: %f", cvar->value.f);
+		}
+		if (gs_platform_key_pressed(GS_KEYCODE_H))
+		{
+			mg_cvar_t *cvar = mg_cvar("r_barrel_cyl_ratio");
+			cvar->value.f -= 0.1;
+			mg_println("barrel_cyl_ratio: %f", cvar->value.f);
+		}
+		if (gs_platform_key_pressed(GS_KEYCODE_U))
+		{
+			mg_cvar_t *cvar = mg_cvar("r_fov");
+			cvar->value.i += 5;
+			mg_println("fov: %zu", cvar->value.i);
+		}
+		if (gs_platform_key_pressed(GS_KEYCODE_J))
+		{
+			mg_cvar_t *cvar = mg_cvar("r_fov");
+			cvar->value.i -= 5;
+			mg_println("fov: %zu", cvar->value.i);
+		}
+
+		if (gs_platform_key_pressed(GS_KEYCODE_R))
+			app_spawn();
 	}
 
-	if (gs_platform_key_pressed(GS_KEYCODE_R))
-		app_spawn();
-
+	if (gs_platform_key_pressed(GS_KEYCODE_ESC)) g_ui_manager->menu_open = !g_ui_manager->menu_open;
 	if (gs_platform_key_pressed(GS_KEYCODE_F1))
+	{
+		g_ui_manager->console_open     = !g_ui_manager->console_open;
+		g_ui_manager->console_scroll_y = 0;
+		g_ui_manager->console_scroll_x = 0;
+	}
+	if (gs_platform_key_pressed(GS_KEYCODE_F2)) g_ui_manager->debug_open = !g_ui_manager->debug_open;
+	if (gs_platform_key_pressed(GS_KEYCODE_F3))
 	{
 		uint32_t main_window = gs_platform_main_window();
 
@@ -180,9 +193,34 @@ void app_update()
 		}
 	}
 
-	if (gs_platform_key_pressed(GS_KEYCODE_ESC)) g_ui_manager->menu_open = !g_ui_manager->menu_open;
-	if (gs_platform_key_pressed(GS_KEYCODE_F2)) g_ui_manager->console_open = !g_ui_manager->console_open;
-	if (gs_platform_key_pressed(GS_KEYCODE_F3)) g_ui_manager->debug_open = !g_ui_manager->debug_open;
+	if (g_ui_manager->console_open)
+	{
+		f32 scroll_x, scroll_y;
+		gs_platform_mouse_wheel(&scroll_x, &scroll_y);
+
+		if (gs_platform_key_down(GS_KEYCODE_LSHIFT))
+		{
+			scroll_x = scroll_y;
+			scroll_y = 0;
+		}
+
+		if (scroll_y != 0)
+		{
+			g_ui_manager->console_scroll_y += scroll_y < 0 ? -4 : 4;
+			g_ui_manager->console_scroll_y = gs_clamp(g_ui_manager->console_scroll_y, 0, MG_CON_LINES - 1);
+		}
+		if (scroll_x != 0)
+		{
+			g_ui_manager->console_scroll_x += scroll_x < 0 ? -4 : 4;
+			g_ui_manager->console_scroll_x = gs_min(g_ui_manager->console_scroll_x, 0);
+		}
+
+		if (gs_platform_key_pressed(GS_KEYCODE_ENTER))
+		{
+			mg_console_run(g_ui_manager->console_input);
+			memset(g_ui_manager->console_input, 0, 256);
+		}
+	}
 
 	// If click, then lock again (in case lost)
 	if (gs_platform_mouse_pressed(GS_MOUSE_LBUTTON) && !gs_platform_mouse_locked() && !g_ui_manager->show_cursor)
@@ -211,11 +249,12 @@ void app_shutdown()
 	mg_audio_manager_free();
 
 	mg_config_free();
+	mg_console_free();
 }
 
 gs_app_desc_t gs_main(int32_t argc, char **argv)
 {
-	// Load config first so we can use resolution, etc.
+	mg_console_init();
 	mg_config_init();
 
 	return (gs_app_desc_t){

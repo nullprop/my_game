@@ -10,6 +10,7 @@
 #include "renderer.h"
 #include "../util/camera.h"
 #include "../util/config.h"
+#include "../util/console.h"
 #include "../util/render.h"
 #include "ui_manager.h"
 
@@ -338,7 +339,7 @@ mg_renderable_t *mg_renderer_get_renderable(uint32_t renderable_id)
 {
 	if (renderable_id >= gs_slot_array_size(g_renderer->renderables))
 	{
-		gs_println("WARN: invalid renderable_id %zu in mg_renderer_get_renderable", renderable_id);
+		mg_println("WARN: invalid renderable_id %zu in mg_renderer_get_renderable", renderable_id);
 		return NULL;
 	}
 
@@ -355,7 +356,7 @@ gs_handle(gs_graphics_shader_t) mg_renderer_get_shader(char *name)
 		}
 	}
 
-	gs_println("ERR: mg_renderer_get_shader no shader %s", name);
+	mg_println("ERR: mg_renderer_get_shader no shader %s", name);
 
 	return gs_handle_invalid(gs_graphics_shader_t);
 }
@@ -384,7 +385,7 @@ bool32_t mg_renderer_play_animation(uint32_t id, char *name)
 
 	if (!found)
 	{
-		gs_println("WARN: mg_model_manager_play_animation could not find animation %s in model %s", name, renderable->model.filename);
+		mg_println("WARN: mg_model_manager_play_animation could not find animation %s in model %s", name, renderable->model.filename);
 	}
 
 	return found;
@@ -571,7 +572,7 @@ void _mg_renderer_renderable_pass()
 				// Sanity
 				if (renderable->frame >= renderable->model.data->header.num_frames)
 				{
-					gs_println(
+					mg_println(
 						"ERR: _mg_renderer_renderable_pass animation '%s' exceeds model '%s' num_frames %d",
 						renderable->current_animation->name,
 						renderable->model.filename,
@@ -675,14 +676,14 @@ void _mg_renderer_load_shader(char *name)
 	// Sanity check
 	if (!gs_util_file_exists(vert))
 	{
-		gs_println("ERR: _mg_renderer_load_shader no shader %s", vert);
+		mg_println("ERR: _mg_renderer_load_shader no shader %s", vert);
 		gs_free(vert);
 		gs_free(frag);
 		return;
 	}
 	if (!gs_util_file_exists(frag))
 	{
-		gs_println("ERR: _mg_renderer_load_shader no shader %s", frag);
+		mg_println("ERR: _mg_renderer_load_shader no shader %s", frag);
 		gs_free(vert);
 		gs_free(frag);
 		return;
@@ -690,11 +691,11 @@ void _mg_renderer_load_shader(char *name)
 
 	// Read from files
 	char *vert_src = gs_platform_read_file_contents(vert, "r", &sz);
-	gs_println("_mg_renderer_load_shader read %zu bytes from %s", sz, vert);
+	mg_println("_mg_renderer_load_shader read %zu bytes from %s", sz, vert);
 	gs_dyn_array_push(g_renderer->shader_sources_vert, vert_src);
 
 	char *frag_src = gs_platform_read_file_contents(frag, "r", &sz);
-	gs_println("_mg_renderer_load_shader read %zu bytes from %s", sz, frag);
+	mg_println("_mg_renderer_load_shader read %zu bytes from %s", sz, frag);
 	gs_dyn_array_push(g_renderer->shader_sources_frag, frag_src);
 
 	// Create description

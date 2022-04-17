@@ -21,8 +21,9 @@
 #include "graphics/renderer.h"
 #include "graphics/texture_manager.h"
 #include "graphics/ui_manager.h"
-#include "util/transform.h"
 #include "util/config.h"
+#include "util/console.h"
+#include "util/transform.h"
 
 gs_camera_t *camera	    = NULL;
 float32_t camera_yaw	    = 0;
@@ -306,7 +307,7 @@ gs_app_desc_t gs_main(int32_t argc, char **argv)
 {
 	if (argc < 2)
 	{
-		gs_println("Missing model path argument");
+		mg_println("Missing model path argument");
 		gs_quit();
 		return;
 	}
