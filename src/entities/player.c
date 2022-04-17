@@ -445,7 +445,8 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 			// Stuck in a solid, try to get out
 			if (trace.all_solid)
 			{
-				_mg_player_unstuck(player);
+				// FIXME: this just makes you fly up walls...
+				//_mg_player_unstuck(player);
 			}
 			else
 			{
