@@ -8,7 +8,7 @@
 =================================================================*/
 
 #include "texture_manager.h"
-#include "../util/console.h"
+#include "../game/console.h"
 #include "../util/string.h"
 
 mg_texture_manager_t *g_texture_manager;

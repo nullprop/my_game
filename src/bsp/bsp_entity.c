@@ -8,7 +8,7 @@
 =================================================================*/
 
 #include "bsp_entity.h"
-#include "../util/console.h"
+#include "../game/console.h"
 
 bsp_entity_t bsp_entity_from_string(char *content)
 {

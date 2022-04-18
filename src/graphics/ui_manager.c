@@ -8,8 +8,8 @@
 =================================================================*/
 
 #include "ui_manager.h"
+#include "../game/console.h"
 #include "../game/game_manager.h"
-#include "../util/console.h"
 #include "../util/render.h"
 #include "renderer.h"
 

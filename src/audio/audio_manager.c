@@ -9,8 +9,8 @@
 
 #include <gs/gs.h>
 
-#include "../util/config.h"
-#include "../util/console.h"
+#include "../game/config.h"
+#include "../game/console.h"
 #include "../util/math.h"
 #include "../util/string.h"
 #include "audio_manager.h"

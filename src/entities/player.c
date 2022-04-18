@@ -15,8 +15,8 @@
 #include "../graphics/renderer.h"
 #include "../graphics/ui_manager.h"
 #include "../util/camera.h"
-#include "../util/config.h"
-#include "../util/console.h"
+#include "../game/config.h"
+#include "../game/console.h"
 #include "../util/math.h"
 
 #include <gs/util/gs_idraw.h>

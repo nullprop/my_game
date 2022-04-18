@@ -8,7 +8,7 @@
 =================================================================*/
 
 #include "model.h"
-#include "../util/console.h"
+#include "../game/console.h"
 #include "../util/render.h"
 #include "../util/string.h"
 #include "../util/transform.h"

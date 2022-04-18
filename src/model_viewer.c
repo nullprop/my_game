@@ -17,12 +17,12 @@
 #include "bsp/bsp_loader.h"
 #include "bsp/bsp_map.h"
 #include "entities/player.h"
+#include "game/config.h"
+#include "game/console.h"
 #include "graphics/model_manager.h"
 #include "graphics/renderer.h"
 #include "graphics/texture_manager.h"
 #include "graphics/ui_manager.h"
-#include "util/config.h"
-#include "util/console.h"
 #include "util/transform.h"
 
 gs_camera_t *camera	    = NULL;

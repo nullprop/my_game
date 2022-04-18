@@ -1,6 +1,6 @@
 #include "game_manager.h"
+#include "../game/console.h"
 #include "../graphics/renderer.h"
-#include "../util/console.h"
 
 mg_game_manager_t *g_game_manager;
 

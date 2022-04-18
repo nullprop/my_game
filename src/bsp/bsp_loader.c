@@ -12,7 +12,7 @@
 =================================================================*/
 
 #include "bsp_loader.h"
-#include "../util/console.h"
+#include "../game/console.h"
 
 // shorthand util for failing during BSP load
 b32 _load_bsp_fail(gs_byte_buffer_t *buffer, char *msg)

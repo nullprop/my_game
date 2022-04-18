@@ -8,9 +8,9 @@
 =================================================================*/
 
 #include "renderer.h"
+#include "../game/config.h"
+#include "../game/console.h"
 #include "../util/camera.h"
-#include "../util/config.h"
-#include "../util/console.h"
 #include "../util/render.h"
 #include "ui_manager.h"
 

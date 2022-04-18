@@ -8,7 +8,7 @@
 =================================================================*/
 
 #include "model_manager.h"
-#include "../util/console.h"
+#include "../game/console.h"
 
 mg_model_manager_t *g_model_manager;
 
