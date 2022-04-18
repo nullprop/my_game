@@ -45,7 +45,6 @@ typedef struct mg_player_camera_t
 
 typedef struct mg_player_t
 {
-	bsp_map_t *map; // TODO: remove
 	gs_vqs transform;
 	mg_player_camera_t camera;
 	gs_camera_t viewmodel_camera;

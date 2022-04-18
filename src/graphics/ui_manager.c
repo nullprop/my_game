@@ -8,6 +8,7 @@
 =================================================================*/
 
 #include "ui_manager.h"
+#include "../game/game_manager.h"
 #include "../util/console.h"
 #include "../util/render.h"
 #include "renderer.h"
@@ -360,17 +361,17 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 		}
 
 		// draw player stats
-		if (g_renderer->player != NULL)
+		if (g_game_manager != NULL && g_game_manager->player != NULL)
 		{
 			sprintf(tmp, "player:");
 			DRAW_TMP(5, 95)
-			sprintf(tmp, "pos: [%f, %f, %f]", g_renderer->player->transform.position.x, g_renderer->player->transform.position.y, g_renderer->player->transform.position.z);
+			sprintf(tmp, "pos: [%f, %f, %f]", g_game_manager->player->transform.position.x, g_game_manager->player->transform.position.y, g_game_manager->player->transform.position.z);
 			DRAW_TMP(10, 110)
-			sprintf(tmp, "ang: [%f, %f, %f]", g_renderer->player->yaw, g_renderer->player->camera.pitch, g_renderer->player->camera.roll);
+			sprintf(tmp, "ang: [%f, %f, %f]", g_game_manager->player->yaw, g_game_manager->player->camera.pitch, g_game_manager->player->camera.roll);
 			DRAW_TMP(10, 125)
-			sprintf(tmp, "vel: [%f, %f, %f]", g_renderer->player->velocity.x, g_renderer->player->velocity.y, g_renderer->player->velocity.z);
+			sprintf(tmp, "vel: [%f, %f, %f]", g_game_manager->player->velocity.x, g_game_manager->player->velocity.y, g_game_manager->player->velocity.z);
 			DRAW_TMP(10, 140)
-			sprintf(tmp, "vel_abs: %f, h: %f", gs_vec3_len(g_renderer->player->velocity), gs_vec3_len(gs_v3(g_renderer->player->velocity.x, g_renderer->player->velocity.y, 0)));
+			sprintf(tmp, "vel_abs: %f, h: %f", gs_vec3_len(g_game_manager->player->velocity), gs_vec3_len(gs_v3(g_game_manager->player->velocity.x, g_game_manager->player->velocity.y, 0)));
 			DRAW_TMP(10, 155)
 		}
 		else if (g_renderer->cam)

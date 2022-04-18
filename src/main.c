@@ -18,27 +18,13 @@
 #include "bsp/bsp_loader.h"
 #include "bsp/bsp_map.h"
 #include "entities/player.h"
+#include "game/game_manager.h"
 #include "graphics/model_manager.h"
 #include "graphics/renderer.h"
 #include "graphics/texture_manager.h"
 #include "graphics/ui_manager.h"
 #include "util/config.h"
 #include "util/console.h"
-
-bsp_map_t *bsp_map  = NULL;
-mg_player_t *player = NULL;
-
-void app_spawn()
-{
-	if (bsp_map->valid)
-	{
-		player->velocity     = gs_v3(0, 0, 0);
-		player->camera.pitch = 0;
-		bsp_map_find_spawn_point(bsp_map, &player->transform.position, &player->yaw);
-		player->last_valid_pos = player->transform.position;
-		player->yaw -= 90;
-	}
-}
 
 void app_init()
 {
@@ -48,6 +34,7 @@ void app_init()
 	mg_model_manager_init();
 	mg_renderer_init(gs_platform_main_window());
 	mg_ui_manager_init();
+	mg_game_manager_init();
 
 	// Lock mouse at start by default
 	// gs_platform_lock_mouse(gs_platform_main_window(), true);
@@ -55,21 +42,6 @@ void app_init()
 	{
 		glfwSetInputMode(gs_platform_raw_window_handle(gs_platform_main_window()), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 	}
-
-	bsp_map = gs_malloc_init(bsp_map_t);
-	load_bsp("maps/q3dm1.bsp", bsp_map);
-
-	if (bsp_map->valid)
-	{
-		bsp_map_init(bsp_map);
-		g_renderer->bsp = bsp_map;
-	}
-
-	player	    = mg_player_new();
-	player->map = bsp_map;
-
-	g_renderer->player = player;
-	g_renderer->cam	   = &player->camera.cam;
 
 	// - - - -
 	// MD3 testing
@@ -103,8 +75,6 @@ void app_init()
 		"Lorem ipsum dolor sit amet, consectetur adipiscing elit, \
 	sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
 		-1);
-
-	app_spawn();
 }
 
 void app_update()
@@ -156,7 +126,7 @@ void app_update()
 		}
 
 		if (gs_platform_key_pressed(GS_KEYCODE_R))
-			app_spawn();
+			mg_game_manager_spawn_player();
 	}
 
 	if (gs_platform_key_pressed(GS_KEYCODE_ESC)) g_ui_manager->menu_open = !g_ui_manager->menu_open;
@@ -235,16 +205,13 @@ void app_update()
 		}
 	}
 
-	mg_player_update(player);
-
+	mg_game_manager_update();
 	mg_renderer_update();
 }
 
 void app_shutdown()
 {
-	mg_player_free(player);
-	bsp_map_free(bsp_map);
-
+	mg_game_manager_free();
 	mg_renderer_free();
 	mg_ui_manager_free();
 	mg_model_manager_free();

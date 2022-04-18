@@ -10,6 +10,7 @@
 #include "player.h"
 #include "../audio/audio_manager.h"
 #include "../bsp/bsp_trace.h"
+#include "../game/game_manager.h"
 #include "../graphics/model_manager.h"
 #include "../graphics/renderer.h"
 #include "../graphics/ui_manager.h"
@@ -65,12 +66,12 @@ void mg_player_free(mg_player_t *player)
 {
 	// mg_renderer_remove_renderable(player->viewmodel_handle);
 	gs_free(player);
-	player = NULL;
 }
 
 void mg_player_update(mg_player_t *player)
 {
 	if (g_ui_manager->show_cursor) return;
+	if (g_game_manager->map == NULL || !g_game_manager->map->valid) return;
 
 	gs_platform_t *platform = gs_subsystem(platform);
 	float dt		= platform->time.delta;
@@ -138,8 +139,8 @@ void mg_player_update(mg_player_t *player)
 	_mg_player_camera_update(player);
 
 	// Check out of map bounds
-	uint32_t leaf_index   = player->map->stats.current_leaf;
-	int32_t cluster_index = player->map->leaves.data[leaf_index].cluster;
+	uint32_t leaf_index   = g_game_manager->map->stats.current_leaf;
+	int32_t cluster_index = g_game_manager->map->leaves.data[leaf_index].cluster;
 	if (cluster_index < 0)
 	{
 		mg_println(
@@ -163,7 +164,7 @@ void _mg_player_do_jump(mg_player_t *player)
 
 void _mg_player_check_floor(mg_player_t *player)
 {
-	bsp_trace_t trace = {.map = player->map};
+	bsp_trace_t trace = {.map = g_game_manager->map};
 	bsp_trace_box(
 		&trace,
 		player->transform.position,
@@ -184,8 +185,8 @@ void _mg_player_check_floor(mg_player_t *player)
 		player->ground_normal	 = trace.normal;
 		player->last_ground_time = gs_platform_elapsed_time();
 
-		uint32_t leaf_index   = player->map->stats.current_leaf;
-		int32_t cluster_index = player->map->leaves.data[leaf_index].cluster;
+		uint32_t leaf_index   = g_game_manager->map->stats.current_leaf;
+		int32_t cluster_index = g_game_manager->map->leaves.data[leaf_index].cluster;
 		if (cluster_index >= 0)
 		{
 			player->last_valid_pos = player->transform.position;
@@ -345,7 +346,7 @@ void _mg_player_uncrouch(mg_player_t *player, float delta_time)
 {
 	if (player->crouch_fraction == 0.0f) return;
 
-	bsp_trace_t trace = {.map = player->map};
+	bsp_trace_t trace = {.map = g_game_manager->map};
 	gs_vec3 origin	  = player->transform.position;
 	bool32_t grounded = player->grounded;
 
@@ -411,7 +412,7 @@ void _mg_player_slidemove(mg_player_t *player, float delta_time)
 	uint16_t max_iter     = 10;
 	gs_vec3 start;
 	gs_vec3 end;
-	bsp_trace_t trace = {.map = player->map};
+	bsp_trace_t trace = {.map = g_game_manager->map};
 	float32_t prev_frac;
 	gs_vec3 prev_normal;
 
@@ -599,7 +600,7 @@ void _mg_player_unstuck(mg_player_t *player)
 	uint32_t dir	   = 0;
 	gs_vec3 start	   = gs_v3(0, 0, 0);
 	gs_vec3 end	   = gs_v3(0, 0, 0);
-	bsp_trace_t trace  = {.map = player->map};
+	bsp_trace_t trace  = {.map = g_game_manager->map};
 
 	while (true)
 	{
