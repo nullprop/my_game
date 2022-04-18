@@ -141,9 +141,26 @@ void mg_ui_manager_free()
 {
 	for (size_t i = 0; i < GUI_FONT_COUNT; i++)
 	{
-		gs_free(g_ui_manager->fonts[i].font_info);
-		gs_free(g_ui_manager->fonts[i].texture.desc.data);
-		gs_graphics_texture_destroy(g_ui_manager->fonts[i].texture.hndl);
+		if (g_ui_manager->fonts[i].font_info)
+		{
+			gs_free(g_ui_manager->fonts[i].font_info);
+			g_ui_manager->fonts[i].font_info = NULL;
+		}
+
+		for (size_t j = 0; j < GS_GRAPHICS_TEXTURE_DATA_MAX; j++)
+		{
+			if (g_ui_manager->fonts[i].texture.desc.data[j])
+			{
+				gs_free(g_ui_manager->fonts[i].texture.desc.data[j]);
+				g_ui_manager->fonts[i].texture.desc.data[j] = NULL;
+			}
+		}
+
+		if (gs_handle_is_valid(g_ui_manager->fonts[i].texture.hndl))
+		{
+			gs_graphics_texture_destroy(g_ui_manager->fonts[i].texture.hndl);
+			g_ui_manager->fonts[i].texture.hndl = gs_handle_invalid(gs_graphics_texture_t);
+		}
 	}
 
 	mg_ui_manager_clear_text();

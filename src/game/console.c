@@ -33,14 +33,14 @@ void mg_console_free()
 	}
 	for (size_t i = 0; i < gs_dyn_array_size(g_console->commands); i++)
 	{
-		gs_free(g_console->commands[i].name);
-		gs_free(g_console->commands[i].help);
+		// gs_free(g_console->commands[i].name);
+		// gs_free(g_console->commands[i].help);
 		if (g_console->commands[i].argt != NULL)
 		{
 			gs_free(g_console->commands[i].argt);
 		}
 	}
-	gs_free(g_console->commands);
+	gs_dyn_array_free(g_console->commands);
 	gs_free(g_console);
 }
 
