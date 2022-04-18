@@ -48,10 +48,14 @@ void mg_config_init()
 		mg_println("WARN: missing cfg/config.txt, saving default");
 		_mg_config_save("cfg/config.txt");
 	}
+
+	mg_cmd_new("cvars", "Shows available cvars", &mg_config_print, NULL, 0);
 }
 
 void mg_config_free()
 {
+	_mg_config_save("cfg/config.txt");
+
 	for (size_t i = 0; i < gs_dyn_array_size(g_config->cvars); i++)
 	{
 		if (g_config->cvars->type == MG_CONFIG_TYPE_STRING)
