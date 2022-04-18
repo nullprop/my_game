@@ -99,7 +99,10 @@ void app_init()
 	// - - - -
 
 	// UI test
-	mg_ui_manager_set_dialogue("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", -1);
+	mg_ui_manager_set_dialogue(
+		"Lorem ipsum dolor sit amet, consectetur adipiscing elit, \
+	sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+		-1);
 
 	app_spawn();
 }
@@ -217,7 +220,7 @@ void app_update()
 
 		if (gs_platform_key_pressed(GS_KEYCODE_ENTER))
 		{
-			mg_console_run(g_ui_manager->console_input);
+			mg_console_input(g_ui_manager->console_input);
 			memset(g_ui_manager->console_input, 0, 256);
 		}
 	}

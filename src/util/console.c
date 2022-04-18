@@ -14,6 +14,11 @@ void mg_console_init()
 	{
 		g_console->input[i] = NULL;
 	}
+	g_console->commands = gs_dyn_array_new(mg_cmd_t);
+
+	mg_cmd_new("clear", "Clears the console", &mg_console_clear, NULL, 0);
+	mg_cmd_new("help", "Shows available commands", &mg_console_help, NULL, 0);
+	mg_cmd_new("exit", "Exits the game", &gs_quit, NULL, 0);
 }
 
 void mg_console_free()
@@ -26,6 +31,13 @@ void mg_console_free()
 	{
 		gs_free(g_console->input[i]);
 	}
+	for (size_t i = 0; i < gs_dyn_array_size(g_console->commands); i++)
+	{
+		gs_free(g_console->commands[i].name);
+		gs_free(g_console->commands[i].help);
+		gs_free(g_console->commands[i].argt);
+	}
+	gs_free(g_console->commands);
 	gs_free(g_console);
 }
 
@@ -39,7 +51,7 @@ void mg_console_println(const char *text)
 	}
 }
 
-void mg_console_run(const char *text)
+void mg_console_input(const char *text)
 {
 	// Store in input history
 	size_t sz    = gs_string_length(text) + 1;
@@ -62,54 +74,99 @@ void mg_console_run(const char *text)
 	}
 	gs_free(tmp);
 
-	// Handle commands
-	// TODO command definitions similar to mg_cvar?
-	//      Command name,
-	//      function to execute,
-	//      help text,
-	//      aliases
-	if (strcmp(text, "clear") == 0)
+	char *token = strtok(text, " ");
+	if (!token)
 	{
-		mg_console_clear();
-		return;
-	}
-	else if (strcmp(text, "exit") == 0)
-	{
-		gs_quit();
-		return;
-	}
-	else if (strcmp(text, "help") == 0)
-	{
-		mg_println("commands:");
-		mg_println("  'cvars' - Shows a list of available cvars");
-		mg_println("  'clear' - Clear the console");
-		mg_println("  'exit'  - Exits the game");
-		return;
-	}
-	else if (strcmp(text, "cvars") == 0)
-	{
-		mg_config_print();
+		mg_println("ERR: Failed to tokenize console input %s", text);
 		return;
 	}
 
-	// Handle cvars
-	char *token = strtok(text, " ");
-	if (token)
+	// Handle commands
+	for (size_t i = 0; i < gs_dyn_array_size(g_console->commands); i++)
 	{
-		mg_cvar_t *cvar = mg_cvar(token);
-		if (cvar)
+		mg_cmd_t cmd = g_console->commands[i];
+		if (strcmp(text, cmd.name) == 0)
 		{
-			token = strtok(NULL, " ");
-			if (token)
+			if (cmd.argc == 0)
 			{
-				mg_cvar_set(cvar, token);
+				mg_console_run(cmd, NULL);
 			}
-			mg_cvar_print(cvar);
+			else
+			{
+				void **argv = gs_malloc(cmd.argc * sizeof(void *));
+				for (size_t j = 0; j < cmd.argc; j++)
+				{
+					token = strtok(NULL, " ");
+					if (!token)
+					{
+						mg_println("ERR: Not enough arguments for command '%s'. Expected %d.", cmd.argc);
+						for (size_t k = 0; k < j; k++)
+						{
+							gs_free(argv[k]);
+						}
+
+						gs_free(argv);
+						return;
+					}
+					switch (cmd.argt[j])
+					{
+					default:
+					case MG_CMD_ARG_STRING:
+						size_t sz = gs_string_length(token) + 1;
+						argv[j]	  = gs_malloc(sz);
+						memcpy(argv[j], token, sz);
+						break;
+
+					case MG_CMD_ARG_INT:
+						argv[j]		= gs_malloc(sizeof(int));
+						*(int *)argv[j] = atoi(token);
+						break;
+
+					case MG_CMD_ARG_FLOAT:
+						argv[j]		  = gs_malloc(sizeof(float));
+						*(float *)argv[j] = atof(token);
+						break;
+					}
+				}
+
+				mg_console_run(cmd, argv);
+
+				for (size_t j = 0; j < cmd.argc; j++)
+				{
+					gs_free(argv[j]);
+				}
+				gs_free(argv);
+			}
+
 			return;
 		}
 	}
 
+	// Handle cvars
+	mg_cvar_t *cvar = mg_cvar(token);
+	if (cvar)
+	{
+		token = strtok(NULL, " ");
+		if (token)
+		{
+			mg_cvar_set(cvar, token);
+		}
+		mg_cvar_print(cvar);
+		return;
+	}
+
 	mg_println("Unknown command or cvar '%s'. Type 'help' to show available commands.", text);
+}
+
+void mg_console_run(const mg_cmd_t cmd, void **argv)
+{
+	if (cmd.func == NULL)
+	{
+		mg_println("ERR: Command '%s' doesn't have a function", cmd.name);
+		return;
+	}
+
+	(cmd.func)(argv);
 }
 
 char *mg_console_get_last(char **container, size_t container_len, size_t sz)
@@ -144,5 +201,14 @@ void mg_console_clear()
 	{
 		gs_free(g_console->output[i]);
 		g_console->output[i] = NULL;
+	}
+}
+
+void mg_console_help()
+{
+	mg_println("help:");
+	for (size_t i = 0; i < gs_dyn_array_size(g_console->commands); i++)
+	{
+		mg_println("  '%s' - %s", g_console->commands[i].name, g_console->commands[i].help);
 	}
 }
