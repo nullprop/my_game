@@ -79,6 +79,32 @@ void app_init()
 
 void app_update()
 {
+	// TODO gs_platform_monitor_sizev after updating gs
+	GLFWvidmode *vid_mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
+	uint32_t main_window	  = gs_platform_main_window();
+	gs_vec2 window_size	  = gs_platform_window_sizev(main_window);
+	bool32_t is_fullscreen	  = gs_platform_window_fullscreen(main_window);
+	mg_cvar_t *vid_width	  = mg_cvar("vid_width");
+	mg_cvar_t *vid_height	  = mg_cvar("vid_height");
+	mg_cvar_t *vid_fullscreen = mg_cvar("vid_fullscreen");
+	if (window_size.x != vid_width->value.i || window_size.y != vid_height->value.i)
+	{
+		gs_platform_set_window_size(main_window, vid_width->value.i, vid_height->value.i);
+	}
+	if (is_fullscreen != vid_fullscreen->value.i)
+	{
+		gs_platform_set_window_fullscreen(main_window, vid_fullscreen->value.i);
+	}
+
+	gs_platform_t *platform = gs_subsystem(platform);
+
+	mg_cvar_t *vid_max_fps = mg_cvar("vid_max_fps");
+	if (platform->time.max_fps != vid_max_fps->value.i)
+	{
+		platform->time.max_fps = vid_max_fps->value.i;
+	}
+
 	// TODO: move inputs to separate file
 	if (!g_ui_manager->console_open)
 	{
@@ -139,31 +165,8 @@ void app_update()
 	if (gs_platform_key_pressed(GS_KEYCODE_F2)) g_ui_manager->debug_open = !g_ui_manager->debug_open;
 	if (gs_platform_key_pressed(GS_KEYCODE_F3))
 	{
-		uint32_t main_window = gs_platform_main_window();
-
-		// TODO: monitor size should probably be in the api
-		GLFWvidmode *vid_mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
-		bool32_t want_fullscreen = !gs_platform_window_fullscreen(main_window);
-
-		if (!want_fullscreen)
-		{
-			// Going back to windowed mode, set to 800x600
-			gs_platform_set_window_fullscreen(main_window, false);
-			gs_platform_set_window_size(main_window, 800, 600);
-
-			// Restore window to center of screen.
-			gs_vec2 window_size  = gs_platform_window_sizev(main_window);
-			gs_vec2 monitor_size = gs_v2(vid_mode->width, vid_mode->height);
-			gs_vec2 top_left     = gs_vec2_scale(gs_vec2_sub(monitor_size, window_size), 0.5f);
-			gs_platform_set_window_positionv(main_window, top_left);
-		}
-		else
-		{
-			// Set to fullscreen res
-			gs_platform_set_window_size(main_window, vid_mode->width, vid_mode->height);
-			gs_platform_set_window_fullscreen(main_window, true);
-		}
+		mg_cvar_t *fs = mg_cvar("vid_fullscreen");
+		fs->value.i   = !fs->value.i;
 	}
 
 	if (g_ui_manager->console_open)

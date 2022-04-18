@@ -32,7 +32,7 @@ mg_player_t *mg_player_new()
 		.transform = gs_vqs_default(),
 		.camera	   = {
 			   .cam = {
-				   .aspect_ratio = vid_width->value.f / vid_height->value.f,
+				   .aspect_ratio = (float)vid_width->value.i / vid_height->value.i,
 				   .far_plane	 = 3000.0f,
 				   .fov		 = mg_cvar("r_fov")->value.i,
 				   .near_plane	 = 0.1f,
@@ -40,7 +40,7 @@ mg_player_t *mg_player_new()
 			   },
 		   },
 		.viewmodel_camera = {
-			.aspect_ratio = vid_width->value.f / vid_height->value.f,
+			.aspect_ratio = (float)vid_width->value.i / vid_height->value.i,
 			.far_plane    = 200.0f,
 			.fov	      = 60.0f,
 			.near_plane   = 0,
