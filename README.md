@@ -88,12 +88,22 @@ sudo apt install gcc mesa-common-dev libxcursor-dev libxrandr-dev libxinerama-de
 bash proc/linux/gcc_dbg.sh
 ```
 
+## Console
+
+Hitting the console key (default: F1) will allow you to change cvars and run commands. Type `help` for more information.
+
+![console screenshot](/docs/screenshots/console_2022-04-18.png)
+
+## Config
+
+The game config is located in `cfg/config.txt`. The game will use values from this file when launching. You can modify any value at runtime via the console. Note that this file does not support custom formatting and will be overwritten when the game exits.
+
 ## Tools
 
 ### ModelViewer
 
 Tool for checking .md3 models and custom animation.cfg files.  
-Type 'help' in console for details.
+Type `help` in console for details.
 
 ```sh
 cd bin
