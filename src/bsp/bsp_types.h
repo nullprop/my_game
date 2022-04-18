@@ -222,15 +222,15 @@ typedef struct bsp_face_lump_t
 	int32_t first_index;
 	int32_t num_indices;
 	int32_t lm_index;
-	//gs_vec2i lm_start;
-	//gs_vec2i lm_size;
-	//gs_vec2i lm_origin;
+	// gs_vec2i lm_start;
+	// gs_vec2i lm_size;
+	// gs_vec2i lm_origin;
 	int32_t lm_start[2];
 	int32_t lm_size[2];
 	int32_t lm_origin[3];
 	gs_vec3 lm_vecs[2];
 	gs_vec3 normal;
-	//gs_vec2i size;
+	// gs_vec2i size;
 	int32_t size[2];
 } bsp_face_lump_t;
 
@@ -409,6 +409,15 @@ typedef struct bsp_map_t
 	int32_t previous_leaf;
 
 	gs_dyn_array(bsp_entity_t) entities;
+
+	gs_handle(gs_graphics_vertex_buffer_t) bsp_graphics_vbo;
+	gs_handle(gs_graphics_index_buffer_t) bsp_graphics_ibo;
+	gs_handle(gs_graphics_pipeline_t) bsp_graphics_pipe;
+	gs_handle(gs_graphics_uniform_t) bsp_graphics_u_proj;
+	gs_handle(gs_graphics_uniform_t) bsp_graphics_u_tex;
+	gs_handle(gs_graphics_uniform_t) bsp_graphics_u_lm;
+	gs_dyn_array(uint32_t) bsp_graphics_index_arr;
+	gs_dyn_array(bsp_vert_lump_t) bsp_graphics_vert_arr;
 } bsp_map_t;
 
 #endif // BSP_TYPES_H

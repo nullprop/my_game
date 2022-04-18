@@ -117,7 +117,7 @@ b32 load_bsp(char *filename, bsp_map_t *map)
 	if (!_load_visdata_lump(&buffer, map))
 		return _load_bsp_fail(&buffer, "failed to read visdata lump");
 
-	map->valid = true;
+	map->valid = map->faces.count > 0;
 	gs_byte_buffer_free(&buffer);
 
 	// Get map name from filepath
