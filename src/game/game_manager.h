@@ -17,7 +17,6 @@ void mg_game_manager_init();
 void mg_game_manager_free();
 void mg_game_manager_update();
 
-void mg_game_manager_load_map_temp(void **argv);
 void mg_game_manager_load_map(char *filename);
 void mg_game_manager_spawn_player();
 

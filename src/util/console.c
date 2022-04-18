@@ -170,7 +170,31 @@ void mg_console_run(const mg_cmd_t cmd, void **argv)
 		return;
 	}
 
-	(cmd.func)(argv);
+	// Too lazy for vargs, shouldn't need more than this...
+	if (cmd.argc == 0)
+	{
+		(cmd.func)(NULL);
+	}
+	else if (cmd.argc == 1)
+	{
+		void (*tmp)(void *) = cmd.func;
+		(tmp)(argv[0]);
+	}
+	else if (cmd.argc == 2)
+	{
+		void (*tmp)(void *, void *) = cmd.func;
+		(tmp)(argv[0], argv[1]);
+	}
+	else if (cmd.argc == 3)
+	{
+		void (*tmp)(void *, void *, void *) = cmd.func;
+		(tmp)(argv[0], argv[1], argv[1]);
+	}
+	else
+	{
+		mg_println("WARN: not unpacking arguments for command '%s'", cmd.name);
+		(cmd.func)(argv);
+	}
 }
 
 char *mg_console_get_last(char **container, size_t container_len, size_t sz)

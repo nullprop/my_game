@@ -13,7 +13,7 @@ void mg_game_manager_init()
 	mg_game_manager_spawn_player();
 
 	mg_cmd_arg_type types[] = {MG_CMD_ARG_STRING};
-	mg_cmd_new("map", "Load map", &mg_game_manager_load_map_temp, (mg_cmd_arg_type *)types, 1);
+	mg_cmd_new("map", "Load map", &mg_game_manager_load_map, (mg_cmd_arg_type *)types, 1);
 	mg_cmd_new("spawn", "Spawn player", &mg_game_manager_spawn_player, NULL, 0);
 }
 
@@ -31,12 +31,6 @@ void mg_game_manager_free()
 void mg_game_manager_update()
 {
 	mg_player_update(g_game_manager->player);
-}
-
-void mg_game_manager_load_map_temp(void **argv)
-{
-	char *filename = argv[0];
-	mg_game_manager_load_map(filename);
 }
 
 void mg_game_manager_load_map(char *filename)
