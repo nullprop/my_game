@@ -54,10 +54,15 @@ extern mg_console_t *g_console;
 		gs_free(tmp);                                 \
 	}
 
-#define mg_cmd_new(n, h, f, t, c)                                                                 \
-	{                                                                                         \
-		mg_cmd_t cmd = (mg_cmd_t){.name = n, .help = h, .func = f, .argt = t, .argc = c}; \
-		gs_dyn_array_push(g_console->commands, cmd);                                      \
+#define mg_cmd_new(n, h, f, t, c)                                                                    \
+	{                                                                                            \
+		mg_cmd_t cmd = (mg_cmd_t){.name = n, .help = h, .func = f, .argt = NULL, .argc = c}; \
+		if (c > 0)                                                                           \
+		{                                                                                    \
+			cmd.argt = gs_malloc(c * sizeof(mg_cmd_arg_type));                           \
+			memcpy(cmd.argt, t, c * sizeof(mg_cmd_arg_type));                            \
+		}                                                                                    \
+		gs_dyn_array_push(g_console->commands, cmd);                                         \
 	}
 
 #endif // MG_CONSOLE_H

@@ -35,7 +35,10 @@ void mg_console_free()
 	{
 		gs_free(g_console->commands[i].name);
 		gs_free(g_console->commands[i].help);
-		gs_free(g_console->commands[i].argt);
+		if (g_console->commands[i].argt != NULL)
+		{
+			gs_free(g_console->commands[i].argt);
+		}
 	}
 	gs_free(g_console->commands);
 	gs_free(g_console);
@@ -108,12 +111,13 @@ void mg_console_input(const char *text)
 						gs_free(argv);
 						return;
 					}
+					mg_cmd_arg_type ttt = cmd.argt[j];
 					switch (cmd.argt[j])
 					{
 					default:
 					case MG_CMD_ARG_STRING:
-						size_t sz = gs_string_length(token) + 1;
-						argv[j]	  = gs_malloc(sz);
+						sz	= gs_string_length(token) + 1;
+						argv[j] = gs_malloc(sz);
 						memcpy(argv[j], token, sz);
 						break;
 
