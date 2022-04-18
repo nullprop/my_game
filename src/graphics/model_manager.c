@@ -51,14 +51,14 @@ mg_model_t *mg_model_manager_find(char *filename)
 	return NULL;
 }
 
-void _mg_model_manager_load(char *filename, char *shader)
+bool _mg_model_manager_load(char *filename, char *shader)
 {
 	md3_t *data = gs_malloc_init(md3_t);
 	if (!mg_load_md3(filename, data))
 	{
 		mg_println("WARN: _mg_model_manager_load failed, model %s", filename);
 		mg_free_md3(data);
-		return;
+		return false;
 	}
 
 	mg_model_t model = {
@@ -70,4 +70,5 @@ void _mg_model_manager_load(char *filename, char *shader)
 	gs_dyn_array_push(g_model_manager->models, model);
 
 	mg_println("Model: Loaded %s", filename);
+	return true;
 }

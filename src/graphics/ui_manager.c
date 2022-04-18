@@ -146,15 +146,8 @@ void mg_ui_manager_free()
 		gs_graphics_texture_destroy(g_ui_manager->fonts[i].texture.hndl);
 	}
 
-	for (
-		gs_slot_array_iter it = gs_slot_array_iter_new(g_ui_manager->texts);
-		gs_slot_array_iter_valid(g_ui_manager->texts, it);
-		gs_slot_array_iter_advance(g_ui_manager->texts, it))
-	{
-		mg_ui_text_t text = gs_slot_array_iter_get(g_ui_manager->texts, it);
-		gs_free(text.content);
-	}
-	gs_slot_array_clear(g_ui_manager->texts);
+	mg_ui_manager_clear_text();
+	gs_slot_array_free(g_ui_manager->texts);
 
 	gs_free(g_ui_manager->current_dialogue.content);
 	gs_free(g_ui_manager);
@@ -294,6 +287,19 @@ void mg_ui_manager_remove_text(const uint32_t id)
 		gs_free(t.content);
 		gs_slot_array_erase(g_ui_manager->texts, id);
 	}
+}
+
+void mg_ui_manager_clear_text()
+{
+	for (
+		gs_slot_array_iter it = gs_slot_array_iter_new(g_ui_manager->texts);
+		gs_slot_array_iter_valid(g_ui_manager->texts, it);
+		gs_slot_array_iter_advance(g_ui_manager->texts, it))
+	{
+		mg_ui_text_t text = gs_slot_array_iter_get(g_ui_manager->texts, it);
+		gs_free(text.content);
+	}
+	gs_slot_array_clear(g_ui_manager->texts);
 }
 
 void _mg_ui_manager_text_overlay(gs_vec2 fbs, gs_gui_container_t *root)

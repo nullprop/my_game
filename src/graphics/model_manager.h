@@ -29,7 +29,7 @@ typedef struct mg_model_manager_t
 void mg_model_manager_init();
 void mg_model_manager_free();
 mg_model_t *mg_model_manager_find(char *filename);
-void _mg_model_manager_load(char *filename, char *shader);
+bool _mg_model_manager_load(char *filename, char *shader);
 
 extern mg_model_manager_t *g_model_manager;
 

@@ -30,7 +30,7 @@ float32_t camera_yaw	    = 0;
 float32_t camera_pitch	    = 0;
 gs_vqs *model_transform	    = NULL;
 char *model_path	    = NULL;
-uint32_t model_id	    = 0;
+uint32_t model_id	    = GS_SLOT_ARRAY_INVALID_HANDLE;
 mg_renderable_t *renderable = NULL;
 uint32_t animation_index    = 0;
 uint32_t animation_count    = 0;
@@ -42,6 +42,7 @@ uint32_t text_anim_fps	    = GS_SLOT_ARRAY_INVALID_HANDLE;
 uint32_t text_anim_frame    = GS_SLOT_ARRAY_INVALID_HANDLE;
 uint32_t text_anim_pause    = GS_SLOT_ARRAY_INVALID_HANDLE;
 uint32_t text_anim_loop	    = GS_SLOT_ARRAY_INVALID_HANDLE;
+bool valid		    = false;
 
 void app_init()
 {
@@ -65,11 +66,27 @@ void app_init()
 	{
 		glfwSetInputMode(gs_platform_raw_window_handle(gs_platform_main_window()), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 	}
+}
+
+void load_model(char *filename)
+{
+	valid = false;
+	if (model_id != GS_SLOT_ARRAY_INVALID_HANDLE)
+	{
+		mg_renderer_remove_renderable(model_id);
+		gs_free(model_transform);
+	}
+
+	if (model_path) gs_free(model_path);
+
+	size_t sz  = gs_string_length(filename) + 1;
+	model_path = gs_malloc(sz);
+	memcpy(model_path, filename, sz);
 
 	mg_model_t *model = mg_model_manager_find(model_path);
 	if (model == NULL)
 	{
-		_mg_model_manager_load(model_path, "basic");
+		if (!_mg_model_manager_load(model_path, "basic")) return;
 		model = mg_model_manager_find(model_path);
 	}
 	model_transform		  = gs_malloc_init(gs_vqs);
@@ -79,6 +96,8 @@ void app_init()
 	model_id		  = mg_renderer_create_renderable(*model, model_transform);
 	renderable		  = mg_renderer_get_renderable(model_id);
 	animation_count		  = gs_dyn_array_size(renderable->model.data->animations);
+
+	mg_ui_manager_clear_text();
 
 	char tmp[256];
 
@@ -124,6 +143,8 @@ void app_init()
 	mg_ui_manager_add_text("R - Restart animation", gs_v2(10, (text_y += text_h)), 0);
 	mg_ui_manager_add_text("Up/Down - Next/Prev animation", gs_v2(10, (text_y += text_h)), 0);
 	mg_ui_manager_add_text("Left/Right - Skip frame", gs_v2(10, (text_y += text_h)), 0);
+
+	valid = true;
 }
 
 void app_update()
@@ -143,141 +164,184 @@ void app_update()
 		}
 	}
 
-	if (gs_platform_key_down(GS_KEYCODE_ESC))
+	if (g_ui_manager->console_open)
 	{
-		gs_quit();
+		if (gs_platform_key_pressed(GS_KEYCODE_ESC))
+		{
+			g_ui_manager->console_open = false;
+		}
+
+		f32 scroll_x, scroll_y;
+		gs_platform_mouse_wheel(&scroll_x, &scroll_y);
+
+		if (gs_platform_key_down(GS_KEYCODE_LSHIFT))
+		{
+			scroll_x = scroll_y;
+			scroll_y = 0;
+		}
+
+		if (scroll_y != 0)
+		{
+			g_ui_manager->console_scroll_y += scroll_y < 0 ? -4 : 4;
+			g_ui_manager->console_scroll_y = gs_clamp(g_ui_manager->console_scroll_y, 0, MG_CON_LINES - 1);
+		}
+		if (scroll_x != 0)
+		{
+			g_ui_manager->console_scroll_x += scroll_x < 0 ? -4 : 4;
+			g_ui_manager->console_scroll_x = gs_min(g_ui_manager->console_scroll_x, 0);
+		}
+
+		if (gs_platform_key_pressed(GS_KEYCODE_ENTER))
+		{
+			mg_console_input(g_ui_manager->console_input);
+			memset(g_ui_manager->console_input, 0, 256);
+		}
 	}
 
-	gs_vec3 wish_move = gs_v3(0, 0, 0);
-	gs_vec2 dp	  = gs_vec2_scale(gs_platform_mouse_deltav(), 2.0f * 0.022f);
+	if (gs_platform_key_pressed(GS_KEYCODE_F1)) g_ui_manager->console_open = !g_ui_manager->console_open;
+	if (gs_platform_key_pressed(GS_KEYCODE_F2)) g_ui_manager->debug_open = !g_ui_manager->debug_open;
 
-	camera_pitch		   = gs_clamp(camera_pitch - dp.y, -90.0f, 90.0f);
-	camera_yaw		   = fmodf(camera_yaw - dp.x, 360.0f);
-	camera->transform.rotation = gs_quat_mul(
-		gs_quat_angle_axis(gs_deg2rad(camera_yaw), MG_AXIS_UP),
-		gs_quat_angle_axis(gs_deg2rad(camera_pitch), MG_AXIS_RIGHT));
-
-	if (gs_platform_key_down(GS_KEYCODE_W))
-		wish_move = gs_vec3_add(wish_move, mg_get_forward(camera->transform.rotation));
-	if (gs_platform_key_down(GS_KEYCODE_S))
-		wish_move = gs_vec3_add(wish_move, mg_get_backward(camera->transform.rotation));
-	if (gs_platform_key_down(GS_KEYCODE_D))
-		wish_move = gs_vec3_add(wish_move, mg_get_right(camera->transform.rotation));
-	if (gs_platform_key_down(GS_KEYCODE_A))
-		wish_move = gs_vec3_add(wish_move, mg_get_left(camera->transform.rotation));
-	if (gs_platform_key_down(GS_KEYCODE_SPACE))
-		wish_move = gs_vec3_add(wish_move, MG_AXIS_UP);
-	if (gs_platform_key_down(GS_KEYCODE_LEFT_CONTROL))
-		wish_move = gs_vec3_add(wish_move, MG_AXIS_DOWN);
-
-	wish_move		   = gs_vec3_norm(wish_move);
-	camera->transform.position = gs_vec3_add(camera->transform.position, gs_vec3_scale(wish_move, 200.0f * delta_time));
-
-	if (gs_platform_key_pressed(GS_KEYCODE_F2)) g_ui_manager->console_open = !g_ui_manager->console_open;
-	if (gs_platform_key_pressed(GS_KEYCODE_F3)) g_ui_manager->debug_open = !g_ui_manager->debug_open;
-
-	// Play next animation
-	if (gs_platform_key_pressed(GS_KEYCODE_UP) && animation_count > 0)
+	if (!valid)
 	{
-		animation_index++;
-		if (animation_index >= animation_count)
-			animation_index = 0;
+		mg_renderer_update();
+		return;
+	}
 
-		mg_renderer_play_animation(model_id, renderable->model.data->animations[animation_index].name);
-		if (renderable->current_animation != NULL)
+	if (!g_ui_manager->console_open)
+	{
+		if (gs_platform_key_pressed(GS_KEYCODE_ESC))
 		{
-			renderable->current_animation->loop = animation_loop;
+			gs_quit();
+		}
+
+		gs_vec3 wish_move = gs_v3(0, 0, 0);
+		gs_vec2 dp	  = gs_vec2_scale(gs_platform_mouse_deltav(), 2.0f * 0.022f);
+
+		camera_pitch		   = gs_clamp(camera_pitch - dp.y, -90.0f, 90.0f);
+		camera_yaw		   = fmodf(camera_yaw - dp.x, 360.0f);
+		camera->transform.rotation = gs_quat_mul(
+			gs_quat_angle_axis(gs_deg2rad(camera_yaw), MG_AXIS_UP),
+			gs_quat_angle_axis(gs_deg2rad(camera_pitch), MG_AXIS_RIGHT));
+
+		if (gs_platform_key_down(GS_KEYCODE_W))
+			wish_move = gs_vec3_add(wish_move, mg_get_forward(camera->transform.rotation));
+		if (gs_platform_key_down(GS_KEYCODE_S))
+			wish_move = gs_vec3_add(wish_move, mg_get_backward(camera->transform.rotation));
+		if (gs_platform_key_down(GS_KEYCODE_D))
+			wish_move = gs_vec3_add(wish_move, mg_get_right(camera->transform.rotation));
+		if (gs_platform_key_down(GS_KEYCODE_A))
+			wish_move = gs_vec3_add(wish_move, mg_get_left(camera->transform.rotation));
+		if (gs_platform_key_down(GS_KEYCODE_SPACE))
+			wish_move = gs_vec3_add(wish_move, MG_AXIS_UP);
+		if (gs_platform_key_down(GS_KEYCODE_LEFT_CONTROL))
+			wish_move = gs_vec3_add(wish_move, MG_AXIS_DOWN);
+
+		wish_move		   = gs_vec3_norm(wish_move);
+		camera->transform.position = gs_vec3_add(camera->transform.position, gs_vec3_scale(wish_move, 200.0f * delta_time));
+
+		// Play next animation
+		if (gs_platform_key_pressed(GS_KEYCODE_UP) && animation_count > 0)
+		{
+			animation_index++;
+			if (animation_index >= animation_count)
+				animation_index = 0;
+
+			mg_renderer_play_animation(model_id, renderable->model.data->animations[animation_index].name);
+			if (renderable->current_animation != NULL)
+			{
+				renderable->current_animation->loop = animation_loop;
+				if (animation_paused)
+					renderable->prev_frame_time = DBL_MAX;
+
+				sprintf(tmp, "Animation: %s", renderable->current_animation->name);
+				mg_ui_manager_update_text(text_animation, tmp);
+				sprintf(tmp, "Anim FPS: %d", renderable->current_animation->fps);
+				mg_ui_manager_update_text(text_anim_fps, tmp);
+			}
+		}
+
+		// Play previous animation
+		if (gs_platform_key_pressed(GS_KEYCODE_DOWN) && animation_count > 0)
+		{
+			animation_index--;
+			// underflow
+			if (animation_index >= animation_count)
+				animation_index = animation_count - 1;
+
+			mg_renderer_play_animation(model_id, renderable->model.data->animations[animation_index].name);
+			if (renderable->current_animation != NULL)
+			{
+				renderable->current_animation->loop = animation_loop;
+				if (animation_paused)
+					renderable->prev_frame_time = DBL_MAX;
+
+				sprintf(tmp, "Animation: %s", renderable->current_animation->name);
+				mg_ui_manager_update_text(text_animation, tmp);
+				sprintf(tmp, "Anim FPS: %d", renderable->current_animation->fps);
+				mg_ui_manager_update_text(text_anim_fps, tmp);
+			}
+		}
+
+		// Toggle pause
+		if (gs_platform_key_pressed(GS_KEYCODE_P))
+		{
+			animation_paused = !animation_paused;
+			// Set prev_frame_time to future so animation wont progress
 			if (animation_paused)
 				renderable->prev_frame_time = DBL_MAX;
-
-			sprintf(tmp, "Animation: %s", renderable->current_animation->name);
-			mg_ui_manager_update_text(text_animation, tmp);
-			sprintf(tmp, "Anim FPS: %d", renderable->current_animation->fps);
-			mg_ui_manager_update_text(text_anim_fps, tmp);
-		}
-	}
-
-	// Play previous animation
-	if (gs_platform_key_pressed(GS_KEYCODE_DOWN) && animation_count > 0)
-	{
-		animation_index--;
-		// underflow
-		if (animation_index >= animation_count)
-			animation_index = animation_count - 1;
-
-		mg_renderer_play_animation(model_id, renderable->model.data->animations[animation_index].name);
-		if (renderable->current_animation != NULL)
-		{
-			renderable->current_animation->loop = animation_loop;
-			if (animation_paused)
-				renderable->prev_frame_time = DBL_MAX;
-
-			sprintf(tmp, "Animation: %s", renderable->current_animation->name);
-			mg_ui_manager_update_text(text_animation, tmp);
-			sprintf(tmp, "Anim FPS: %d", renderable->current_animation->fps);
-			mg_ui_manager_update_text(text_anim_fps, tmp);
-		}
-	}
-
-	// Toggle pause
-	if (gs_platform_key_pressed(GS_KEYCODE_P))
-	{
-		animation_paused = !animation_paused;
-		// Set prev_frame_time to future so animation wont progress
-		if (animation_paused)
-			renderable->prev_frame_time = DBL_MAX;
-		else
-			renderable->prev_frame_time = plat_time;
-
-		sprintf(tmp, "Pause: %d", animation_paused);
-		mg_ui_manager_update_text(text_anim_pause, tmp);
-	}
-
-	// Restart animation
-	if (gs_platform_key_pressed(GS_KEYCODE_R))
-	{
-		if (renderable->current_animation != NULL)
-		{
-			renderable->frame	    = renderable->current_animation->first_frame;
-			renderable->prev_frame_time = plat_time;
-		}
-	}
-
-	// Toggle loop
-	if (gs_platform_key_pressed(GS_KEYCODE_L))
-	{
-		animation_loop = !animation_loop;
-		if (renderable->current_animation != NULL)
-		{
-			renderable->current_animation->loop = animation_loop;
-		}
-		sprintf(tmp, "Loop: %d", animation_loop);
-		mg_ui_manager_update_text(text_anim_loop, tmp);
-	}
-
-	// Frame skip forwards
-	if (gs_platform_key_pressed(GS_KEYCODE_RIGHT) && renderable->current_animation != NULL)
-	{
-		renderable->frame++;
-		if (renderable->frame >= renderable->current_animation->first_frame + renderable->current_animation->num_frames)
-		{
-			if (animation_loop)
-				renderable->frame = renderable->current_animation->first_frame;
 			else
-				renderable->frame = renderable->current_animation->first_frame + renderable->current_animation->num_frames - 1;
-		}
-	}
+				renderable->prev_frame_time = plat_time;
 
-	// Frame skip backwards
-	if (gs_platform_key_pressed(GS_KEYCODE_LEFT) && renderable->current_animation != NULL)
-	{
-		renderable->frame--;
-		if (renderable->frame < renderable->current_animation->first_frame)
+			sprintf(tmp, "Pause: %d", animation_paused);
+			mg_ui_manager_update_text(text_anim_pause, tmp);
+		}
+
+		// Restart animation
+		if (gs_platform_key_pressed(GS_KEYCODE_R))
 		{
-			if (animation_loop)
-				renderable->frame = renderable->current_animation->first_frame + renderable->current_animation->num_frames - 1;
-			else
-				renderable->frame = renderable->current_animation->first_frame;
+			if (renderable->current_animation != NULL)
+			{
+				renderable->frame	    = renderable->current_animation->first_frame;
+				renderable->prev_frame_time = plat_time;
+			}
+		}
+
+		// Toggle loop
+		if (gs_platform_key_pressed(GS_KEYCODE_L))
+		{
+			animation_loop = !animation_loop;
+			if (renderable->current_animation != NULL)
+			{
+				renderable->current_animation->loop = animation_loop;
+			}
+			sprintf(tmp, "Loop: %d", animation_loop);
+			mg_ui_manager_update_text(text_anim_loop, tmp);
+		}
+
+		// Frame skip forwards
+		if (gs_platform_key_pressed(GS_KEYCODE_RIGHT) && renderable->current_animation != NULL)
+		{
+			renderable->frame++;
+			if (renderable->frame >= renderable->current_animation->first_frame + renderable->current_animation->num_frames)
+			{
+				if (animation_loop)
+					renderable->frame = renderable->current_animation->first_frame;
+				else
+					renderable->frame = renderable->current_animation->first_frame + renderable->current_animation->num_frames - 1;
+			}
+		}
+
+		// Frame skip backwards
+		if (gs_platform_key_pressed(GS_KEYCODE_LEFT) && renderable->current_animation != NULL)
+		{
+			renderable->frame--;
+			if (renderable->frame < renderable->current_animation->first_frame)
+			{
+				if (animation_loop)
+					renderable->frame = renderable->current_animation->first_frame + renderable->current_animation->num_frames - 1;
+				else
+					renderable->frame = renderable->current_animation->first_frame;
+			}
 		}
 	}
 
@@ -301,22 +365,18 @@ void app_shutdown()
 	gs_free(camera);
 	gs_free(model_transform);
 	gs_free(model_path);
+
+	mg_config_free();
+	mg_console_free();
 }
 
 gs_app_desc_t gs_main(int32_t argc, char **argv)
 {
-	if (argc < 2)
-	{
-		mg_println("Missing model path argument");
-		gs_quit();
-		return;
-	}
-
-	size_t sz  = gs_string_length(argv[1]) + 1;
-	model_path = gs_malloc(sz);
-	memcpy(model_path, argv[1], sz);
-
+	mg_console_init();
 	mg_config_init();
+
+	mg_cmd_arg_type args[] = {MG_CMD_ARG_STRING};
+	mg_cmd_new("model", "Load a model. Example: 'model models/players/sarge/upper.md3'", &load_model, (mg_cmd_arg_type *)args, 1);
 
 	return (gs_app_desc_t){
 		.init	       = app_init,
