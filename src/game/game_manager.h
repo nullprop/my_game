@@ -20,6 +20,11 @@ void mg_game_manager_update();
 void mg_game_manager_load_map(char *filename);
 void mg_game_manager_spawn_player();
 
+void mg_game_manager_input_alive();
+void mg_game_manager_input_console();
+void mg_game_manager_input_menu();
+void mg_game_manager_input_general();
+
 extern mg_game_manager_t *g_game_manager;
 
 #endif // MG_GAME_MANAGER_H

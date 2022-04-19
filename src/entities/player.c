@@ -70,6 +70,7 @@ void mg_player_free(mg_player_t *player)
 
 void mg_player_update(mg_player_t *player)
 {
+	// TODO: time manager, pausing
 	if (g_ui_manager->show_cursor) return;
 	if (g_game_manager->map == NULL || !g_game_manager->map->valid) return;
 
@@ -78,7 +79,6 @@ void mg_player_update(mg_player_t *player)
 	double pt		= gs_platform_elapsed_time();
 
 	_mg_player_check_floor(player);
-	_mg_player_get_input(player, dt);
 
 	// Handle jump and gravity
 	if (player->grounded)
@@ -196,46 +196,6 @@ void _mg_player_check_floor(mg_player_t *player)
 	{
 		player->grounded = false;
 	}
-}
-
-void _mg_player_get_input(mg_player_t *player, float delta_time)
-{
-	player->wish_move   = gs_v3(0, 0, 0);
-	player->wish_jump   = false;
-	player->wish_crouch = false;
-
-	gs_vec2 dp = gs_vec2_scale(gs_platform_mouse_deltav(), mg_cvar("cl_sensitivity")->value.f * 0.022f);
-
-	if (gs_platform_key_down(GS_KEYCODE_UP))
-		dp.y -= 150.0f * delta_time;
-	if (gs_platform_key_down(GS_KEYCODE_DOWN))
-		dp.y += 150.0f * delta_time;
-	if (gs_platform_key_down(GS_KEYCODE_RIGHT))
-		dp.x += 150.0f * delta_time;
-	if (gs_platform_key_down(GS_KEYCODE_LEFT))
-		dp.x -= 150.0f * delta_time;
-
-	// Rotate
-	player->camera.pitch	   = gs_clamp(player->camera.pitch + dp.y, -90.0f, 90.0f);
-	player->yaw		   = fmodf(player->yaw - dp.x, 360.0f);
-	player->transform.rotation = gs_quat_angle_axis(gs_deg2rad(player->yaw), MG_AXIS_UP);
-
-	if (gs_platform_key_down(GS_KEYCODE_W))
-		player->wish_move = gs_vec3_add(player->wish_move, mg_get_forward(player->transform.rotation));
-	if (gs_platform_key_down(GS_KEYCODE_S))
-		player->wish_move = gs_vec3_add(player->wish_move, mg_get_backward(player->transform.rotation));
-	if (gs_platform_key_down(GS_KEYCODE_D))
-		player->wish_move = gs_vec3_add(player->wish_move, mg_get_right(player->transform.rotation));
-	if (gs_platform_key_down(GS_KEYCODE_A))
-		player->wish_move = gs_vec3_add(player->wish_move, mg_get_left(player->transform.rotation));
-
-	player->wish_move.z = 0;
-	player->wish_move   = gs_vec3_norm(player->wish_move);
-
-	if (gs_platform_key_down(GS_KEYCODE_SPACE))
-		player->wish_jump = true;
-	if (gs_platform_key_down(GS_KEYCODE_LEFT_CONTROL))
-		player->wish_crouch = true;
 }
 
 void _mg_player_camera_update(mg_player_t *player)

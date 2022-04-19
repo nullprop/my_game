@@ -78,7 +78,6 @@ void _mg_player_crouch(mg_player_t *player, float delta_time);
 void _mg_player_accelerate(mg_player_t *player, float delta_time, float move_speed, float acceleration, float max_vel);
 void _mg_player_friction(mg_player_t *player, float delta_time);
 void _mg_player_camera_update(mg_player_t *player);
-void _mg_player_get_input(mg_player_t *player, float delta_time);
 void _mg_player_do_jump(mg_player_t *player);
 void _mg_player_check_floor(mg_player_t *player);
 
