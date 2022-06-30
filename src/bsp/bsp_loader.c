@@ -146,13 +146,16 @@ b32 _load_lump(gs_byte_buffer_t *buffer, bsp_map_t *map, uint32_t *count, void *
 	*data  = gs_malloc(size);
 
 	buffer->position = map->header.dir_entries[type].offset;
-	gs_byte_buffer_read_bulk(buffer, data, size);
+
+	if (size > 0)
+		gs_byte_buffer_read_bulk(buffer, data, size);
 
 	return true;
 }
 
 b32 _load_entity_lump(gs_byte_buffer_t *buffer, bsp_map_t *map)
 {
+	gs_assert(map->header.dir_entries[BSP_LUMP_TYPE_ENTITIES].length > 0);
 	int32_t size = map->header.dir_entries[BSP_LUMP_TYPE_ENTITIES].length;
 
 	// not sure if the lump is null terminated,
@@ -168,6 +171,7 @@ b32 _load_entity_lump(gs_byte_buffer_t *buffer, bsp_map_t *map)
 
 b32 _load_visdata_lump(gs_byte_buffer_t *buffer, bsp_map_t *map)
 {
+	gs_assert(map->header.dir_entries[BSP_LUMP_TYPE_VISDATA].length > 0);
 	buffer->position = map->header.dir_entries[BSP_LUMP_TYPE_VISDATA].offset;
 	gs_byte_buffer_read(buffer, int32_t, &map->visdata.num_vecs);
 	gs_byte_buffer_read(buffer, int32_t, &map->visdata.size_vecs);

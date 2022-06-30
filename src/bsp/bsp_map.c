@@ -569,7 +569,7 @@ gs_vec3 bsp_map_find_spawn_point(bsp_map_t *map, gs_vec3 *position, float32_t *y
 	{
 		bsp_entity_t ent = map->entities[i];
 		char *classname	 = bsp_entity_get_value(&ent, "classname");
-		if (strcmp(classname, "info_player_deathmatch") == 0)
+		if (strcmp(classname, "info_player_deathmatch") == 0 || strcmp(classname, "info_player_start") == 0)
 		{
 			gs_dyn_array_push(spawns, ent);
 		}
@@ -603,8 +603,10 @@ gs_vec3 bsp_map_find_spawn_point(bsp_map_t *map, gs_vec3 *position, float32_t *y
 
 	// Get yaw
 	temp = bsp_entity_get_value(&spawns[spawn_index], "angle");
-	gs_assert(temp != NULL);
-	*yaw = strtof(temp, NULL);
+	if (temp == NULL)
+		*yaw = 0;
+	else
+		*yaw = strtof(temp, NULL);
 
 	gs_dyn_array_free(spawns);
 
