@@ -102,7 +102,7 @@ void mg_console_input(const char *text)
 					token = strtok(NULL, " ");
 					if (!token)
 					{
-						mg_println("ERR: Not enough arguments for command '%s'. Expected %d.", cmd.argc);
+						mg_println("ERR: Not enough arguments for command '%s'. Expected %d.", cmd.name, cmd.argc);
 						for (size_t k = 0; k < j; k++)
 						{
 							gs_free(argv[k]);
