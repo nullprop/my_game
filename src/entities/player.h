@@ -35,6 +35,7 @@
 #define MG_PLAYER_UNCROUCH_TIME_AIR 0.0f
 #define MG_PLAYER_STEP_HEIGHT	    16.0f
 #define MG_PLAYER_COYOTE_TIME	    0.2f
+#define MG_PLAYER_GRAVITY	    800.0f
 
 typedef struct mg_player_camera_t
 {

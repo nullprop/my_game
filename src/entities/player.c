@@ -10,13 +10,13 @@
 #include "player.h"
 #include "../audio/audio_manager.h"
 #include "../bsp/bsp_trace.h"
+#include "../game/config.h"
+#include "../game/console.h"
 #include "../game/game_manager.h"
 #include "../graphics/model_manager.h"
 #include "../graphics/renderer.h"
 #include "../graphics/ui_manager.h"
 #include "../util/camera.h"
-#include "../game/config.h"
-#include "../game/console.h"
 #include "../util/math.h"
 
 #include <gs/util/gs_idraw.h>
@@ -95,7 +95,7 @@ void mg_player_update(mg_player_t *player)
 	else
 	{
 		// gravity
-		player->velocity = gs_vec3_add(player->velocity, gs_vec3_scale(MG_AXIS_DOWN, 800.0f * dt));
+		player->velocity = gs_vec3_add(player->velocity, gs_vec3_scale(MG_AXIS_DOWN, MG_PLAYER_GRAVITY * dt));
 
 		// coyote
 		if (player->wish_jump && !player->has_jumped && pt - player->last_ground_time <= MG_PLAYER_COYOTE_TIME * 1000)

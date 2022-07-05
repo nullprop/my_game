@@ -1,9 +1,10 @@
 #include "game_manager.h"
-#include "../game/config.h"
-#include "../game/console.h"
 #include "../graphics/renderer.h"
 #include "../graphics/ui_manager.h"
 #include "../util/transform.h"
+#include "config.h"
+#include "console.h"
+#include "monster_manager.h"
 
 mg_game_manager_t *g_game_manager;
 
@@ -15,6 +16,8 @@ void mg_game_manager_init()
 	mg_game_manager_load_map("maps/q3dm1.bsp");
 	mg_game_manager_spawn_player();
 
+	mg_monster_manager_init();
+
 	mg_cmd_arg_type types[] = {MG_CMD_ARG_STRING};
 	mg_cmd_new("map", "Load map", &mg_game_manager_load_map, (mg_cmd_arg_type *)types, 1);
 	mg_cmd_new("spawn", "Spawn player", &mg_game_manager_spawn_player, NULL, 0);
@@ -22,6 +25,8 @@ void mg_game_manager_init()
 
 void mg_game_manager_free()
 {
+	mg_monster_manager_free();
+
 	mg_player_free(g_game_manager->player);
 	g_game_manager->player = NULL;
 	bsp_map_free(g_game_manager->map);
@@ -45,6 +50,7 @@ void mg_game_manager_update()
 	{
 		mg_game_manager_input_alive();
 		mg_player_update(g_game_manager->player);
+		mg_monster_manager_update();
 	}
 
 	mg_game_manager_input_general();
@@ -72,7 +78,7 @@ void mg_game_manager_load_map(char *filename)
 		mg_println("Failed to load map %s", filename);
 		bsp_map_free(g_game_manager->map);
 		g_game_manager->map = NULL;
-		g_renderer->bsp = NULL;
+		g_renderer->bsp	    = NULL;
 	}
 }
 
@@ -135,6 +141,13 @@ void mg_game_manager_input_alive()
 	if (gs_platform_key_pressed(GS_KEYCODE_ESC))
 	{
 		g_ui_manager->menu_open = true;
+	}
+
+	if (gs_platform_key_pressed(GS_KEYCODE_F))
+	{
+		mg_monster_manager_spawn_monster(
+			gs_vec3_add(g_game_manager->player->transform.position, gs_vec3_scale(mg_get_forward(g_game_manager->player->transform.rotation), 250.0f)),
+			"models/cube.md3");
 	}
 }
 
