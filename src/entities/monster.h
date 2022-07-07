@@ -16,10 +16,7 @@
 #include "../graphics/model_manager.h"
 #include "../graphics/renderer.h"
 
-#define MG_MONSTER_HEIGHT	     64.0f
-#define MG_MONSTER_CROUCH_HEIGHT     32.0f
 #define MG_MONSTER_EYE_OFFSET	     4.0f
-#define MG_MONSTER_HALF_WIDTH	     16.0f
 #define MG_MONSTER_MOVE_SPEED	     240.0f
 #define MG_MONSTER_CROUCH_MOVE_SPEED 160.0f
 #define MG_MONSTER_ACCEL	     10.0f
@@ -61,9 +58,11 @@ typedef struct mg_monster_t
 	mg_model_t *model;
 	uint32_t model_id;
 	mg_renderable_t *renderable;
+	float height;
+	float crouch_height;
 } mg_monster_t;
 
-mg_monster_t *mg_monster_new(const char *model_path);
+mg_monster_t *mg_monster_new(const char *model_path, const gs_vec3 mins, const gs_vec3 maxs);
 void mg_monster_free(mg_monster_t *monster);
 void mg_monster_update(mg_monster_t *monster);
 void _mg_monster_unstuck(mg_monster_t *monster);

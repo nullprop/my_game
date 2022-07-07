@@ -41,11 +41,11 @@ void mg_monster_manager_update()
 
 bool mg_monster_manager_spawn_monster(const gs_vec3 pos, const char *model_path)
 {
-	mg_monster_t *mon = mg_monster_new(model_path);
+	mg_monster_t *mon = mg_monster_new(model_path, gs_v3(-16.0f, -16.0f, 0), gs_v3(16.0f, 16.0f, 64.0f));
 	if (mon)
 	{
 		mon->transform.position = pos;
-		mon->last_valid_pos = pos;
+		mon->last_valid_pos	= pos;
 		gs_dyn_array_push(g_monster_manager->monsters, mon);
 		return true;
 	}

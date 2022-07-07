@@ -18,7 +18,7 @@
 #include "../util/transform.h"
 #include <gs/util/gs_idraw.h>
 
-mg_monster_t *mg_monster_new(const char *model_path)
+mg_monster_t *mg_monster_new(const char *model_path, const gs_vec3 mins, const gs_vec3 maxs)
 {
 	mg_monster_t *monster = gs_malloc_init(mg_monster_t);
 
@@ -28,12 +28,13 @@ mg_monster_t *mg_monster_new(const char *model_path)
 	*monster = (mg_monster_t){
 		.transform	  = gs_vqs_default(),
 		.health		  = 100,
-		.eye_pos	  = gs_v3(0, 0, MG_MONSTER_HEIGHT - MG_MONSTER_EYE_OFFSET),
-		.mins		  = gs_v3(-MG_MONSTER_HALF_WIDTH, -MG_MONSTER_HALF_WIDTH, 0),
-		.maxs		  = gs_v3(MG_MONSTER_HALF_WIDTH, MG_MONSTER_HALF_WIDTH, MG_MONSTER_HEIGHT),
+		.eye_pos	  = gs_v3(0, 0, maxs.z - MG_MONSTER_EYE_OFFSET),
+		.mins		  = gs_v3(mins.x, mins.y, mins.z),
+		.maxs		  = gs_v3(maxs.x, maxs.y, maxs.z),
 		.last_ground_time = 0,
+		.height		  = maxs.z,
+		.crouch_height	  = maxs.z * 0.5f,
 	};
-	monster->transform.scale = gs_v3(10.0f, 10.0f, 10.0f);
 
 	monster->model = mg_model_manager_find(model_path);
 	if (monster->model == NULL)
@@ -251,26 +252,26 @@ void _mg_monster_crouch(mg_monster_t *monster, float delta_time)
 		if (monster->crouch_fraction > 1.0f) monster->crouch_fraction = 1.0f;
 
 		monster->crouched  = true;
-		monster->maxs.z	   = MG_MONSTER_HEIGHT - monster->crouch_fraction * (MG_MONSTER_HEIGHT - MG_MONSTER_CROUCH_HEIGHT);
+		monster->maxs.z	   = monster->height - monster->crouch_fraction * (monster->height - monster->crouch_height);
 		monster->eye_pos.z = monster->maxs.z - MG_MONSTER_EYE_OFFSET;
 
 		// Pull feet up if not on ground
 		if (!monster->grounded)
 		{
-			monster->transform.position.z += (MG_MONSTER_HEIGHT - MG_MONSTER_CROUCH_HEIGHT) * 0.5f * (monster->crouch_fraction - prev_fraction);
+			monster->transform.position.z += (monster->height - monster->crouch_height) * 0.5f * (monster->crouch_fraction - prev_fraction);
 		}
 	}
 	else
 	{
 		monster->crouched	 = true;
 		monster->crouch_fraction = 1.0f;
-		monster->maxs.z		 = MG_MONSTER_CROUCH_HEIGHT;
+		monster->maxs.z		 = monster->crouch_height;
 		monster->eye_pos.z	 = monster->maxs.z - MG_MONSTER_EYE_OFFSET;
 
 		// Pull feet up if not on ground
 		if (!monster->grounded)
 		{
-			monster->transform.position.z += (MG_MONSTER_HEIGHT - MG_MONSTER_CROUCH_HEIGHT) * 0.5f;
+			monster->transform.position.z += (monster->height - monster->crouch_height) * 0.5f;
 		}
 	}
 }
@@ -290,7 +291,7 @@ void _mg_monster_uncrouch(mg_monster_t *monster, float delta_time)
 		bsp_trace_box(
 			&trace,
 			monster->transform.position,
-			gs_vec3_scale(mg_get_down(monster->transform.rotation), (MG_MONSTER_HEIGHT - MG_MONSTER_CROUCH_HEIGHT) * 0.5f * monster->crouch_fraction),
+			gs_vec3_scale(mg_get_down(monster->transform.rotation), (monster->height - monster->crouch_height) * 0.5f * monster->crouch_fraction),
 			monster->mins,
 			monster->maxs,
 			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_MONSTERCLIP);
@@ -303,7 +304,7 @@ void _mg_monster_uncrouch(mg_monster_t *monster, float delta_time)
 	bsp_trace_box(
 		&trace,
 		origin,
-		gs_vec3_add(origin, gs_vec3_scale(mg_get_up(monster->transform.rotation), (MG_MONSTER_HEIGHT - MG_MONSTER_CROUCH_HEIGHT) * monster->crouch_fraction)),
+		gs_vec3_add(origin, gs_vec3_scale(mg_get_up(monster->transform.rotation), (monster->height - monster->crouch_height) * monster->crouch_fraction)),
 		monster->mins, monster->maxs,
 		BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_MONSTERCLIP);
 
@@ -320,7 +321,7 @@ void _mg_monster_uncrouch(mg_monster_t *monster, float delta_time)
 			if (monster->crouch_fraction < 0.0f) monster->crouch_fraction = 0.0f;
 
 			monster->crouched  = monster->crouch_fraction != 0.0f;
-			monster->maxs.z	   = MG_MONSTER_HEIGHT - monster->crouch_fraction * (MG_MONSTER_HEIGHT - MG_MONSTER_CROUCH_HEIGHT);
+			monster->maxs.z	   = monster->height - monster->crouch_fraction * (monster->height - monster->crouch_height);
 			monster->eye_pos.z = monster->maxs.z - MG_MONSTER_EYE_OFFSET;
 			monster->transform.position.z -= (monster->transform.position.z - origin.z) * (monster->crouch_fraction - prev_fraction);
 
@@ -333,7 +334,7 @@ void _mg_monster_uncrouch(mg_monster_t *monster, float delta_time)
 		{
 			monster->crouched	      = false;
 			monster->crouch_fraction      = 0.0f;
-			monster->maxs.z		      = MG_MONSTER_HEIGHT;
+			monster->maxs.z		      = monster->height;
 			monster->eye_pos.z	      = monster->maxs.z - MG_MONSTER_EYE_OFFSET;
 			monster->transform.position.z = origin.z;
 		}
