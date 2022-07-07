@@ -67,11 +67,8 @@ void mg_monster_free(mg_monster_t *monster);
 void mg_monster_update(mg_monster_t *monster);
 void _mg_monster_unstuck(mg_monster_t *monster);
 void _mg_monster_think(mg_monster_t *monster, double platform_time);
-void _mg_monster_slidemove(mg_monster_t *monster, float delta_time);
 void _mg_monster_uncrouch(mg_monster_t *monster, float delta_time);
 void _mg_monster_crouch(mg_monster_t *monster, float delta_time);
-void _mg_monster_accelerate(mg_monster_t *monster, float delta_time, float move_speed, float acceleration, float max_vel);
-void _mg_monster_friction(mg_monster_t *monster, float delta_time);
 void _mg_monster_do_jump(mg_monster_t *monster);
 void _mg_monster_check_floor(mg_monster_t *monster);
 

@@ -18,6 +18,7 @@
 #include "../graphics/ui_manager.h"
 #include "../util/camera.h"
 #include "../util/math.h"
+#include "entity.h"
 
 #include <gs/util/gs_idraw.h>
 
@@ -115,26 +116,56 @@ void mg_player_update(mg_player_t *player)
 	}
 
 	// Update velocity
-	_mg_player_friction(player, dt);
+	if (player->grounded)
+	{
+		mg_ent_friction(&player->velocity, MG_PLAYER_STOP_SPEED, MG_PLAYER_FRICTION, dt);
+	}
+
+	float move_speed = 0;
+	float move_accel = 0;
 
 	if (player->grounded)
 	{
 		if (player->crouched)
 		{
-			_mg_player_accelerate(player, dt, mg_lerp(MG_PLAYER_MOVE_SPEED, MG_PLAYER_CROUCH_MOVE_SPEED, player->crouch_fraction), MG_PLAYER_ACCEL, MG_PLAYER_MAX_VEL);
+
+			move_speed = mg_lerp(MG_PLAYER_MOVE_SPEED, MG_PLAYER_CROUCH_MOVE_SPEED, player->crouch_fraction);
+			move_accel = MG_PLAYER_ACCEL;
 		}
 		else
 		{
-			_mg_player_accelerate(player, dt, MG_PLAYER_MOVE_SPEED, MG_PLAYER_ACCEL, MG_PLAYER_MAX_VEL);
+			move_speed = MG_PLAYER_MOVE_SPEED;
+			move_accel = MG_PLAYER_ACCEL;
 		}
 	}
 	else
 	{
-		_mg_player_accelerate(player, dt, MG_PLAYER_AIR_MOVE_SPEED, MG_PLAYER_AIR_ACCEL, MG_PLAYER_MAX_VEL);
+		move_speed = MG_PLAYER_AIR_MOVE_SPEED;
+		move_accel = MG_PLAYER_AIR_ACCEL;
 	}
 
+	mg_ent_accelerate(
+		&player->velocity,
+		player->wish_move,
+		move_speed,
+		move_accel,
+		MG_PLAYER_MAX_VEL,
+		dt);
+
 	// Move
-	_mg_player_slidemove(player, dt);
+	if (!mg_ent_slidemove(
+		    &player->transform,
+		    &player->velocity,
+		    player->mins,
+		    player->maxs,
+		    MG_PLAYER_STEP_HEIGHT,
+		    player->grounded,
+		    BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP,
+		    dt))
+	{
+		// FIXME: this just makes you fly up walls...
+		// _mg_player_unstuck(player);
+	}
 
 	_mg_player_camera_update(player);
 
@@ -217,49 +248,6 @@ void _mg_player_camera_update(mg_player_t *player)
 			.scale	  = gs_v3(4.0f, 4.0f, 4.0f),
 		},
 		&player->camera.cam.transform);
-}
-
-void _mg_player_friction(mg_player_t *player, float delta_time)
-{
-	if (player->grounded == false) return;
-
-	float vel2 = gs_vec3_len2(player->velocity);
-	if (vel2 < GS_EPSILON)
-	{
-		player->velocity = gs_v3(0, 0, 0);
-		return;
-	}
-
-	float vel      = sqrtf(vel2);
-	float loss     = fmaxf(vel, MG_PLAYER_STOP_SPEED) * MG_PLAYER_FRICTION * delta_time;
-	float fraction = fmaxf(0, vel - loss) / vel;
-
-	player->velocity = gs_vec3_scale(player->velocity, fraction);
-}
-
-void _mg_player_accelerate(mg_player_t *player, float delta_time, float move_speed, float acceleration, float max_vel)
-{
-	// Velocity projected on to wished direction,
-	// positive if in the same direction.
-	float proj_vel = gs_vec3_dot(player->velocity, player->wish_move);
-
-	// The max amount to change by,
-	// won't accelerate past move_speed.
-	float change = move_speed - proj_vel;
-	if (change <= 0) return;
-
-	// The actual acceleration
-	float accel = acceleration * move_speed * delta_time;
-
-	// Clamp to max change
-	if (accel > change) accel = change;
-
-	player->velocity = gs_vec3_add(player->velocity, gs_vec3_scale(player->wish_move, accel));
-
-	// Clamp to max vel per axis
-	player->velocity.x = fminf(MG_PLAYER_MAX_VEL, fmaxf(player->velocity.x, -MG_PLAYER_MAX_VEL));
-	player->velocity.y = fminf(MG_PLAYER_MAX_VEL, fmaxf(player->velocity.y, -MG_PLAYER_MAX_VEL));
-	player->velocity.z = fminf(MG_PLAYER_MAX_VEL, fmaxf(player->velocity.z, -MG_PLAYER_MAX_VEL));
 }
 
 // Can always crouch
@@ -363,179 +351,6 @@ void _mg_player_uncrouch(mg_player_t *player, float delta_time)
 			player->eye_pos.z	     = player->maxs.z - MG_PLAYER_EYE_OFFSET;
 			player->transform.position.z = origin.z;
 		}
-	}
-}
-
-void _mg_player_slidemove(mg_player_t *player, float delta_time)
-{
-	uint16_t current_iter = 0;
-	uint16_t max_iter     = 10;
-	gs_vec3 start;
-	gs_vec3 end;
-	bsp_trace_t trace = {.map = g_game_manager->map};
-	float32_t prev_frac;
-	gs_vec3 prev_normal;
-
-	while (delta_time > 0)
-	{
-		if (gs_vec3_len2(player->velocity) == 0)
-		{
-			break;
-		}
-
-		// Sanity check for infinite loops,
-		// shouldn't really happen.
-		if (current_iter >= max_iter)
-		{
-			break;
-		}
-		current_iter++;
-
-		start = player->transform.position;
-		end   = gs_vec3_add(start, gs_vec3_scale(player->velocity, delta_time));
-
-		bsp_trace_box(
-			&trace,
-			start,
-			end,
-			player->mins,
-			player->maxs,
-			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
-
-		if (trace.start_solid)
-		{
-			// Stuck in a solid, try to get out
-			if (trace.all_solid)
-			{
-				// FIXME: this just makes you fly up walls...
-				//_mg_player_unstuck(player);
-			}
-			else
-			{
-				mg_println(
-					"WARN: player start solid but not stuck: [%f, %f, %f] -> [%f, %f, %f]",
-					player->transform.position.x,
-					player->transform.position.y,
-					player->transform.position.z,
-					trace.end.x,
-					trace.end.y,
-					trace.end.z);
-				player->transform.position = trace.end;
-				player->velocity	   = gs_v3(0, 0, 0);
-			}
-			break;
-		}
-
-		if (trace.fraction > 0)
-		{
-			// Move as far as we can
-			player->transform.position = trace.end;
-		}
-
-		bool is_done	= false;
-		gs_vec3 end_pos = trace.end;
-
-		if (trace.fraction == 1.0f)
-		{
-			// Moved all the way
-			delta_time = 0;
-			is_done	   = true;
-			goto step_down;
-		}
-
-		delta_time -= delta_time * trace.fraction;
-
-		// Colliding with something, check if we can move further
-		// by stepping up or down before clipping velocity to the plane.
-		gs_vec3 hit_normal = trace.normal;
-
-	step_up:
-		// TODO
-		// Known issues:
-		// 	Hugging a wall stops player from going up stairs.
-		// 	The forward trace will collide with the wall if velocity
-		// 	is angled towards it.
-		// 	Potential solution: If forward trace collides with anything,
-		// 	project velocity to normal and try again?
-
-		// Check above
-		bsp_trace_box(
-			&trace,
-			end_pos,
-			gs_vec3_add(end_pos, gs_v3(0, 0, MG_PLAYER_STEP_HEIGHT)),
-			player->mins,
-			player->maxs,
-			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
-		if (trace.fraction <= 0)
-			goto step_down;
-
-		// Check forward
-		gs_vec3 horizontal_vel = player->velocity;
-		horizontal_vel.z       = 0;
-		horizontal_vel	       = gs_vec3_scale(horizontal_vel, delta_time);
-		// Player can be epsilon from an edge on either axis,
-		// and will need to go epsilon over it for downwards trace to hit anything.
-		// Scaling both axes to a min of 2 * epsilon (if not 0) allows player to
-		// step up stairs even if moving at a very shallow angle towards them.
-		// While this can make the player move a very tiny distance further,
-		// it's imperceptible in testing and preferred to getting stuck on a stair.
-		if (fabs(horizontal_vel.x) > GS_EPSILON && fabs(horizontal_vel.x) < BSP_TRACE_EPSILON * 2.0f)
-			horizontal_vel.x = (horizontal_vel.x / fabs(horizontal_vel.x)) * BSP_TRACE_EPSILON * 2.0f;
-		if (fabs(horizontal_vel.y) > GS_EPSILON && fabs(horizontal_vel.y) < BSP_TRACE_EPSILON * 2.0f)
-			horizontal_vel.y = (horizontal_vel.y / fabs(horizontal_vel.y)) * BSP_TRACE_EPSILON * 2.0f;
-
-		bsp_trace_box(
-			&trace,
-			trace.end,
-			gs_vec3_add(trace.end, horizontal_vel),
-			player->mins,
-			player->maxs,
-			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
-		if (trace.fraction <= 0)
-			goto step_down;
-
-		float forward_frac = trace.fraction;
-
-		// Move down
-		bsp_trace_box(
-			&trace,
-			trace.end,
-			gs_vec3_add(trace.end, gs_v3(0, 0, -MG_PLAYER_STEP_HEIGHT)),
-			player->mins,
-			player->maxs,
-			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
-		if (trace.fraction == 1.0f || trace.end.z <= end_pos.z || trace.normal.z <= 0.7f)
-			goto step_down;
-
-		player->transform.position = trace.end;
-		delta_time -= delta_time * forward_frac;
-		continue;
-
-	step_down:
-		// We're already going 'forward' as much as we can,
-		// try to stick to the floor if grounded before.
-		if (!player->grounded)
-			goto slide;
-
-		// Move down
-		bsp_trace_box(
-			&trace,
-			end_pos,
-			gs_vec3_add(end_pos, gs_v3(0, 0, -MG_PLAYER_STEP_HEIGHT)),
-			player->mins,
-			player->maxs,
-			BSP_CONTENT_CONTENTS_SOLID | BSP_CONTENT_CONTENTS_PLAYERCLIP);
-		if (trace.fraction == 1.0f || trace.end.z >= end_pos.z || trace.normal.z <= 0.7f)
-			goto slide;
-
-		player->transform.position = trace.end;
-		continue;
-
-	slide:
-		if (is_done) break; // if getting here from frac = 1.0 -> step_down
-
-		// Can't step, slide along the plane, modify velocity for next loop
-		player->velocity = mg_clip_velocity(player->velocity, hit_normal, 1.001f);
 	}
 }
 
