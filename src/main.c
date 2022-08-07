@@ -149,3 +149,9 @@ gs_app_desc_t gs_main(int32_t argc, char **argv)
 		.frame_rate    = mg_cvar("vid_max_fps")->value.i,
 	};
 }
+
+// "call DEBUG_free_cursor()" in gdb when hitting breakpoint to free pointer on Linux
+void DEBUG_free_cursor()
+{
+	gs_platform_lock_mouse(gs_platform_main_window(), false);
+}
