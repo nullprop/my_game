@@ -81,7 +81,7 @@ All projects contained in `third_party` are copyright of their respective owners
 
 ### Linux
 
-Tested on Ubuntu 20.04.3 LTS (Desktop).
+Tested on Ubuntu 22.04.1 LTS (Desktop).
 
 ```sh
 sudo apt install gcc mesa-common-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev
