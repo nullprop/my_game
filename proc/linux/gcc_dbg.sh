@@ -1,8 +1,13 @@
 #!/bin/bash
 
+# Clean
 rm -rf bin
 mkdir bin
 cd bin
+
+# Copy assets
+cp ../assets/* ./ -r
+cp ../src/shaders ./ -r
 
 flags=(
 	-std=gnu99 -w -ldl -lGL -lX11 -pthread -lXi -g -O0
@@ -45,8 +50,3 @@ src=(
 build_cmd="gcc ${inc[*]} ${src[*]} ${flags[*]} ${libs[*]} -o ${proj_name}"
 echo ${build_cmd}
 ${build_cmd}
-
-# Copy assets
-cd ..
-cp ./assets/* ./bin -r
-cp ./src/shaders ./bin -r
