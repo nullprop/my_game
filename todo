@@ -1,0 +1,37 @@
+todo:
+- dynamic lights
+- effects
+- enemies
+- menu, options
+- save/load system
+- potentially visible leaves
+  - frustum cull potential leaves
+  - visible faces
+- don't tesselate patch on axis with no curve
+- demos
+- demo rendering to video
+- custom folder
+- input manager?
+
+done:
+* fix pipeline
+* fix visible faces draw
+* lightmaps
+* textures
+* fix collisions
+* entity
+* player
+* player movement after collision
+* models
+* animations
+* figure out render arch for bsp, models, gui, etc
+* ui manager
+* console
+* character step code
+* texture manager
+* ui font size
+* ui background rect
+* ui abstract dialogue box
+* ui element duration
+* valgrind
+* coyote time
