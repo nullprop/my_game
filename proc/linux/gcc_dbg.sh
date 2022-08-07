@@ -31,6 +31,10 @@ if [ "$?" -ne "0" ]; then
 	exit 1
 fi
 
+if [ "$1" == "game" ]; then
+	exit 1
+fi
+
 # Build model viewer
 proj_name=modelviewer
 echo Building ${proj_name}...
