@@ -220,6 +220,7 @@ void mg_renderer_init(uint32_t window_handle)
 			.format	    = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
 			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.mip_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 			.data	    = pixels});
 
 	gs_free(pixels);
@@ -417,6 +418,7 @@ void _mg_renderer_resize(const gs_vec2 fb_size)
 			.wrap_t	    = GS_GRAPHICS_TEXTURE_WRAP_CLAMP_TO_BORDER,
 			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.mip_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 		});
 
 	g_renderer->offscreen_dt = gs_graphics_texture_create(
@@ -429,6 +431,7 @@ void _mg_renderer_resize(const gs_vec2 fb_size)
 			.wrap_t	    = GS_GRAPHICS_TEXTURE_WRAP_CLAMP_TO_BORDER,
 			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.mip_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 		});
 }
 

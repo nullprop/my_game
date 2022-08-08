@@ -36,14 +36,16 @@ void mg_texture_manager_free()
 	g_texture_manager = NULL;
 }
 
-void mg_texture_manager_set_filter(gs_graphics_texture_filtering_type value)
+void mg_texture_manager_set_filter(gs_graphics_texture_filtering_type tex, gs_graphics_texture_filtering_type mip)
 {
-	g_texture_manager->filter = value;
+	g_texture_manager->tex_filter = tex;
+	g_texture_manager->mip_filter = mip;
 	for (size_t i = 0; i < gs_dyn_array_size(g_texture_manager->textures); i++)
 	{
 		if (
-			g_texture_manager->textures[i].asset->desc.min_filter == value &&
-			g_texture_manager->textures[i].asset->desc.mag_filter == value
+			g_texture_manager->textures[i].asset->desc.min_filter == tex &&
+			g_texture_manager->textures[i].asset->desc.mag_filter == tex &&
+			g_texture_manager->textures[i].asset->desc.mip_filter == mip
 		) {
 			continue;
 		}
@@ -124,6 +126,7 @@ bool32_t _mg_texture_manager_load(char *name, gs_asset_texture_t *asset)
 					.format	    = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
 					.min_filter = mg_cvar("r_filter")->value.i + 1,
 					.mag_filter = mg_cvar("r_filter")->value.i + 1,
+					.mip_filter = mg_cvar("r_mip_filter")->value.i + 1,
 				},
 				false,
 				false);

@@ -106,9 +106,10 @@ void app_update()
 	}
 
 	mg_cvar_t *r_filter = mg_cvar("r_filter");
-	if (g_texture_manager->filter != r_filter->value.i + 1)
+	mg_cvar_t *r_filter_mip = mg_cvar("r_filter_mip");
+	if (g_texture_manager->tex_filter != r_filter->value.i + 1 || g_texture_manager->mip_filter != r_filter_mip->value.i + 1)
 	{
-		mg_texture_manager_set_filter(r_filter->value.i + 1);
+		mg_texture_manager_set_filter(r_filter->value.i + 1, r_filter_mip + 1);
 	}
 
 	// If click, then lock again (in case lost)

@@ -34,6 +34,7 @@ void mg_config_init()
 	mg_cvar_new("r_barrel_strength", MG_CONFIG_TYPE_FLOAT, 0.5f);
 	mg_cvar_new("r_barrel_cyl_ratio", MG_CONFIG_TYPE_FLOAT, 1.0f);
 	mg_cvar_new("r_filter", MG_CONFIG_TYPE_INT, 0);
+	mg_cvar_new("r_filter_mip", MG_CONFIG_TYPE_INT, 1);
 
 	mg_cvar_new("cl_sensitivity", MG_CONFIG_TYPE_FLOAT, 2.0f);
 

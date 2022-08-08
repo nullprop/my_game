@@ -183,6 +183,7 @@ void _bsp_load_textures(bsp_map_t *map)
 			.format	    = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
 			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.mip_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 			.data	    = pixels});
 
 	gs_free(pixels);
@@ -199,6 +200,7 @@ void _bsp_load_lightmaps(bsp_map_t *map)
 			.format	    = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
 			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
 			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
+			.mip_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
 			.data	    = &gray});
 
 	map->lightmap_textures.data  = gs_malloc(map->lightmaps.count * sizeof(gs_handle(gs_graphics_texture_t)));
@@ -214,6 +216,7 @@ void _bsp_load_lightmaps(bsp_map_t *map)
 				.format	    = GS_GRAPHICS_TEXTURE_FORMAT_RGB8,
 				.min_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
 				.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
+				.mip_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
 				.data	    = map->lightmaps.data[i].map});
 	}
 }
