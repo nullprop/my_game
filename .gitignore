@@ -1,5 +1,7 @@
 # builds
 bin/
+obj/
+libs/
 
 # assets
 assets/*
