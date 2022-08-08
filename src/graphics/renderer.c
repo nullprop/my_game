@@ -221,6 +221,7 @@ void mg_renderer_init(uint32_t window_handle)
 			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 			.mip_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.num_mips   = 0,
 			.data	    = pixels});
 
 	gs_free(pixels);
@@ -419,6 +420,7 @@ void _mg_renderer_resize(const gs_vec2 fb_size)
 			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 			.mip_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.num_mips   = 0,
 		});
 
 	g_renderer->offscreen_dt = gs_graphics_texture_create(
@@ -432,6 +434,7 @@ void _mg_renderer_resize(const gs_vec2 fb_size)
 			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 			.mip_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.num_mips   = 0,
 		});
 }
 

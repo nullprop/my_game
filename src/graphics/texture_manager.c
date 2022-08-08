@@ -8,8 +8,8 @@
 =================================================================*/
 
 #include "texture_manager.h"
-#include "../game/console.h"
 #include "../game/config.h"
+#include "../game/console.h"
 #include "../util/string.h"
 
 mg_texture_manager_t *g_texture_manager;
@@ -18,6 +18,10 @@ void mg_texture_manager_init()
 {
 	g_texture_manager	    = gs_malloc_init(mg_texture_manager_t);
 	g_texture_manager->textures = gs_dyn_array_new(mg_texture_t);
+
+	g_texture_manager->tex_filter = mg_cvar("r_filter")->value.i;
+	g_texture_manager->mip_filter = mg_cvar("r_filter_mip")->value.i;
+	g_texture_manager->num_mips   = mg_cvar("r_mips")->value.i;
 }
 
 void mg_texture_manager_free()
@@ -36,17 +40,19 @@ void mg_texture_manager_free()
 	g_texture_manager = NULL;
 }
 
-void mg_texture_manager_set_filter(gs_graphics_texture_filtering_type tex, gs_graphics_texture_filtering_type mip)
+void mg_texture_manager_set_filter(gs_graphics_texture_filtering_type tex, gs_graphics_texture_filtering_type mip, int num_mips)
 {
 	g_texture_manager->tex_filter = tex;
 	g_texture_manager->mip_filter = mip;
+	g_texture_manager->num_mips   = num_mips;
 	for (size_t i = 0; i < gs_dyn_array_size(g_texture_manager->textures); i++)
 	{
 		if (
 			g_texture_manager->textures[i].asset->desc.min_filter == tex &&
 			g_texture_manager->textures[i].asset->desc.mag_filter == tex &&
-			g_texture_manager->textures[i].asset->desc.mip_filter == mip
-		) {
+			g_texture_manager->textures[i].asset->desc.mip_filter == mip &&
+			g_texture_manager->textures[i].asset->desc.num_mips == num_mips)
+		{
 			continue;
 		}
 
@@ -54,9 +60,7 @@ void mg_texture_manager_set_filter(gs_graphics_texture_filtering_type tex, gs_gr
 		gs_assert(
 			_mg_texture_manager_load(
 				g_texture_manager->textures[i].filename,
-				g_texture_manager->textures[i].asset
-			)
-		);
+				g_texture_manager->textures[i].asset));
 	}
 }
 
@@ -124,9 +128,10 @@ bool32_t _mg_texture_manager_load(char *name, gs_asset_texture_t *asset)
 				asset,
 				&(gs_graphics_texture_desc_t){
 					.format	    = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
-					.min_filter = mg_cvar("r_filter")->value.i + 1,
-					.mag_filter = mg_cvar("r_filter")->value.i + 1,
-					.mip_filter = mg_cvar("r_mip_filter")->value.i + 1,
+					.min_filter = g_texture_manager->tex_filter,
+					.mag_filter = g_texture_manager->tex_filter,
+					.mip_filter = g_texture_manager->mip_filter,
+					.num_mips   = g_texture_manager->num_mips,
 				},
 				false,
 				false);

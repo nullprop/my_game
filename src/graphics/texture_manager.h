@@ -22,12 +22,13 @@ typedef struct mg_texture_manager_t
 {
 	gs_graphics_texture_filtering_type tex_filter;
 	gs_graphics_texture_filtering_type mip_filter;
+	int num_mips;
 	gs_dyn_array(mg_texture_t) textures;
 } mg_texture_manager_t;
 
 void mg_texture_manager_init();
 void mg_texture_manager_free();
-void mg_texture_manager_set_filter(gs_graphics_texture_filtering_type tex, gs_graphics_texture_filtering_type mip);
+void mg_texture_manager_set_filter(gs_graphics_texture_filtering_type tex, gs_graphics_texture_filtering_type mip, int num_mips);
 gs_asset_texture_t *mg_texture_manager_get(char *path);
 bool32_t _mg_texture_manager_load(char *path, gs_asset_texture_t *asset);
 gs_asset_texture_t *_mg_texture_manager_find(char *filename);

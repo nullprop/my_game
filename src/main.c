@@ -105,11 +105,18 @@ void app_update()
 		platform->time.max_fps = vid_max_fps->value.i;
 	}
 
-	mg_cvar_t *r_filter = mg_cvar("r_filter");
+	mg_cvar_t *r_filter	= mg_cvar("r_filter");
 	mg_cvar_t *r_filter_mip = mg_cvar("r_filter_mip");
-	if (g_texture_manager->tex_filter != r_filter->value.i + 1 || g_texture_manager->mip_filter != r_filter_mip->value.i + 1)
+	mg_cvar_t *r_mips	= mg_cvar("r_mips");
+	if (
+		g_texture_manager->tex_filter != r_filter->value.i + 1 ||
+		g_texture_manager->mip_filter != r_filter_mip->value.i + 1 ||
+		g_texture_manager->num_mips != r_mips->value.i)
 	{
-		mg_texture_manager_set_filter(r_filter->value.i + 1, r_filter_mip + 1);
+		mg_texture_manager_set_filter(
+			r_filter->value.i + 1,
+			r_filter_mip->value.i + 1,
+			r_mips->value.i);
 	}
 
 	// If click, then lock again (in case lost)

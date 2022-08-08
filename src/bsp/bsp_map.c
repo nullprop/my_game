@@ -11,12 +11,12 @@
 =================================================================*/
 
 #include "bsp_map.h"
+#include "../game/config.h"
 #include "../graphics/renderer.h"
 #include "../graphics/texture_manager.h"
 #include "../util/camera.h"
 #include "../util/render.h"
 #include "../util/transform.h"
-#include "../game/config.h"
 
 void bsp_map_init(bsp_map_t *map)
 {
@@ -184,6 +184,7 @@ void _bsp_load_textures(bsp_map_t *map)
 			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
 			.mip_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.num_mips   = 0,
 			.data	    = pixels});
 
 	gs_free(pixels);
@@ -201,6 +202,7 @@ void _bsp_load_lightmaps(bsp_map_t *map)
 			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
 			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
 			.mip_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
+			.num_mips   = 1,
 			.data	    = &gray});
 
 	map->lightmap_textures.data  = gs_malloc(map->lightmaps.count * sizeof(gs_handle(gs_graphics_texture_t)));
@@ -217,6 +219,7 @@ void _bsp_load_lightmaps(bsp_map_t *map)
 				.min_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
 				.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
 				.mip_filter = GS_GRAPHICS_TEXTURE_FILTER_LINEAR,
+				.num_mips   = 1,
 				.data	    = map->lightmaps.data[i].map});
 	}
 }
