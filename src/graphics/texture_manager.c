@@ -9,6 +9,7 @@
 
 #include "texture_manager.h"
 #include "../game/console.h"
+#include "../game/config.h"
 #include "../util/string.h"
 
 mg_texture_manager_t *g_texture_manager;
@@ -99,8 +100,8 @@ bool32_t _mg_texture_manager_load(char *name, gs_asset_texture_t *asset)
 				asset,
 				&(gs_graphics_texture_desc_t){
 					.format	    = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
-					.min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
-					.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+					.min_filter = mg_cvar("r_filter")->value.i + 1,
+					.mag_filter = mg_cvar("r_filter")->value.i + 1,
 				},
 				false,
 				false);

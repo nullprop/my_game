@@ -218,8 +218,8 @@ void mg_renderer_init(uint32_t window_handle)
 			.width	    = missing_size,
 			.height	    = missing_size,
 			.format	    = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
-			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
-			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.min_filter = mg_cvar("r_filter")->value.i + 1,
+			.mag_filter = mg_cvar("r_filter")->value.i + 1,
 			.data	    = pixels});
 
 	gs_free(pixels);
