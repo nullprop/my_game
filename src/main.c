@@ -150,8 +150,8 @@ gs_app_desc_t gs_main(int32_t argc, char **argv)
 	};
 }
 
-// "call DEBUG_free_cursor()" in gdb when hitting breakpoint to free pointer on Linux
-void DEBUG_free_cursor()
+// "call DEBUG_fc()" in gdb when hitting breakpoint to free cursor on Linux
+void DEBUG_fc()
 {
 	gs_platform_lock_mouse(gs_platform_main_window(), false);
 }
