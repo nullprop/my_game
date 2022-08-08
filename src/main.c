@@ -105,6 +105,12 @@ void app_update()
 		platform->time.max_fps = vid_max_fps->value.i;
 	}
 
+	mg_cvar_t *r_filter = mg_cvar("r_filter");
+	if (g_texture_manager->filter != r_filter->value.i + 1)
+	{
+		mg_texture_manager_set_filter(r_filter->value.i + 1);
+	}
+
 	// If click, then lock again (in case lost)
 	if (gs_platform_mouse_pressed(GS_MOUSE_LBUTTON) && !gs_platform_mouse_locked() && !g_ui_manager->show_cursor)
 	{

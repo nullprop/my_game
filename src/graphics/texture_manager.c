@@ -36,6 +36,28 @@ void mg_texture_manager_free()
 	g_texture_manager = NULL;
 }
 
+void mg_texture_manager_set_filter(gs_graphics_texture_filtering_type value)
+{
+	g_texture_manager->filter = value;
+	for (size_t i = 0; i < gs_dyn_array_size(g_texture_manager->textures); i++)
+	{
+		if (
+			g_texture_manager->textures[i].asset->desc.min_filter == value &&
+			g_texture_manager->textures[i].asset->desc.mag_filter == value
+		) {
+			continue;
+		}
+
+		gs_graphics_texture_destroy(g_texture_manager->textures[i].asset->hndl);
+		gs_assert(
+			_mg_texture_manager_load(
+				g_texture_manager->textures[i].filename,
+				g_texture_manager->textures[i].asset
+			)
+		);
+	}
+}
+
 // Get texture pointer, load from file if required.
 // Returns NULL on failure.
 gs_asset_texture_t *mg_texture_manager_get(char *path)
