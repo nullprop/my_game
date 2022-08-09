@@ -12,6 +12,17 @@ todo:
 - demo rendering to video
 - custom folder
 - input manager?
+- android build
+- mobile inputs
+- water, underwater rendering
+- water movement
+- trenchbroom
+- renderables culling
+- time manager
+- weapons
+  - tracing against bsp & entities utils
+- update gs
+- fix gray lines in text rendering (console, dialogue)
 
 done:
 * fix pipeline
@@ -35,3 +46,5 @@ done:
 * ui element duration
 * valgrind
 * coyote time
+* command struct, funcs
+* texture filtering, mips (nearest, bi-, trilinear)
