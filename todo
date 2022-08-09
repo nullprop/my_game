@@ -23,6 +23,9 @@ todo:
   - tracing against bsp & entities utils
 - update gs
 - fix gray lines in text rendering (console, dialogue)
+- better cvar change tracking, clean up main
+- fix getting stuck on walls midair
+- fix walking up stairs if hugging wall
 
 done:
 * fix pipeline
