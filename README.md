@@ -84,7 +84,7 @@ All projects contained in `third_party` are copyright of their respective owners
 Tested on Ubuntu 22.04.1 LTS (Desktop).
 
 ```sh
-sudo apt install gcc mesa-common-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev
+sudo apt install gcc mesa-common-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev libc6-dev-i386
 bash proc/linux/gcc_dbg.sh
 ```
 

@@ -38,10 +38,13 @@ void app_init()
 
 	// Lock mouse at start by default
 	// gs_platform_lock_mouse(gs_platform_main_window(), true);
+
+#ifndef __ANDROID__
 	if (glfwRawMouseMotionSupported())
 	{
 		glfwSetInputMode(gs_platform_raw_window_handle(gs_platform_main_window()), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 	}
+#endif
 
 	// - - - -
 	// MD3 testing
@@ -79,9 +82,6 @@ void app_init()
 
 void app_update()
 {
-	// TODO gs_platform_monitor_sizev after updating gs
-	GLFWvidmode *vid_mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
 	uint32_t main_window	  = gs_platform_main_window();
 	gs_vec2 window_size	  = gs_platform_window_sizev(main_window);
 	bool32_t is_fullscreen	  = gs_platform_window_fullscreen(main_window);
@@ -119,6 +119,7 @@ void app_update()
 			r_mips->value.i);
 	}
 
+#ifndef __ANDROID__
 	// If click, then lock again (in case lost)
 	if (gs_platform_mouse_pressed(GS_MOUSE_LBUTTON) && !gs_platform_mouse_locked() && !g_ui_manager->show_cursor)
 	{
@@ -128,6 +129,7 @@ void app_update()
 			glfwSetInputMode(gs_platform_raw_window_handle(gs_platform_main_window()), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 		}
 	}
+#endif
 
 	mg_game_manager_update();
 	mg_renderer_update();
