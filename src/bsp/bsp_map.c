@@ -568,7 +568,7 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam, gs_handle(gs_graphics_rend
 	gs_graphics_renderpass_end(cb);
 }
 
-gs_vec3 bsp_map_find_spawn_point(bsp_map_t *map, gs_vec3 *position, float32_t *yaw)
+void bsp_map_find_spawn_point(bsp_map_t *map, gs_vec3 *position, float32_t *yaw)
 {
 	gs_dyn_array(bsp_entity_t) spawns = gs_dyn_array_new(bsp_entity_t);
 
@@ -616,8 +616,6 @@ gs_vec3 bsp_map_find_spawn_point(bsp_map_t *map, gs_vec3 *position, float32_t *y
 		*yaw = strtof(temp, NULL);
 
 	gs_dyn_array_free(spawns);
-
-	return;
 }
 
 void bsp_map_free(bsp_map_t *map)

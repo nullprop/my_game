@@ -180,7 +180,7 @@ bool mg_load_md3(char *filename, md3_t *model)
 		if (file == NULL)
 		{
 			mg_println("WARN: failed to read animation file %s", cfg_path);
-			return;
+			return false;
 		}
 
 		char line[128];

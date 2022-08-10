@@ -140,7 +140,7 @@ bool mg_audio_manager_is_playing(char *name)
 	if (asset == NULL)
 	{
 		mg_println("WARN: mg_audio_manager_is_playing invalid audio %s", name);
-		return;
+		return false;
 	}
 
 	return gs_audio_is_playing(asset->instance);
