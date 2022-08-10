@@ -29,6 +29,7 @@
 void app_init()
 {
 	// Init managers, free in app_shutdown if adding here
+	mg_config_init();
 	mg_audio_manager_init();
 	mg_texture_manager_init();
 	mg_model_manager_init();
@@ -143,7 +144,6 @@ void app_shutdown()
 	mg_model_manager_free();
 	mg_texture_manager_free();
 	mg_audio_manager_free();
-
 	mg_config_free();
 	mg_console_free();
 }
@@ -151,18 +151,17 @@ void app_shutdown()
 gs_app_desc_t gs_main(int32_t argc, char **argv)
 {
 	mg_console_init();
-	mg_config_init();
 
 	return (gs_app_desc_t){
 		.init	       = app_init,
 		.update	       = app_update,
 		.shutdown      = app_shutdown,
 		.window_title  = "Game",
-		.window_flags  = mg_cvar("vid_fullscreen")->value.i ? GS_WINDOW_FLAGS_FULLSCREEN : 0,
-		.window_width  = mg_cvar("vid_width")->value.i,
-		.window_height = mg_cvar("vid_height")->value.i,
-		.enable_vsync  = mg_cvar("vid_vsync")->value.i,
-		.frame_rate    = mg_cvar("vid_max_fps")->value.i,
+		.window_flags  = 0,
+		.window_width  = 800,
+		.window_height = 600,
+		.enable_vsync  = 1,
+		.frame_rate    = 60,
 	};
 }
 
