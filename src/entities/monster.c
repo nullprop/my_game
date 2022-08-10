@@ -186,7 +186,7 @@ void _mg_monster_do_jump(mg_monster_t *monster)
 	monster->grounded   = false;
 	monster->has_jumped = true;
 	if (g_audio_manager != NULL)
-		mg_audio_manager_play("sound/monster/jump1.wav", 0.03f);
+		mg_audio_manager_play("monster/jump1.wav", 0.03f);
 }
 
 void _mg_monster_check_floor(mg_monster_t *monster)

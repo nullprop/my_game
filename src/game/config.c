@@ -42,14 +42,14 @@ void mg_config_init()
 	mg_cvar_new_str("stringtest", MG_CONFIG_TYPE_STRING, "Sandvich make me strong!");
 
 	// Load config if exists
-	if (gs_util_file_exists("cfg/config.txt"))
+	if (gs_platform_file_exists("assets/cfg/config.txt"))
 	{
-		_mg_config_load("cfg/config.txt");
+		_mg_config_load("assets/cfg/config.txt");
 	}
 	else
 	{
-		mg_println("WARN: missing cfg/config.txt, saving default");
-		_mg_config_save("cfg/config.txt");
+		mg_println("WARN: missing assets/cfg/config.txt, saving default");
+		_mg_config_save("assets/cfg/config.txt");
 	}
 
 	mg_cmd_new("cvars", "Shows available cvars", &mg_config_print, NULL, 0);
@@ -57,7 +57,7 @@ void mg_config_init()
 
 void mg_config_free()
 {
-	_mg_config_save("cfg/config.txt");
+	_mg_config_save("assets/cfg/config.txt");
 
 	for (size_t i = 0; i < gs_dyn_array_size(g_config->cvars); i++)
 	{

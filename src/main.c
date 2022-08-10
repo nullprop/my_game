@@ -48,21 +48,21 @@ void app_init()
 
 	// - - - -
 	// MD3 testing
-	mg_model_t *testmodel	      = mg_model_manager_find("models/players/sarge/head.md3");
+	mg_model_t *testmodel	      = mg_model_manager_find("players/sarge/head.md3");
 	gs_vqs *testmodel_transform   = gs_malloc_init(gs_vqs);
 	testmodel_transform->position = gs_v3(660.0f, 778.0f, -10.0f);
 	testmodel_transform->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
 	testmodel_transform->scale    = gs_v3(1.0f, 1.0f, 1.0f);
 	mg_renderer_create_renderable(*testmodel, testmodel_transform);
 
-	mg_model_t *testmodel_1		= mg_model_manager_find("models/players/sarge/upper.md3");
+	mg_model_t *testmodel_1		= mg_model_manager_find("players/sarge/upper.md3");
 	gs_vqs *testmodel_transform_1	= gs_malloc_init(gs_vqs);
 	testmodel_transform_1->position = gs_v3(660.0f, 748.0f, -10.0f);
 	testmodel_transform_1->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
 	testmodel_transform_1->scale	= gs_v3(1.0f, 1.0f, 1.0f);
 	uint32_t id_1			= mg_renderer_create_renderable(*testmodel_1, testmodel_transform_1);
 
-	mg_model_t *testmodel_2		= mg_model_manager_find("models/players/sarge/lower.md3");
+	mg_model_t *testmodel_2		= mg_model_manager_find("players/sarge/lower.md3");
 	gs_vqs *testmodel_transform_2	= gs_malloc_init(gs_vqs);
 	testmodel_transform_2->position = gs_v3(660.0f, 718.0f, -10.0f);
 	testmodel_transform_2->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);

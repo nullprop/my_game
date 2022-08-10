@@ -96,7 +96,7 @@ Hitting the console key (default: F1) will allow you to change cvars and run com
 
 ## Config
 
-The game config is located in `cfg/config.txt`. The game will use values from this file when launching. You can modify any value at runtime via the console. Note that this file does not support custom formatting and will be overwritten when the game exits.
+The game config is located in `assets/cfg/config.txt`. The game will use values from this file when launching. You can modify any value at runtime via the console. Note that this file does not support custom formatting and will be overwritten when the game exits.
 
 ## Tools
 

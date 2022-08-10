@@ -24,7 +24,7 @@ void mg_audio_manager_init()
 	g_audio_manager->assets = gs_dyn_array_new(mg_audio_asset_t);
 
 	// Player sounds
-	_mg_audio_manager_load("sound/player/jump1.wav", MG_AUDIO_TYPE_EFFECT, false, false, 1.0f);
+	_mg_audio_manager_load("player/jump1.wav", MG_AUDIO_TYPE_EFFECT, false, false, 1.0f);
 }
 
 void mg_audio_manager_free()
@@ -148,8 +148,10 @@ bool mg_audio_manager_is_playing(char *name)
 
 void _mg_audio_manager_load(char *filename, mg_audio_type type, bool loop, bool persistent, float volume)
 {
+	char *path = mg_append_string("assets/sound/", filename);
+
 	mg_audio_asset_t asset = (mg_audio_asset_t){
-		.source	    = gs_audio_load_from_file(filename),
+		.source	    = gs_audio_load_from_file(path),
 		.type	    = type,
 		.loop	    = loop,
 		.persistent = persistent,
@@ -159,6 +161,7 @@ void _mg_audio_manager_load(char *filename, mg_audio_type type, bool loop, bool 
 
 	if (!gs_handle_is_valid(asset.source))
 	{
+		gs_free(path);
 		return;
 	}
 
@@ -172,9 +175,11 @@ void _mg_audio_manager_load(char *filename, mg_audio_type type, bool loop, bool 
 
 	if (!gs_handle_is_valid(asset.instance))
 	{
+		gs_free(path);
 		return;
 	}
 
+	gs_free(path);
 	gs_dyn_array_push(g_audio_manager->assets, asset);
 }
 

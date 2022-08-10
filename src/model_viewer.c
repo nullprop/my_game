@@ -376,7 +376,7 @@ gs_app_desc_t gs_main(int32_t argc, char **argv)
 	mg_config_init();
 
 	mg_cmd_arg_type args[] = {MG_CMD_ARG_STRING};
-	mg_cmd_new("model", "Load a model. Example: 'model models/players/sarge/upper.md3'", &load_model, (mg_cmd_arg_type *)args, 1);
+	mg_cmd_new("model", "Load a model. Example: 'model assets/models/players/sarge/upper.md3'", &load_model, (mg_cmd_arg_type *)args, 1);
 
 	return (gs_app_desc_t){
 		.init	       = app_init,

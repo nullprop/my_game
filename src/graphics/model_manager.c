@@ -9,6 +9,7 @@
 
 #include "model_manager.h"
 #include "../game/console.h"
+#include "../util/string.h"
 
 mg_model_manager_t *g_model_manager;
 
@@ -19,9 +20,9 @@ void mg_model_manager_init()
 	g_model_manager->models = gs_dyn_array_new(mg_model_t);
 
 	// Test
-	_mg_model_manager_load("models/players/sarge/head.md3", "basic");
-	_mg_model_manager_load("models/players/sarge/upper.md3", "basic");
-	_mg_model_manager_load("models/players/sarge/lower.md3", "basic");
+	_mg_model_manager_load("players/sarge/head.md3", "basic");
+	_mg_model_manager_load("players/sarge/upper.md3", "basic");
+	_mg_model_manager_load("players/sarge/lower.md3", "basic");
 }
 
 void mg_model_manager_free()
@@ -53,11 +54,14 @@ mg_model_t *mg_model_manager_find(char *filename)
 
 bool _mg_model_manager_load(char *filename, char *shader)
 {
+	char *path = mg_append_string("assets/models/", filename);
+
 	md3_t *data = gs_malloc_init(md3_t);
-	if (!mg_load_md3(filename, data))
+	if (!mg_load_md3(path, data))
 	{
 		mg_println("WARN: _mg_model_manager_load failed, model %s", filename);
 		mg_free_md3(data);
+		gs_free(path);
 		return false;
 	}
 
@@ -70,5 +74,6 @@ bool _mg_model_manager_load(char *filename, char *shader)
 	gs_dyn_array_push(g_model_manager->models, model);
 
 	mg_println("Model: Loaded %s", filename);
+	gs_free(path);
 	return true;
 }

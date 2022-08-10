@@ -6,8 +6,8 @@ mkdir bin
 cd bin
 
 # Copy assets
-cp ../assets/* ./ -r
-cp ../src/shaders ./ -r
+cp ../assets/ ./ -r
+cp ../src/shaders ./assets/ -r
 
 flags=(
 	-std=gnu99 -w -ldl -lGL -lX11 -pthread -lXi -g -O0

@@ -21,9 +21,9 @@ void mg_ui_manager_init()
 	g_ui_manager = gs_malloc_init(mg_ui_manager_t);
 
 	// Load fonts
-	gs_asset_font_load_from_file("./fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_SMALL], 14);
-	gs_asset_font_load_from_file("./fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_MEDIUM], 18);
-	gs_asset_font_load_from_file("./fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_LARGE], 24);
+	gs_asset_font_load_from_file("./assets/fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_SMALL], 14);
+	gs_asset_font_load_from_file("./assets/fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_MEDIUM], 18);
+	gs_asset_font_load_from_file("./assets/fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_LARGE], 24);
 
 	// Default style sheet
 	gs_gui_style_element_t panel_style[] = {

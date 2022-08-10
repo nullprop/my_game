@@ -1,3 +1,4 @@
+@REM TODO: UPDATE
 @echo off
 rmdir /Q /S bin
 mkdir bin

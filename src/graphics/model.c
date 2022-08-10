@@ -26,7 +26,7 @@ bool mg_load_md3(char *filename, md3_t *model)
 {
 	mg_println("mg_load_md3() loading: '%s'", filename);
 
-	if (!gs_util_file_exists(filename))
+	if (!gs_platform_file_exists(filename))
 	{
 		mg_println("mg_load_md3() failed: file not found '%s'", filename);
 		return false;
@@ -172,7 +172,7 @@ bool mg_load_md3(char *filename, md3_t *model)
 	strcat(cfg_path, model_path);
 	strcat(cfg_path, "_animation.cfg");
 
-	if (gs_util_file_exists(cfg_path))
+	if (gs_platform_file_exists(cfg_path))
 	{
 		mg_println("mg_load_md3(): loading animations from '%s'", cfg_path);
 

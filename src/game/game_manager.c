@@ -13,7 +13,7 @@ void mg_game_manager_init()
 	g_game_manager	       = gs_malloc_init(mg_game_manager_t);
 	g_game_manager->player = mg_player_new();
 
-	mg_game_manager_load_map("maps/q3dm1.bsp");
+	mg_game_manager_load_map("assets/maps/q3dm1.bsp");
 	mg_game_manager_spawn_player();
 
 	mg_monster_manager_init();
@@ -147,7 +147,7 @@ void mg_game_manager_input_alive()
 	{
 		mg_monster_manager_spawn_monster(
 			gs_vec3_add(g_game_manager->player->transform.position, gs_vec3_scale(mg_get_forward(g_game_manager->player->transform.rotation), 250.0f)),
-			"models/cube.md3");
+			"cube.md3");
 	}
 }
 

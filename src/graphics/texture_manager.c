@@ -107,11 +107,14 @@ bool32_t _mg_texture_manager_load(char *name, gs_asset_texture_t *asset)
 
 	bool32_t success = false;
 
+	// bsp textures already start with 'textures/'
+	char* path = mg_append_string("assets/", name);
+
 	// Name with extension
-	size_t malloc_sz = strlen(name) + 5;
+	size_t malloc_sz = strlen(path) + 5;
 	char *filename	 = gs_malloc(malloc_sz);
 	memset(filename, 0, malloc_sz);
-	strcat(filename, name);
+	strcat(filename, path);
 	strcat(filename, extensions[0]);
 
 	for (size_t i = 0; i < 2; i++)
@@ -121,7 +124,7 @@ bool32_t _mg_texture_manager_load(char *name, gs_asset_texture_t *asset)
 			strcpy(filename + strlen(filename) - 4, extensions[i]);
 		}
 
-		if (gs_util_file_exists(filename))
+		if (gs_platform_file_exists(filename))
 		{
 			success = gs_asset_texture_load_from_file(
 				filename,
@@ -153,6 +156,7 @@ bool32_t _mg_texture_manager_load(char *name, gs_asset_texture_t *asset)
 	}
 
 	gs_free(filename);
+	gs_free(path);
 
 	return success;
 }

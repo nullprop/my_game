@@ -661,7 +661,7 @@ void _mg_renderer_post_pass()
 void _mg_renderer_load_shader(char *name)
 {
 	// Get paths to shaders
-	char *base_path = "shaders/";
+	char *base_path = "assets/shaders/";
 	char *vert_ext	= "_vs.glsl";
 	char *frag_ext	= "_fs.glsl";
 
@@ -680,14 +680,14 @@ void _mg_renderer_load_shader(char *name)
 	strcat(frag, frag_ext);
 
 	// Sanity check
-	if (!gs_util_file_exists(vert))
+	if (!gs_platform_file_exists(vert))
 	{
 		mg_println("ERR: _mg_renderer_load_shader no shader %s", vert);
 		gs_free(vert);
 		gs_free(frag);
 		return;
 	}
-	if (!gs_util_file_exists(frag))
+	if (!gs_platform_file_exists(frag))
 	{
 		mg_println("ERR: _mg_renderer_load_shader no shader %s", frag);
 		gs_free(vert);

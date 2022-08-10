@@ -55,7 +55,7 @@ mg_player_t *mg_player_new()
 		.last_ground_time    = 0,
 	};
 
-	// mg_model_t *model = mg_model_manager_find("models/Suzanne/glTF/suzanne.gltf");
+	// mg_model_t *model = mg_model_manager_find("Suzanne/glTF/suzanne.gltf");
 	// player->viewmodel_handle = mg_renderer_create_renderable(*model, &player->viewmodel_transform);
 
 	_mg_player_camera_update(player);
@@ -190,7 +190,7 @@ void _mg_player_do_jump(mg_player_t *player)
 	player->grounded   = false;
 	player->has_jumped = true;
 	if (g_audio_manager != NULL)
-		mg_audio_manager_play("sound/player/jump1.wav", 0.03f);
+		mg_audio_manager_play("player/jump1.wav", 0.03f);
 }
 
 void _mg_player_check_floor(mg_player_t *player)

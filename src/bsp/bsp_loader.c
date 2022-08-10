@@ -27,7 +27,7 @@ b32 load_bsp(char *filename, bsp_map_t *map)
 {
 	mg_println("load_bsp() loading: '%s'", filename);
 
-	if (!gs_util_file_exists(filename))
+	if (!gs_platform_file_exists(filename))
 	{
 		mg_println("load_bsp() failed: file not found '%s'", filename);
 		return false;
