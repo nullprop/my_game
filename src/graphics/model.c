@@ -191,8 +191,13 @@ bool mg_load_md3(char *filename, md3_t *model)
 		{
 			num_line++;
 
+			if (strlen(line) < 2)
+			{
+				continue;
+			}
+
 			// Empty line
-			if (line[0] == '\n')
+			if (line[0] == '\n' || (line[0] == '\r' && line[1] == '\n'))
 			{
 				continue;
 			}
