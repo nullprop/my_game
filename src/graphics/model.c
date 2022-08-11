@@ -239,6 +239,11 @@ bool mg_load_md3(char *filename, md3_t *model)
 					// Remove new line at the end
 					for (size_t i = 0; i < 16; i++)
 					{
+						if (anim.name[i] == '\r')
+						{
+							anim.name[i] = '\0';
+							continue;
+						}
 						if (anim.name[i] == '\n')
 						{
 							anim.name[i] = '\0';
