@@ -662,8 +662,14 @@ void _mg_renderer_load_shader(char *name)
 {
 	// Get paths to shaders
 	char *base_path = "assets/shaders/";
-	char *vert_ext	= "_vs.glsl";
-	char *frag_ext	= "_fs.glsl";
+
+#ifdef __ANDROID__
+	char *vert_ext = "_vs_mobile.glsl";
+	char *frag_ext = "_fs_mobile.glsl";
+#else
+	char *vert_ext = "_vs.glsl";
+	char *frag_ext = "_fs.glsl";
+#endif
 
 	size_t sz  = strlen(base_path) + strlen(name) + strlen(vert_ext) + 1;
 	char *vert = gs_malloc(sz);

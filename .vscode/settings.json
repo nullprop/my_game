@@ -19,7 +19,13 @@
     "type_traits": "c",
     "utility": "c",
     "*.tcc": "c",
-    "typeinfo": "c"
+    "typeinfo": "c",
+    "initializer_list": "c",
+    "iterator": "c"
   },
-  "files.eol": "\n"
+  "files.eol": "\n",
+  "C_Cpp.dimInactiveRegions": false,
+  "editor.detectIndentation": false,
+  "editor.tabSize": 8,
+  "editor.insertSpaces": false
 }

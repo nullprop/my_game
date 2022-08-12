@@ -25,9 +25,12 @@
 #include "graphics/renderer.h"
 #include "graphics/texture_manager.h"
 #include "graphics/ui_manager.h"
+#include "util/file.h"
 
 void app_init()
 {
+	mg_unpack_assets();
+
 	// Init managers, free in app_shutdown if adding here
 	mg_config_init();
 	mg_audio_manager_init();

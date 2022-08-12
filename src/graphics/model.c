@@ -176,35 +176,36 @@ bool mg_load_md3(char *filename, md3_t *model)
 	{
 		mg_println("mg_load_md3(): loading animations from '%s'", cfg_path);
 
-		FILE *file = fopen(cfg_path, "r");
-		if (file == NULL)
-		{
-			mg_println("WARN: failed to read animation file %s", cfg_path);
-			return false;
-		}
+		char* file_data = gs_platform_read_file_contents(cfg_path, "r", NULL);
 
-		char line[128];
+		char *line;
+		char *line_ptr;
 		char *token;
 		u8 num_parts = 0;
 		u8 num_line  = 0;
-		while (fgets(line, sizeof(line), file))
+		line = strtok_r(file_data, "\r\n", &line_ptr);
+		while (line != NULL)
 		{
 			num_line++;
+			//gs_println("line %d: %s", num_line, line);
 
 			if (strlen(line) < 2)
 			{
+				line = strtok_r(NULL, "\r\n", &line_ptr);
 				continue;
 			}
 
 			// Empty line
 			if (line[0] == '\n' || (line[0] == '\r' && line[1] == '\n'))
 			{
+				line = strtok_r(NULL, "\r\n", &line_ptr);
 				continue;
 			}
 
 			// Comment
 			if (line[0] == '/' && line[1] == '/')
 			{
+				line = strtok_r(NULL, "\r\n", &line_ptr);
 				continue;
 			}
 
@@ -213,7 +214,7 @@ bool mg_load_md3(char *filename, md3_t *model)
 			// Parse values delimited by space:
 			// first frame, num frames, loop, frames per second, name
 			num_parts = 0;
-			token	  = strtok(&line, " ");
+			token	  = strtok(line, " ");
 			while (token)
 			{
 				switch (num_parts)
@@ -260,20 +261,22 @@ bool mg_load_md3(char *filename, md3_t *model)
 
 				num_parts++;
 
-				token = strtok(0, " ");
+				token = strtok(NULL, " ");
 			}
 
 			// Check we got all
 			if (num_parts < 5)
 			{
 				mg_println("WARN: animation config line %zu has too few arguments", num_line);
+				line = strtok_r(NULL, "\r\n", &line_ptr);
 				continue;
 			}
 
 			gs_dyn_array_push(model->animations, anim);
+			line = strtok_r(NULL, "\r\n", &line_ptr);
 		}
 
-		fclose(file);
+		gs_free(file_data);
 		mg_println("Config loaded");
 	}
 	else

@@ -22,7 +22,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/third_party/include"
+                "${workspaceFolder}/third_party/include",
+                "${workspaceFolder}/../android-ndk-r25/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/"
             ],
             "defines": [
                 "_DEBUG",

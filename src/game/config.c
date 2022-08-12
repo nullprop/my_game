@@ -96,41 +96,51 @@ void mg_config_print()
 // Load config from file
 void _mg_config_load(char *filepath)
 {
-	mg_println("Loading config from '%s'", filepath);
-
-	FILE *file = fopen(filepath, "r");
-	if (file == NULL)
+	if (!gs_platform_file_exists(filepath))
 	{
 		mg_println("WARN: failed to read config file %s", filepath);
 		return;
 	}
 
-	char line[128];
+	mg_println("Loading config from '%s'", filepath);
+
+	char *file_data = gs_platform_read_file_contents(filepath, "r", NULL);
+
+	char *line;
+	char *line_ptr;
 	char *token;
 	u8 num_line = 0;
-	while (fgets(line, sizeof(line), file))
+	line = strtok_r(file_data, "\r\n", &line_ptr);
+	while (line != NULL)
 	{
 		num_line++;
+		//gs_println("line %d: %s", num_line, line);
 
 		// Empty line
 		if (line[0] == '\n')
 		{
+			line = strtok_r(NULL, "\r\n", &line_ptr);
 			continue;
 		}
 
 		// Comment
 		if (line[0] == '/' && line[1] == '/')
 		{
+			line = strtok_r(NULL, "\r\n", &line_ptr);
 			continue;
 		}
 
-		token = strtok(&line, " ");
-		if (!token) continue;
+		token = strtok(line, " ");
+		if (!token)
+		{
+			line = strtok_r(NULL, "\r\n", &line_ptr);
+		}
 
 		mg_cvar_t *cvar = mg_cvar(token);
 		if (cvar == NULL)
 		{
 			mg_println("WARN: _mg_config_load unknown cvar name %s", token);
+			line = strtok_r(NULL, "\r\n", &line_ptr);
 			continue;
 		}
 
@@ -143,7 +153,11 @@ void _mg_config_load(char *filepath)
 			token = strtok(NULL, " ");
 		}
 
-		if (!token) continue;
+		if (!token)
+		{
+			line = strtok_r(NULL, "\r\n", &line_ptr);
+			continue;
+		}
 
 		switch (cvar->type)
 		{
@@ -164,9 +178,11 @@ void _mg_config_load(char *filepath)
 			mg_println("WARN: _mg_config_load unknown cvar type %d", cvar->type);
 			break;
 		}
+
+		line = strtok_r(NULL, "\r\n", &line_ptr);
 	}
 
-	fclose(file);
+	gs_free(file_data);
 	mg_println("Config loaded");
 }
 
@@ -177,7 +193,7 @@ void _mg_config_save(char *filepath)
 {
 	mg_println("Saving config to '%s'", filepath);
 
-	FILE *file = fopen(filepath, "w");
+	FILE *file = gs_platform_open_file(filepath, "w");
 	if (file == NULL)
 	{
 		mg_println("WARN: _mg_config_save couldn't save config to '%s'", filepath);

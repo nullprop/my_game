@@ -43,15 +43,15 @@ void mg_console_help();
 
 extern mg_console_t *g_console;
 
-#define mg_println(__FMT, ...)                                \
-	{                                                     \
-		gs_printf(__FMT, ##__VA_ARGS__);              \
-		gs_printf("\n");                              \
-                                                              \
-		char *tmp = gs_malloc(1024);                  \
-		gs_snprintf(tmp, 1024, __FMT, ##__VA_ARGS__); \
-		mg_console_println(tmp);                      \
-		gs_free(tmp);                                 \
+#define mg_println(__FMT, ...)                                  \
+	{                                                       \
+		gs_printf(__FMT, ##__VA_ARGS__);                \
+		gs_printf("\n");                                \
+                                                                \
+		char *tmp = gs_malloc(1024);                    \
+		gs_snprintf(tmp, 1024, __FMT, ##__VA_ARGS__);   \
+		if (g_console != NULL) mg_console_println(tmp); \
+		gs_free(tmp);                                   \
 	}
 
 #define mg_cmd_new(n, h, f, t, c)                                                                    \
