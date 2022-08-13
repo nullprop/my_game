@@ -149,7 +149,6 @@ void mg_game_manager_input_alive()
 {
 	gs_platform_t *platform = gs_subsystem(platform);
 	float dt		= platform->time.delta;
-	double pt		= gs_platform_elapsed_time();
 
 	// Reset
 	g_game_manager->player->wish_move   = gs_v3(0, 0, 0);

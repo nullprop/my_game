@@ -10,6 +10,7 @@
 #include "ui_manager.h"
 #include "../game/console.h"
 #include "../game/game_manager.h"
+#include "../game/time_manager.h"
 #include "../util/render.h"
 #include "renderer.h"
 
@@ -348,7 +349,7 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 {
 	if (!g_ui_manager->debug_open) return;
 
-	char tmp[128];
+	char tmp[64];
 
 	gs_gui_set_style_sheet(&g_renderer->gui, &g_ui_manager->console_style_sheet);
 	gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&root->body, fbs.x, fbs.y, 0, 0, GS_GUI_LAYOUT_ANCHOR_TOPLEFT), 0);
@@ -367,52 +368,66 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 		// draw fps
 		sprintf(
 			tmp,
-			"fps: %d (update: %.2fms, render: %.2fms, wait: %.2fms)",
-			(int)gs_round(1.0f / gs_platform_delta_time()),
-			gs_platform_time()->update,
-			gs_platform_time()->render,
-			gs_platform_time()->frame - gs_platform_time()->update - gs_platform_time()->render);
+			"fps: %d",
+			(int)gs_round(1.0f / gs_platform_delta_time()));
 		DRAW_TMP(5, 5)
+
+		// draw times
+		sprintf(tmp, "game:");
+		DRAW_TMP(5, 20)
+		sprintf(tmp, "update: %.2fms", g_time_manager->update);
+		DRAW_TMP(10, 35)
+		sprintf(tmp, "render: %.2fms", g_time_manager->render);
+		DRAW_TMP(10, 50)
+
+		sprintf(tmp, "gs:");
+		DRAW_TMP(5, 65)
+		sprintf(tmp, "update: %.2fms", gs_platform_time()->update);
+		DRAW_TMP(10, 80)
+		sprintf(tmp, "render: %.2fms", gs_platform_time()->render);
+		DRAW_TMP(10, 95)
+		sprintf(tmp, "wait: %.2fms", gs_platform_time()->frame - gs_platform_time()->update - gs_platform_time()->render);
+		DRAW_TMP(10, 110)
 
 		// draw map stats
 		if (g_renderer->bsp != NULL && g_renderer->bsp->valid)
 		{
 			sprintf(tmp, "map: %s", g_renderer->bsp->name);
-			DRAW_TMP(5, 20)
+			DRAW_TMP(5, 125)
 			sprintf(tmp, "tris: %zu/%zu", g_renderer->bsp->stats.visible_indices / 3, g_renderer->bsp->stats.total_indices / 3);
-			DRAW_TMP(10, 35)
+			DRAW_TMP(10, 140)
 			sprintf(tmp, "faces: %zu/%zu", g_renderer->bsp->stats.visible_faces, g_renderer->bsp->stats.total_faces);
-			DRAW_TMP(10, 50)
+			DRAW_TMP(10, 155)
 			sprintf(tmp, "patches: %zu/%zu", g_renderer->bsp->stats.visible_patches, g_renderer->bsp->stats.total_patches);
-			DRAW_TMP(10, 65)
+			DRAW_TMP(10, 170)
 			sprintf(tmp, "leaf: %zu, cluster: %d", g_renderer->bsp->stats.current_leaf, g_renderer->bsp->leaves.data[g_renderer->bsp->stats.current_leaf].cluster);
-			DRAW_TMP(10, 80)
+			DRAW_TMP(10, 185)
 		}
 
 		// draw player stats
 		if (g_game_manager != NULL && g_game_manager->player != NULL)
 		{
 			sprintf(tmp, "player:");
-			DRAW_TMP(5, 95)
+			DRAW_TMP(5, 200)
 			sprintf(tmp, "pos: [%f, %f, %f]", g_game_manager->player->transform.position.x, g_game_manager->player->transform.position.y, g_game_manager->player->transform.position.z);
-			DRAW_TMP(10, 110)
+			DRAW_TMP(10, 215)
 			sprintf(tmp, "ang: [%f, %f, %f]", g_game_manager->player->yaw, g_game_manager->player->camera.pitch, g_game_manager->player->camera.roll);
-			DRAW_TMP(10, 125)
+			DRAW_TMP(10, 230)
 			sprintf(tmp, "vel: [%f, %f, %f]", g_game_manager->player->velocity.x, g_game_manager->player->velocity.y, g_game_manager->player->velocity.z);
-			DRAW_TMP(10, 140)
+			DRAW_TMP(10, 245)
 			sprintf(tmp, "vel_abs: %f, h: %f", gs_vec3_len(g_game_manager->player->velocity), gs_vec3_len(gs_v3(g_game_manager->player->velocity.x, g_game_manager->player->velocity.y, 0)));
-			DRAW_TMP(10, 155)
+			DRAW_TMP(10, 260)
 		}
 		else if (g_renderer->cam)
 		{
 			// use renderer camera directly
 			sprintf(tmp, "camera:");
-			DRAW_TMP(5, 95)
+			DRAW_TMP(5, 200)
 			sprintf(tmp, "pos: [%f, %f, %f]", g_renderer->cam->transform.position.x, g_renderer->cam->transform.position.y, g_renderer->cam->transform.position.z);
-			DRAW_TMP(10, 110)
+			DRAW_TMP(10, 215)
 			// TODO: yaw/pitch/roll conversion
 			// sprintf(tmp, "ang: [%f, %f, %f]", gs_rad2deg(g_renderer->cam->transform.rotation.x), gs_rad2deg(g_renderer->cam->transform.rotation.y), gs_rad2deg(g_renderer->cam->transform.rotation.z));
-			// DRAW_TMP(10, 125)
+			// DRAW_TMP(10, 230)
 		}
 	}
 	gs_gui_panel_end(&g_renderer->gui);

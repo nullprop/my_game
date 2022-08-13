@@ -21,6 +21,7 @@
 #include "game/config.h"
 #include "game/console.h"
 #include "game/game_manager.h"
+#include "game/time_manager.h"
 #include "graphics/model_manager.h"
 #include "graphics/renderer.h"
 #include "graphics/texture_manager.h"
@@ -33,6 +34,7 @@ void app_init()
 
 	// Init managers, free in app_shutdown if adding here
 	mg_config_init();
+	mg_time_manager_init();
 	mg_audio_manager_init();
 	mg_texture_manager_init();
 	mg_model_manager_init();
@@ -86,7 +88,8 @@ void app_init()
 
 void app_update()
 {
-	uint32_t main_window	  = gs_platform_main_window();
+	mg_time_manager_update_start();
+	uint32_t main_window = gs_platform_main_window();
 
 #ifndef __ANDROID__
 	gs_vec2 window_size	  = gs_platform_window_sizev(main_window);
@@ -139,7 +142,11 @@ void app_update()
 #endif
 
 	mg_game_manager_update();
+	mg_time_manager_update_end();
+
+	mg_time_manager_render_start();
 	mg_renderer_update();
+	mg_time_manager_render_end();
 }
 
 void app_shutdown()
@@ -150,6 +157,7 @@ void app_shutdown()
 	mg_model_manager_free();
 	mg_texture_manager_free();
 	mg_audio_manager_free();
+	mg_time_manager_free();
 	mg_config_free();
 	mg_console_free();
 }
