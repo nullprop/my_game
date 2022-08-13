@@ -108,7 +108,7 @@ bool32_t _mg_texture_manager_load(char *name, gs_asset_texture_t *asset)
 	bool32_t success = false;
 
 	// bsp textures already start with 'textures/'
-	char* path = mg_append_string("assets/", name);
+	char *path = mg_append_string("assets/", name);
 
 	// Name with extension
 	size_t malloc_sz = strlen(path) + 5;
@@ -138,6 +138,11 @@ bool32_t _mg_texture_manager_load(char *name, gs_asset_texture_t *asset)
 				},
 				false,
 				false);
+
+			if (!success)
+			{
+				mg_println("WARN: _mg_texture_manager_load could not load texture: %s, failed to open existing file %s", name, filename);
+			}
 		}
 		else if (i == 1)
 		{

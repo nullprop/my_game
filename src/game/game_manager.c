@@ -95,49 +95,88 @@ void mg_game_manager_spawn_player()
 	}
 }
 
+#ifdef __ANDROID__
+mg_player_input_t mg_game_manager_get_input(float dt)
+{
+	mg_player_input_t input = {0};
+
+	// Testing
+	input.move.x += 1.0f;
+	g_ui_manager->debug_open = true;
+
+	if (gs_platform_touch_down(0))
+	{
+		input.delta_aim = gs_vec2_scale(gs_platform_touch_deltav(0), mg_cvar("cl_sensitivity")->value.f * 0.022f);
+	}
+
+	return input;
+}
+#else
+mg_player_input_t mg_game_manager_get_input(float dt)
+{
+	mg_player_input_t input = {0};
+
+	input.delta_aim = gs_vec2_scale(gs_platform_mouse_deltav(), mg_cvar("cl_sensitivity")->value.f * 0.022f);
+
+	if (gs_platform_key_down(GS_KEYCODE_UP))
+		input.delta_aim.y -= 150.0f * dt;
+	if (gs_platform_key_down(GS_KEYCODE_DOWN))
+		input.delta_aim.y += 150.0f * dt;
+	if (gs_platform_key_down(GS_KEYCODE_RIGHT))
+		input.delta_aim.x += 150.0f * dt;
+	if (gs_platform_key_down(GS_KEYCODE_LEFT))
+		input.delta_aim.x -= 150.0f * dt;
+
+	if (gs_platform_key_down(GS_KEYCODE_W))
+		input.move.x += 1.0f;
+	if (gs_platform_key_down(GS_KEYCODE_S))
+		input.move.x -= 1.0f;
+	if (gs_platform_key_down(GS_KEYCODE_D))
+		input.move.y += 1.0f;
+	if (gs_platform_key_down(GS_KEYCODE_A))
+		input.move.y -= 1.0f;
+
+	if (gs_platform_key_down(GS_KEYCODE_SPACE))
+		input.jump = true;
+	if (gs_platform_key_down(GS_KEYCODE_LEFT_CONTROL))
+		input.crouch = true;
+
+	return input;
+}
+#endif
+
 void mg_game_manager_input_alive()
 {
 	gs_platform_t *platform = gs_subsystem(platform);
 	float dt		= platform->time.delta;
 	double pt		= gs_platform_elapsed_time();
 
+	// Reset
 	g_game_manager->player->wish_move   = gs_v3(0, 0, 0);
 	g_game_manager->player->wish_jump   = false;
 	g_game_manager->player->wish_crouch = false;
 
-	gs_vec2 dp = gs_vec2_scale(gs_platform_mouse_deltav(), mg_cvar("cl_sensitivity")->value.f * 0.022f);
-
-	if (gs_platform_key_down(GS_KEYCODE_UP))
-		dp.y -= 150.0f * dt;
-	if (gs_platform_key_down(GS_KEYCODE_DOWN))
-		dp.y += 150.0f * dt;
-	if (gs_platform_key_down(GS_KEYCODE_RIGHT))
-		dp.x += 150.0f * dt;
-	if (gs_platform_key_down(GS_KEYCODE_LEFT))
-		dp.x -= 150.0f * dt;
+	mg_player_input_t input = mg_game_manager_get_input(dt);
 
 	// Rotate
-	g_game_manager->player->camera.pitch	   = gs_clamp(g_game_manager->player->camera.pitch + dp.y, -90.0f, 90.0f);
-	g_game_manager->player->yaw		   = fmodf(g_game_manager->player->yaw - dp.x, 360.0f);
+	g_game_manager->player->camera.pitch	   = gs_clamp(g_game_manager->player->camera.pitch + input.delta_aim.y, -90.0f, 90.0f);
+	g_game_manager->player->yaw		   = fmodf(g_game_manager->player->yaw - input.delta_aim.x, 360.0f);
 	g_game_manager->player->transform.rotation = gs_quat_angle_axis(gs_deg2rad(g_game_manager->player->yaw), MG_AXIS_UP);
 
-	if (gs_platform_key_down(GS_KEYCODE_W))
-		g_game_manager->player->wish_move = gs_vec3_add(g_game_manager->player->wish_move, mg_get_forward(g_game_manager->player->transform.rotation));
-	if (gs_platform_key_down(GS_KEYCODE_S))
-		g_game_manager->player->wish_move = gs_vec3_add(g_game_manager->player->wish_move, mg_get_backward(g_game_manager->player->transform.rotation));
-	if (gs_platform_key_down(GS_KEYCODE_D))
-		g_game_manager->player->wish_move = gs_vec3_add(g_game_manager->player->wish_move, mg_get_right(g_game_manager->player->transform.rotation));
-	if (gs_platform_key_down(GS_KEYCODE_A))
-		g_game_manager->player->wish_move = gs_vec3_add(g_game_manager->player->wish_move, mg_get_left(g_game_manager->player->transform.rotation));
+	// Move dir
+	if (input.move.x != 0)
+		g_game_manager->player->wish_move = gs_vec3_add(g_game_manager->player->wish_move, gs_vec3_scale(mg_get_forward(g_game_manager->player->transform.rotation), input.move.x));
+	if (input.move.y != 0)
+		g_game_manager->player->wish_move = gs_vec3_add(g_game_manager->player->wish_move, gs_vec3_scale(mg_get_right(g_game_manager->player->transform.rotation), input.move.y));
 
 	g_game_manager->player->wish_move.z = 0;
 	g_game_manager->player->wish_move   = gs_vec3_norm(g_game_manager->player->wish_move);
 
-	if (gs_platform_key_down(GS_KEYCODE_SPACE))
-		g_game_manager->player->wish_jump = true;
-	if (gs_platform_key_down(GS_KEYCODE_LEFT_CONTROL))
-		g_game_manager->player->wish_crouch = true;
+	// Actions
+	g_game_manager->player->wish_jump   = input.jump;
+	g_game_manager->player->wish_crouch = input.crouch;
 
+	// TODO: platform
 	if (gs_platform_key_pressed(GS_KEYCODE_ESC))
 	{
 		g_ui_manager->menu_open = true;

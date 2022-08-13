@@ -13,6 +13,14 @@ typedef struct mg_game_manager_t
 	mg_player_t *player;
 } mg_game_manager_t;
 
+typedef struct mg_player_input_t
+{
+	gs_vec2 delta_aim;
+	gs_vec2 move;
+	bool jump;
+	bool crouch;
+} mg_player_input_t;
+
 void mg_game_manager_init();
 void mg_game_manager_free();
 void mg_game_manager_update();
@@ -20,6 +28,7 @@ void mg_game_manager_update();
 void mg_game_manager_load_map(char *filename);
 void mg_game_manager_spawn_player();
 
+mg_player_input_t mg_game_manager_get_input(float dt);
 void mg_game_manager_input_alive();
 void mg_game_manager_input_console();
 void mg_game_manager_input_menu();

@@ -348,7 +348,7 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 {
 	if (!g_ui_manager->debug_open) return;
 
-	char tmp[64];
+	char tmp[128];
 
 	gs_gui_set_style_sheet(&g_renderer->gui, &g_ui_manager->console_style_sheet);
 	gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&root->body, fbs.x, fbs.y, 0, 0, GS_GUI_LAYOUT_ANCHOR_TOPLEFT), 0);
@@ -365,7 +365,13 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 	}
 
 		// draw fps
-		sprintf(tmp, "fps: %d", (int)gs_round(1.0f / gs_platform_delta_time()));
+		sprintf(
+			tmp,
+			"fps: %d (update: %.2fms, render: %.2fms, wait: %.2fms)",
+			(int)gs_round(1.0f / gs_platform_delta_time()),
+			gs_platform_time()->update,
+			gs_platform_time()->render,
+			gs_platform_time()->frame - gs_platform_time()->update - gs_platform_time()->render);
 		DRAW_TMP(5, 5)
 
 		// draw map stats

@@ -1,0 +1,2 @@
+APP_PLATFORM := 30
+APP_DEBUG := true

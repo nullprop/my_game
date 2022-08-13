@@ -87,6 +87,8 @@ void app_init()
 void app_update()
 {
 	uint32_t main_window	  = gs_platform_main_window();
+
+#ifndef __ANDROID__
 	gs_vec2 window_size	  = gs_platform_window_sizev(main_window);
 	bool32_t is_fullscreen	  = gs_platform_window_fullscreen(main_window);
 	mg_cvar_t *vid_width	  = mg_cvar("vid_width");
@@ -100,13 +102,14 @@ void app_update()
 	{
 		gs_platform_set_window_fullscreen(main_window, vid_fullscreen->value.i);
 	}
+#endif
 
 	gs_platform_t *platform = gs_subsystem(platform);
 
 	mg_cvar_t *vid_max_fps = mg_cvar("vid_max_fps");
 	if (platform->time.max_fps != vid_max_fps->value.i)
 	{
-		platform->time.max_fps = vid_max_fps->value.i;
+		gs_platform_set_frame_rate(vid_max_fps->value.i);
 	}
 
 	mg_cvar_t *r_filter	= mg_cvar("r_filter");
@@ -127,10 +130,10 @@ void app_update()
 	// If click, then lock again (in case lost)
 	if (gs_platform_mouse_pressed(GS_MOUSE_LBUTTON) && !gs_platform_mouse_locked() && !g_ui_manager->show_cursor)
 	{
-		gs_platform_lock_mouse(gs_platform_main_window(), true);
+		gs_platform_lock_mouse(main_window, true);
 		if (glfwRawMouseMotionSupported())
 		{
-			glfwSetInputMode(gs_platform_raw_window_handle(gs_platform_main_window()), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+			glfwSetInputMode(gs_platform_raw_window_handle(main_window), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 		}
 	}
 #endif
@@ -163,7 +166,7 @@ gs_app_desc_t gs_main(int32_t argc, char **argv)
 		.window_flags  = 0,
 		.window_width  = 800,
 		.window_height = 600,
-		.enable_vsync  = 1,
+		.enable_vsync  = 0,
 		.frame_rate    = 60,
 	};
 }

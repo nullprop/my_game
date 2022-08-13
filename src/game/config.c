@@ -21,7 +21,11 @@ void mg_config_init()
 	mg_cvar_new("vid_fullscreen", MG_CONFIG_TYPE_INT, 0);
 	mg_cvar_new("vid_width", MG_CONFIG_TYPE_INT, 800);
 	mg_cvar_new("vid_height", MG_CONFIG_TYPE_INT, 600);
+#ifdef __ANDROID__
+	mg_cvar_new("vid_max_fps", MG_CONFIG_TYPE_INT, 60);
+#else
 	mg_cvar_new("vid_max_fps", MG_CONFIG_TYPE_INT, 240);
+#endif	
 	mg_cvar_new("vid_vsync", MG_CONFIG_TYPE_INT, 0);
 
 	mg_cvar_new("snd_master", MG_CONFIG_TYPE_FLOAT, 0.1f);
@@ -33,11 +37,20 @@ void mg_config_init()
 	mg_cvar_new("r_barrel_enabled", MG_CONFIG_TYPE_INT, 1);
 	mg_cvar_new("r_barrel_strength", MG_CONFIG_TYPE_FLOAT, 0.5f);
 	mg_cvar_new("r_barrel_cyl_ratio", MG_CONFIG_TYPE_FLOAT, 1.0f);
-	mg_cvar_new("r_filter", MG_CONFIG_TYPE_INT, 0);
 	mg_cvar_new("r_filter_mip", MG_CONFIG_TYPE_INT, 1);
+#ifdef __ANDROID__
+	mg_cvar_new("r_filter", MG_CONFIG_TYPE_INT, 1);
+	mg_cvar_new("r_mips", MG_CONFIG_TYPE_INT, 1);
+#else
+	mg_cvar_new("r_filter", MG_CONFIG_TYPE_INT, 0);
 	mg_cvar_new("r_mips", MG_CONFIG_TYPE_INT, 0);
+#endif
 
+#ifdef __ANDROID__
+	mg_cvar_new("cl_sensitivity", MG_CONFIG_TYPE_FLOAT, 5.0f);
+#else
 	mg_cvar_new("cl_sensitivity", MG_CONFIG_TYPE_FLOAT, 2.0f);
+#endif
 
 	mg_cvar_new_str("stringtest", MG_CONFIG_TYPE_STRING, "Sandvich make me strong!");
 
@@ -110,11 +123,11 @@ void _mg_config_load(char *filepath)
 	char *line_ptr;
 	char *token;
 	u8 num_line = 0;
-	line = strtok_r(file_data, "\r\n", &line_ptr);
+	line	    = strtok_r(file_data, "\r\n", &line_ptr);
 	while (line != NULL)
 	{
 		num_line++;
-		//gs_println("line %d: %s", num_line, line);
+		// gs_println("line %d: %s", num_line, line);
 
 		// Empty line
 		if (line[0] == '\n')
