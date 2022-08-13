@@ -25,7 +25,6 @@ void bsp_map_init(bsp_map_t *map)
 
 	// Init dynamic arrays
 	gs_dyn_array_reserve(map->render_faces, map->faces.count);
-	gs_dyn_array_reserve(map->visible_faces, map->faces.count);
 	uint32_t patch_count = 0;
 	for (size_t i = 0; i < map->faces.count; i++)
 	{
@@ -405,11 +404,14 @@ void bsp_map_render_immediate(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camer
 	gsi_depth_enabled(gsi, true);
 	// gsi_face_cull_enabled(gsi, true);
 
-	for (size_t i = 0; i < gs_dyn_array_size(map->visible_faces); i++)
+	for (size_t i = 0; i < gs_dyn_array_size(map->render_faces); i++)
 	{
-		int32_t index = map->visible_faces[i].index;
+		if (!map->render_faces[i].visible) continue;
 
-		if (map->visible_faces[i].type == BSP_FACE_TYPE_PATCH)
+		bsp_face_renderable_t bsp_face = map->render_faces[i];
+		int32_t index		       = bsp_face.index;
+
+		if (bsp_face.type == BSP_FACE_TYPE_PATCH)
 		{
 			bsp_patch_t patch = map->patches[index];
 
@@ -555,11 +557,15 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam, gs_handle(gs_graphics_rend
 	// Draw faces
 	int32_t texture_index;
 	int32_t lm_index;
-	bsp_face_renderable_t *container = map->visible_faces;
-	for (size_t i = 0; i < gs_dyn_array_size(container); i++)
+	uint32_t vis_index;
+	bsp_face_renderable_t bsp_face;
+	for (size_t i = 0; i < gs_dyn_array_size(map->render_faces); i++)
 	{
-		texture_index = map->faces.data[container[i].index].texture;
-		lm_index      = map->faces.data[container[i].index].lm_index;
+		if (!map->render_faces[i].visible) continue;
+
+		bsp_face      = map->render_faces[i];
+		texture_index = map->faces.data[bsp_face.index].texture;
+		lm_index      = map->faces.data[bsp_face.index].lm_index;
 
 		if (texture_index >= 0 && map->texture_assets.data[texture_index] == NULL || !gs_handle_is_valid(map->texture_assets.data[texture_index]->hndl))
 		{
@@ -584,7 +590,7 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam, gs_handle(gs_graphics_rend
 
 		if (wireframe)
 		{
-			switch (map->faces.data[container[i].index].type)
+			switch (map->faces.data[bsp_face.index].type)
 			{
 			case BSP_FACE_TYPE_POLYGON:
 				color.y = 1.0;
@@ -637,8 +643,8 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam, gs_handle(gs_graphics_rend
 		gs_graphics_draw(
 			cb,
 			&(gs_graphics_draw_desc_t){
-				.start = (size_t)(intptr_t)(container[i].first_ibo_index * sizeof(uint32_t)),
-				.count = (size_t)container[i].num_ibo_indices,
+				.start = (size_t)(intptr_t)(bsp_face.first_ibo_index * sizeof(uint32_t)),
+				.count = (size_t)bsp_face.num_ibo_indices,
 			});
 	}
 
@@ -730,12 +736,10 @@ void bsp_map_free(bsp_map_t *map)
 			bsp_patch_free(&map->patches[i]);
 		}
 		gs_dyn_array_free(map->patches);
-		gs_dyn_array_free(map->visible_faces);
 		gs_dyn_array_free(map->render_faces);
 
-		map->patches	   = NULL;
-		map->visible_faces = NULL;
-		map->render_faces  = NULL;
+		map->patches		  = NULL;
+		map->render_faces	  = NULL;
 
 		// data contents will be freed by texture manager
 		gs_free(map->texture_assets.data);
@@ -819,13 +823,16 @@ int32_t _bsp_find_camera_leaf(bsp_map_t *map, gs_vec3 view_position)
 
 void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
 {
-	gs_dyn_array_clear(map->visible_faces);
 	uint32_t visible_patches  = 0;
 	uint32_t visible_faces	  = 0;
 	uint32_t visible_vertices = 0;
 	uint32_t visible_indices  = 0;
 	int32_t view_cluster	  = map->leaves.data[leaf].cluster;
-	bool32_t cont;
+
+	for (size_t i = 0; i < gs_dyn_array_size(map->render_faces); i++)
+	{
+		map->render_faces[i].visible = false;
+	}
 
 	for (size_t i = 0; i < map->leaves.count; i++)
 	{
@@ -845,30 +852,18 @@ void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
 			int32_t idx		   = map->leaf_faces.data[lump.first_leaf_face + j].face;
 			bsp_face_renderable_t face = map->render_faces[idx];
 
-			// Don't add same face multiple times
-			// TODO: this has terrible perf,
-			// use a good set implementation...
-			// TODO: is this even needed?
-			/*
-			cont = 0;
-			for (size_t k = 0; k < gs_dyn_array_size(map->visible_faces); k++)
+			if (face.visible)
 			{
-				if (map->visible_faces[k].index == face.index && map->visible_faces[k].type == face.type)
-				{
-					cont = true;
-					break;
-				}
+				continue;
 			}
-			if (cont) continue;
-			*/
+
+			map->render_faces[idx].visible = true;
 
 			// TODO billboards
 			if (face.type == BSP_FACE_TYPE_BILLBOARD)
 			{
 				continue;
 			}
-
-			gs_dyn_array_push(map->visible_faces, face);
 
 			if (face.type == BSP_FACE_TYPE_PATCH)
 			{

@@ -101,6 +101,7 @@ typedef struct bsp_face_renderable_t
 	int32_t index;
 	uint32_t first_ibo_index;
 	uint32_t num_ibo_indices;
+	bool visible;
 } bsp_face_renderable_t;
 
 /*
@@ -388,7 +389,6 @@ typedef struct bsp_map_t
 	bool32_t valid;
 	bsp_stats_t stats;
 	gs_dyn_array(bsp_patch_t) patches;
-	gs_dyn_array(bsp_face_renderable_t) visible_faces;
 	gs_dyn_array(bsp_face_renderable_t) render_faces;
 
 	struct
