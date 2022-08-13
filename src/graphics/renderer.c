@@ -610,13 +610,24 @@ void _mg_renderer_renderable_pass()
 		// Play animation
 		if (renderable->current_animation != NULL)
 		{
-			double plat_time  = g_time_manager->time;
-			double frame_time = 1.0f / renderable->current_animation->fps;
+			double plat_time	= g_time_manager->time;
+			double frame_time	= 1.0f / renderable->current_animation->fps;
+			double since_last_frame = plat_time - renderable->prev_frame_time;
 
-			if (plat_time - renderable->prev_frame_time >= frame_time)
+			if (since_last_frame >= frame_time)
 			{
 				renderable->frame++;
-				renderable->prev_frame_time += frame_time;
+
+				if (since_last_frame >= frame_time * 10)
+				{
+					// Don't fast-forward when missing updates.
+					// Game frozen, paused at breakpoint, etc...
+					renderable->prev_frame_time = plat_time;
+				}
+				else
+				{
+					renderable->prev_frame_time += frame_time;
+				}
 
 				if (renderable->frame >= renderable->current_animation->first_frame + renderable->current_animation->num_frames)
 				{
