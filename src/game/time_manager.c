@@ -53,3 +53,58 @@ void mg_time_manager_render_end()
 	g_time_manager->_render_end = gs_platform_elapsed_time() / 1000.0f;
 	g_time_manager->render	    = g_time_manager->_render_end - g_time_manager->_render_start;
 }
+
+void mg_time_manager_bsp_start()
+{
+	g_time_manager->_bsp_start = gs_platform_elapsed_time() / 1000.0f;
+}
+
+void mg_time_manager_bsp_end()
+{
+	g_time_manager->_bsp_end = gs_platform_elapsed_time() / 1000.0f;
+	g_time_manager->bsp	 = g_time_manager->_bsp_end - g_time_manager->_bsp_start;
+}
+
+void mg_time_manager_vis_start()
+{
+	g_time_manager->_vis_start = gs_platform_elapsed_time() / 1000.0f;
+}
+
+void mg_time_manager_vis_end()
+{
+	g_time_manager->_vis_end = gs_platform_elapsed_time() / 1000.0f;
+	g_time_manager->vis	 = g_time_manager->_vis_end - g_time_manager->_vis_start;
+}
+
+void mg_time_manager_models_start()
+{
+	g_time_manager->_models_start = gs_platform_elapsed_time() / 1000.0f;
+}
+
+void mg_time_manager_models_end()
+{
+	g_time_manager->_models_end = gs_platform_elapsed_time() / 1000.0f;
+	g_time_manager->models	    = g_time_manager->_models_end - g_time_manager->_models_start;
+}
+
+void mg_time_manager_post_start()
+{
+	g_time_manager->_post_start = gs_platform_elapsed_time() / 1000.0f;
+}
+
+void mg_time_manager_post_end()
+{
+	g_time_manager->_post_end = gs_platform_elapsed_time() / 1000.0f;
+	g_time_manager->post	  = g_time_manager->_post_end - g_time_manager->_post_start;
+}
+
+void mg_time_manager_ui_start()
+{
+	g_time_manager->_ui_start = gs_platform_elapsed_time() / 1000.0f;
+}
+
+void mg_time_manager_ui_end()
+{
+	g_time_manager->_ui_end = gs_platform_elapsed_time() / 1000.0f;
+	g_time_manager->ui	= g_time_manager->_ui_end - g_time_manager->_ui_start;
+}

@@ -180,6 +180,8 @@ void mg_ui_manager_free()
 
 void mg_ui_manager_render(gs_vec2 fbs, bool32_t clear)
 {
+	mg_time_manager_ui_start();
+
 	bool show_cursor_prev = g_ui_manager->show_cursor;
 
 	g_ui_manager->show_cursor = g_ui_manager->menu_open || g_ui_manager->console_open;
@@ -249,6 +251,8 @@ void mg_ui_manager_render(gs_vec2 fbs, bool32_t clear)
 		gs_gui_render(&g_renderer->gui, &g_renderer->cb);
 		gs_graphics_renderpass_end(&g_renderer->cb);
 	}
+
+	mg_time_manager_ui_end();
 }
 
 void mg_ui_manager_set_dialogue(const char *text, float32_t duration)
@@ -384,10 +388,26 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 		// draw times
 		sprintf(tmp, "game:");
 		DRAW_TMP(5, tmp_y)
+
 		sprintf(tmp, "update: %.2fms", g_time_manager->update * 1000.0);
 		DRAW_TMP(10, tmp_y)
+
 		sprintf(tmp, "render: %.2fms", g_time_manager->render * 1000.0);
 		DRAW_TMP(10, tmp_y)
+
+		sprintf(tmp, "bsp:");
+		DRAW_TMP(15, tmp_y)
+		sprintf(tmp, "vis: %.2fms", g_time_manager->vis * 1000.0);
+		DRAW_TMP(20, tmp_y)
+		sprintf(tmp, "render: %.2fms", g_time_manager->bsp * 1000.0);
+		DRAW_TMP(20, tmp_y)
+
+		sprintf(tmp, "models: %.2fms", g_time_manager->models * 1000.0);
+		DRAW_TMP(15, tmp_y)
+		sprintf(tmp, "post: %.2fms", g_time_manager->post * 1000.0);
+		DRAW_TMP(15, tmp_y)
+		sprintf(tmp, "ui: %.2fms", g_time_manager->ui * 1000.0);
+		DRAW_TMP(15, tmp_y)
 
 		sprintf(tmp, "gs:");
 		DRAW_TMP(5, tmp_y)

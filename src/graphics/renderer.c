@@ -290,6 +290,13 @@ void mg_renderer_update()
 		// Post-process offscreen texture and render to backbuffer.
 		_mg_renderer_post_pass();
 	}
+	else
+	{
+		mg_time_manager_models_start();
+		mg_time_manager_models_end();
+		mg_time_manager_post_start();
+		mg_time_manager_post_end();
+	}
 
 	// Render UI straight to backbuffer
 	mg_ui_manager_render(g_renderer->fb_size, !has_cam);
@@ -478,7 +485,13 @@ void _mg_renderer_resize(const gs_vec2 fb_size)
 
 void _mg_renderer_renderable_pass()
 {
-	if (gs_slot_array_size(g_renderer->renderables) == 0) return;
+	mg_time_manager_models_start();
+
+	if (gs_slot_array_size(g_renderer->renderables) == 0)
+	{
+		mg_time_manager_models_end();
+		return;
+	}
 
 	bool wireframe = mg_cvar("r_wireframe")->value.i;
 
@@ -555,6 +568,14 @@ void _mg_renderer_renderable_pass()
 			if (g_renderer->bsp != NULL && g_renderer->bsp->valid)
 			{
 				light = bsp_sample_lightvol(g_renderer->bsp, renderable->transform->position);
+				// bsp_lightvol_lump_t lump = bsp_get_lightvol(g_renderer->bsp, renderable->transform->position, NULL);
+				// light.directional.x	 = (float)lump.directional[0] / 255.0f;
+				// light.directional.y	 = (float)lump.directional[1] / 255.0f;
+				// light.directional.z	 = (float)lump.directional[2] / 255.0f;
+				// light.ambient.x		 = (float)lump.ambient[0] / 255.0f;
+				// light.ambient.y		 = (float)lump.ambient[1] / 255.0f;
+				// light.ambient.z		 = (float)lump.ambient[2] / 255.0f;
+				// light.direction		 = mg_sphere_to_normal(lump.dir);
 			}
 			else
 			{
@@ -660,10 +681,14 @@ void _mg_renderer_renderable_pass()
 	}
 
 	gs_graphics_renderpass_end(&g_renderer->cb);
+
+	mg_time_manager_models_end();
 }
 
 void _mg_renderer_post_pass()
 {
+	mg_time_manager_post_start();
+
 	gs_graphics_renderpass_begin(&g_renderer->cb, GS_GRAPHICS_RENDER_PASS_DEFAULT);
 	gs_graphics_set_viewport(&g_renderer->cb, 0, 0, (int32_t)g_renderer->fb_size.x, (int32_t)g_renderer->fb_size.y);
 	gs_graphics_pipeline_bind(&g_renderer->cb, g_renderer->post_pipe);
@@ -725,6 +750,8 @@ void _mg_renderer_post_pass()
 	gs_graphics_apply_bindings(&g_renderer->cb, &binds);
 	gs_graphics_draw(&g_renderer->cb, &(gs_graphics_draw_desc_t){.start = 0, .count = 6});
 	gs_graphics_renderpass_end(&g_renderer->cb);
+
+	mg_time_manager_post_end();
 }
 
 void _mg_renderer_load_shader(char *name)
