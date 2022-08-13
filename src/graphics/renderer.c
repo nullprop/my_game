@@ -175,13 +175,14 @@ void mg_renderer_init(uint32_t window_handle)
 		});
 
 	// Pipeline vertex attributes
+	size_t total_stride			     = sizeof(float32_t) * 8;
 	gs_graphics_vertex_attribute_desc_t vattrs[] = {
-		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT3, .name = "a_pos"},
-		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT3, .name = "a_normal"},
-		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT2, .name = "a_texcoord"},
+		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT3, .name = "a_pos", .stride = total_stride, .offset = 0},
+		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT3, .name = "a_normal", .stride = total_stride, .offset = sizeof(float32_t) * 3},
+		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT2, .name = "a_texcoord", .stride = total_stride, .offset = sizeof(float32_t) * 6},
 	};
 	gs_graphics_vertex_attribute_desc_t post_vattrs[] = {
-		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT2, .name = "a_pos"},
+		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT2, .name = "a_pos", .stride = sizeof(float32_t) * 2, .offset = 0},
 	};
 
 	// Create pipelines

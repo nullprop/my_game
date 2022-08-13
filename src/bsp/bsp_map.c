@@ -106,12 +106,13 @@ void bsp_map_init(bsp_map_t *map)
 		});
 
 	// Pipeline vertex attributes
+	size_t total_stride			     = sizeof(float32_t) * 10 + sizeof(uint8_t) * 4;
 	gs_graphics_vertex_attribute_desc_t vattrs[] = {
-		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT3, .name = "a_pos"},
-		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT2, .name = "a_tex_coord"},
-		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT2, .name = "a_lm_coord"},
-		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT3, .name = "a_normal"},
-		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_BYTE4, .name = "a_color"},
+		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT3, .name = "a_pos", .stride = total_stride, .offset = 0},
+		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT2, .name = "a_tex_coord", .stride = total_stride, .offset = sizeof(float32_t) * 3},
+		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT2, .name = "a_lm_coord", .stride = total_stride, .offset = sizeof(float32_t) * 5},
+		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_FLOAT3, .name = "a_normal", .stride = total_stride, .offset = sizeof(float32_t) * 7},
+		(gs_graphics_vertex_attribute_desc_t){.format = GS_GRAPHICS_VERTEX_ATTRIBUTE_BYTE4, .name = "a_color", .stride = total_stride, .offset = sizeof(float32_t) * 10},
 	};
 
 	map->bsp_graphics_pipe = gs_graphics_pipeline_create(
@@ -738,8 +739,8 @@ void bsp_map_free(bsp_map_t *map)
 		gs_dyn_array_free(map->patches);
 		gs_dyn_array_free(map->render_faces);
 
-		map->patches		  = NULL;
-		map->render_faces	  = NULL;
+		map->patches	  = NULL;
+		map->render_faces = NULL;
 
 		// data contents will be freed by texture manager
 		gs_free(map->texture_assets.data);
