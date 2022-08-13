@@ -537,20 +537,21 @@ void _mg_renderer_renderable_pass()
 			       .binding = 1, // VERTEX
 		       };
 
+		gs_vec4_t color		  = gs_v4(1.0, 1.0, 1.0, 1.0);
+		mg_renderer_light_t light = {0};
+
 		if (wireframe)
 		{
 			// Color
-			gs_vec4_t color = gs_v4(1.0, 1.0, 1.0, 1.0);
-			uniforms[2]	= (gs_graphics_bind_uniform_desc_t){
-				    .uniform = g_renderer->u_color,
-				    .data    = &color,
-				    .binding = 0, // FRAGMENT
-			    };
+			uniforms[2] = (gs_graphics_bind_uniform_desc_t){
+				.uniform = g_renderer->u_color,
+				.data	 = &color,
+				.binding = 0, // FRAGMENT
+			};
 		}
 		else
 		{
 			// Light
-			mg_renderer_light_t light = {};
 			if (g_renderer->bsp != NULL && g_renderer->bsp->valid)
 			{
 				light = bsp_sample_lightvol(g_renderer->bsp, renderable->transform->position);

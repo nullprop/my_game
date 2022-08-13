@@ -573,9 +573,10 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam, gs_handle(gs_graphics_rend
 
 		uint8_t uniform_count = wireframe ? 1 : 2;
 
+		gs_vec4_t color = gs_v4(0, 0, 0, 1.0);
+
 		if (wireframe)
 		{
-			gs_vec4_t color = gs_v4(0, 0, 0, 1.0);
 			switch (map->faces.data[container[i].index].type)
 			{
 			case BSP_FACE_TYPE_POLYGON:
@@ -943,6 +944,7 @@ bsp_lightvol_lump_t bsp_get_lightvol(bsp_map_t *map, gs_vec3 position, gs_vec3 *
 // TODO: still some funkiness when moving between lightvols,
 // ideally make interp good enough to not have to support
 // multiple directional lights.
+// This also takes way too much time each frame!
 mg_renderer_light_t bsp_sample_lightvol(bsp_map_t *map, gs_vec3 position)
 {
 	// Get our position in the map
