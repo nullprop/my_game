@@ -19,8 +19,8 @@ void mg_texture_manager_init()
 	g_texture_manager	    = gs_malloc_init(mg_texture_manager_t);
 	g_texture_manager->textures = gs_dyn_array_new(mg_texture_t);
 
-	g_texture_manager->tex_filter = mg_cvar("r_filter")->value.i;
-	g_texture_manager->mip_filter = mg_cvar("r_filter_mip")->value.i;
+	g_texture_manager->tex_filter = mg_cvar("r_filter")->value.i + 1;
+	g_texture_manager->mip_filter = mg_cvar("r_filter_mip")->value.i + 1;
 	g_texture_manager->num_mips   = mg_cvar("r_mips")->value.i;
 }
 
@@ -42,6 +42,7 @@ void mg_texture_manager_free()
 
 void mg_texture_manager_set_filter(gs_graphics_texture_filtering_type tex, gs_graphics_texture_filtering_type mip, int num_mips)
 {
+	mg_println("mg_texture_manager_set_filter: reloading textures");
 	g_texture_manager->tex_filter = tex;
 	g_texture_manager->mip_filter = mip;
 	g_texture_manager->num_mips   = num_mips;
