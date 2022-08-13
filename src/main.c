@@ -84,7 +84,7 @@ void app_init()
 		"Lorem ipsum dolor sit amet, consectetur adipiscing elit, \
 	sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
 		-1);
-	
+
 #ifdef __ANDROID__
 	g_ui_manager->debug_open = true;
 #endif
@@ -148,9 +148,7 @@ void app_update()
 	mg_game_manager_update();
 	mg_time_manager_update_end();
 
-	mg_time_manager_render_start();
 	mg_renderer_update();
-	mg_time_manager_render_end();
 }
 
 void app_shutdown()

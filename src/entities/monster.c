@@ -13,6 +13,7 @@
 #include "../game/config.h"
 #include "../game/console.h"
 #include "../game/game_manager.h"
+#include "../game/time_manager.h"
 #include "../graphics/ui_manager.h"
 #include "../util/math.h"
 #include "../util/transform.h"
@@ -60,9 +61,8 @@ void mg_monster_update(mg_monster_t *monster)
 	if (g_ui_manager->show_cursor) return;
 	if (g_game_manager->map == NULL || !g_game_manager->map->valid) return;
 
-	gs_platform_t *platform = gs_subsystem(platform);
-	float dt		= platform->time.delta;
-	double pt		= gs_platform_elapsed_time();
+	double dt = g_time_manager->delta;
+	double pt = g_time_manager->time;
 
 	_mg_monster_think(monster, pt);
 	_mg_monster_check_floor(monster);
@@ -210,7 +210,7 @@ void _mg_monster_check_floor(mg_monster_t *monster)
 		monster->grounded	  = true;
 		monster->has_jumped	  = false;
 		monster->ground_normal	  = trace.normal;
-		monster->last_ground_time = gs_platform_elapsed_time();
+		monster->last_ground_time = g_time_manager->time;
 
 		uint32_t leaf_index   = g_game_manager->map->stats.current_leaf;
 		int32_t cluster_index = g_game_manager->map->leaves.data[leaf_index].cluster;

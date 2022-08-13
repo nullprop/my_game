@@ -28,7 +28,7 @@ void mg_game_manager_update();
 void mg_game_manager_load_map(char *filename);
 void mg_game_manager_spawn_player();
 
-mg_player_input_t mg_game_manager_get_input(float dt);
+mg_player_input_t mg_game_manager_get_input();
 void mg_game_manager_input_alive();
 void mg_game_manager_input_console();
 void mg_game_manager_input_menu();

@@ -197,8 +197,6 @@ void mg_ui_manager_render(gs_vec2 fbs, bool32_t clear)
 		}
 	}
 
-	double pt = gs_platform_elapsed_time();
-
 	// Begin new frame for gui
 	gs_gui_begin(&g_renderer->gui, g_renderer->fb_size);
 	{
@@ -260,7 +258,7 @@ void mg_ui_manager_set_dialogue(const char *text, float32_t duration)
 	mg_ui_dialogue_t diag = {
 		.content     = gs_malloc(gs_string_length(text) + 1),
 		.duration    = duration,
-		._start_time = gs_platform_elapsed_time(),
+		._start_time = g_time_manager->time,
 	};
 	memcpy(diag.content, text, gs_string_length(text) + 1);
 
@@ -380,15 +378,15 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 		sprintf(
 			tmp,
 			"fps: %d",
-			(int)gs_round(1.0f / gs_platform_delta_time()));
+			(int)gs_round(1.0f / g_time_manager->unscaled_delta));
 		DRAW_TMP(5, tmp_y)
 
 		// draw times
 		sprintf(tmp, "game:");
 		DRAW_TMP(5, tmp_y)
-		sprintf(tmp, "update: %.2fms", g_time_manager->update);
+		sprintf(tmp, "update: %.2fms", g_time_manager->update * 1000.0);
 		DRAW_TMP(10, tmp_y)
-		sprintf(tmp, "render: %.2fms", g_time_manager->render);
+		sprintf(tmp, "render: %.2fms", g_time_manager->render * 1000.0);
 		DRAW_TMP(10, tmp_y)
 
 		sprintf(tmp, "gs:");
@@ -557,8 +555,8 @@ void _mg_ui_manager_dialogue_window(gs_vec2 fbs, gs_gui_container_t *root)
 	}
 	gs_gui_panel_end(&g_renderer->gui);
 
-	double pt = gs_platform_elapsed_time();
-	if (diag.duration > 0 && pt - diag._start_time > diag.duration * 1000)
+	double pt = g_time_manager->time;
+	if (diag.duration > 0 && pt - diag._start_time > diag.duration)
 		g_ui_manager->dialogue_open = false;
 }
 

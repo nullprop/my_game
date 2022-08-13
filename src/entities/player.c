@@ -13,6 +13,7 @@
 #include "../game/config.h"
 #include "../game/console.h"
 #include "../game/game_manager.h"
+#include "../game/time_manager.h"
 #include "../graphics/model_manager.h"
 #include "../graphics/renderer.h"
 #include "../graphics/ui_manager.h"
@@ -75,9 +76,8 @@ void mg_player_update(mg_player_t *player)
 	if (g_ui_manager->show_cursor) return;
 	if (g_game_manager->map == NULL || !g_game_manager->map->valid) return;
 
-	gs_platform_t *platform = gs_subsystem(platform);
-	float dt		= platform->time.delta;
-	double pt		= gs_platform_elapsed_time();
+	double dt = g_time_manager->delta;
+	double pt = g_time_manager->time;
 
 	_mg_player_check_floor(player);
 
@@ -99,7 +99,7 @@ void mg_player_update(mg_player_t *player)
 		player->velocity = gs_vec3_add(player->velocity, gs_vec3_scale(MG_AXIS_DOWN, MG_PLAYER_GRAVITY * dt));
 
 		// coyote
-		if (player->wish_jump && !player->has_jumped && pt - player->last_ground_time <= MG_PLAYER_COYOTE_TIME * 1000)
+		if (player->wish_jump && !player->has_jumped && pt - player->last_ground_time <= MG_PLAYER_COYOTE_TIME)
 		{
 			_mg_player_do_jump(player);
 		}
@@ -214,7 +214,7 @@ void _mg_player_check_floor(mg_player_t *player)
 		player->grounded	 = true;
 		player->has_jumped	 = false;
 		player->ground_normal	 = trace.normal;
-		player->last_ground_time = gs_platform_elapsed_time();
+		player->last_ground_time = g_time_manager->time;
 
 		uint32_t leaf_index   = g_game_manager->map->stats.current_leaf;
 		int32_t cluster_index = g_game_manager->map->leaves.data[leaf_index].cluster;

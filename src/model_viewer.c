@@ -19,6 +19,7 @@
 #include "entities/player.h"
 #include "game/config.h"
 #include "game/console.h"
+#include "game/time_manager.h"
 #include "graphics/model_manager.h"
 #include "graphics/renderer.h"
 #include "graphics/texture_manager.h"
@@ -53,6 +54,7 @@ void app_init()
 	camera->transform.position = gs_v3(0, -50.0f, 0);
 
 	// Init managers, free in app_shutdown if adding here
+	mg_time_manager_init();
 	mg_texture_manager_init();
 	mg_model_manager_init();
 	mg_renderer_init(gs_platform_main_window());
@@ -149,9 +151,9 @@ void load_model(char *filename)
 
 void app_update()
 {
-	gs_platform_t *platform = gs_subsystem(platform);
-	float delta_time	= platform->time.delta;
-	double plat_time	= gs_platform_elapsed_time();
+	mg_time_manager_update_start();
+	double delta_time = g_time_manager->delta;
+	double plat_time  = g_time_manager->time;
 	char tmp[64];
 
 	// If click, then lock again (in case lost)
@@ -203,6 +205,7 @@ void app_update()
 
 	if (!valid)
 	{
+		mg_time_manager_update_end();
 		mg_renderer_update();
 		return;
 	}
@@ -345,13 +348,15 @@ void app_update()
 		}
 	}
 
-	sprintf(tmp, "FPS: %d", (int)gs_round(1.0f / delta_time));
+	sprintf(tmp, "FPS: %d", (int)gs_round(1.0f / g_time_manager->unscaled_delta));
 	mg_ui_manager_update_text(text_fps, tmp);
 
 	sprintf(tmp, "Frame: %d / %d",
 		renderable->current_animation != NULL ? renderable->frame - renderable->current_animation->first_frame + 1 : 0,
 		renderable->current_animation != NULL ? renderable->current_animation->num_frames : 0);
 	mg_ui_manager_update_text(text_anim_frame, tmp);
+
+	mg_time_manager_update_end();
 
 	mg_renderer_update();
 }
@@ -366,6 +371,7 @@ void app_shutdown()
 	gs_free(model_transform);
 	gs_free(model_path);
 
+	mg_time_manager_free();
 	mg_config_free();
 	mg_console_free();
 }

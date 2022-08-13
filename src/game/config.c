@@ -25,7 +25,7 @@ void mg_config_init()
 	mg_cvar_new("vid_max_fps", MG_CONFIG_TYPE_INT, 60);
 #else
 	mg_cvar_new("vid_max_fps", MG_CONFIG_TYPE_INT, 240);
-#endif	
+#endif
 	mg_cvar_new("vid_vsync", MG_CONFIG_TYPE_INT, 0);
 
 	mg_cvar_new("snd_master", MG_CONFIG_TYPE_FLOAT, 0.1f);
@@ -55,6 +55,8 @@ void mg_config_init()
 #else
 	mg_cvar_new("cl_sensitivity", MG_CONFIG_TYPE_FLOAT, 2.0f);
 #endif
+
+	mg_cvar_new("cl_timescale", MG_CONFIG_TYPE_FLOAT, 1.0f);
 
 	mg_cvar_new_str("stringtest", MG_CONFIG_TYPE_STRING, "Sandvich make me strong!");
 

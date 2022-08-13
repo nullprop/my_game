@@ -14,13 +14,17 @@
 
 typedef struct mg_time_manager_t
 {
-	double update;
-	double render;
+	double update;	       // seconds
+	double render;	       // seconds
+	double delta;	       // seconds
+	double unscaled_delta; // seconds
+	double time;	       // seconds
+	double unscaled_time;  // seconds
 
-	double _update_start;
-	double _update_end;
-	double _render_start;
-	double _render_end;
+	double _update_start; // seconds
+	double _update_end;   // seconds
+	double _render_start; // seconds
+	double _render_end;   // seconds
 } mg_time_manager_t;
 
 void mg_time_manager_init();

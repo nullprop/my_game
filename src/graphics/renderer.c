@@ -10,6 +10,7 @@
 #include "renderer.h"
 #include "../game/config.h"
 #include "../game/console.h"
+#include "../game/time_manager.h"
 #include "../util/camera.h"
 #include "../util/render.h"
 #include "ui_manager.h"
@@ -229,6 +230,8 @@ void mg_renderer_init(uint32_t window_handle)
 
 void mg_renderer_update()
 {
+	mg_time_manager_render_start();
+
 	// Framebuffer size
 	const gs_vec2 fb = gs_platform_framebuffer_sizev(gs_platform_main_window());
 	if (fb.x != g_renderer->fb_size.x || fb.y != g_renderer->fb_size.y)
@@ -262,6 +265,8 @@ void mg_renderer_update()
 
 	// Submit command buffer
 	gs_graphics_command_buffer_submit(&g_renderer->cb);
+
+	mg_time_manager_render_end();
 }
 
 void mg_renderer_free()
@@ -325,7 +330,7 @@ uint32_t mg_renderer_create_renderable(mg_model_t model, gs_vqs *transform)
 		.transform	   = transform,
 		.u_view		   = gs_vqs_to_mat4(transform),
 		.frame		   = 0,
-		.prev_frame_time   = gs_platform_elapsed_time(),
+		.prev_frame_time   = g_time_manager->time,
 		.current_animation = NULL,
 	};
 
@@ -377,7 +382,7 @@ bool32_t mg_renderer_play_animation(uint32_t id, char *name)
 	{
 		if (strcmp(renderable->model.data->animations[i].name, name) == 0)
 		{
-			renderable->prev_frame_time   = gs_platform_elapsed_time();
+			renderable->prev_frame_time   = g_time_manager->time;
 			renderable->current_animation = &renderable->model.data->animations[i];
 			renderable->frame	      = renderable->current_animation->first_frame;
 			found			      = true;
@@ -553,8 +558,8 @@ void _mg_renderer_renderable_pass()
 		// Play animation
 		if (renderable->current_animation != NULL)
 		{
-			double plat_time  = gs_platform_elapsed_time();
-			double frame_time = 1000 / renderable->current_animation->fps;
+			double plat_time  = g_time_manager->time;
+			double frame_time = 1.0f / renderable->current_animation->fps;
 
 			if (plat_time - renderable->prev_frame_time >= frame_time)
 			{

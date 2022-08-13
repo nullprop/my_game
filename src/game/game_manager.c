@@ -5,6 +5,7 @@
 #include "config.h"
 #include "console.h"
 #include "monster_manager.h"
+#include "time_manager.h"
 
 mg_game_manager_t *g_game_manager;
 
@@ -96,7 +97,7 @@ void mg_game_manager_spawn_player()
 }
 
 #ifdef __ANDROID__
-mg_player_input_t mg_game_manager_get_input(float dt)
+mg_player_input_t mg_game_manager_get_input()
 {
 	mg_player_input_t input = {0};
 
@@ -111,8 +112,9 @@ mg_player_input_t mg_game_manager_get_input(float dt)
 	return input;
 }
 #else
-mg_player_input_t mg_game_manager_get_input(float dt)
+mg_player_input_t mg_game_manager_get_input()
 {
+	double dt		= g_time_manager->unscaled_delta;
 	mg_player_input_t input = {0};
 
 	input.delta_aim = gs_vec2_scale(gs_platform_mouse_deltav(), mg_cvar("cl_sensitivity")->value.f * 0.022f);
@@ -147,14 +149,13 @@ mg_player_input_t mg_game_manager_get_input(float dt)
 void mg_game_manager_input_alive()
 {
 	gs_platform_t *platform = gs_subsystem(platform);
-	float dt		= platform->time.delta;
 
 	// Reset
 	g_game_manager->player->wish_move   = gs_v3(0, 0, 0);
 	g_game_manager->player->wish_jump   = false;
 	g_game_manager->player->wish_crouch = false;
 
-	mg_player_input_t input = mg_game_manager_get_input(dt);
+	mg_player_input_t input = mg_game_manager_get_input();
 
 	// Rotate
 	g_game_manager->player->camera.pitch	   = gs_clamp(g_game_manager->player->camera.pitch + input.delta_aim.y, -90.0f, 90.0f);
