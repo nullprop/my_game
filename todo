@@ -23,6 +23,7 @@ todo:
 - better cvar change tracking, clean up main
 - fix getting stuck on walls midair
 - fix walking up stairs if hugging wall
+- parse pipelines from files (see gs_parse_*)
 
 done:
 * fix pipeline
@@ -50,3 +51,4 @@ done:
 * texture filtering, mips (nearest, bi-, trilinear)
 * android build
 * time manager
+* wireframe rendering toggle

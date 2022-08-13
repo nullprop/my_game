@@ -96,6 +96,14 @@ void bsp_map_init(bsp_map_t *map)
 			},
 			.stage = GS_GRAPHICS_SHADER_STAGE_FRAGMENT,
 		});
+	map->bsp_graphics_u_color = gs_graphics_uniform_create(
+		&(gs_graphics_uniform_desc_t){
+			.name	= "u_color",
+			.layout = &(gs_graphics_uniform_layout_desc_t){
+				.type = GS_GRAPHICS_UNIFORM_VEC4,
+			},
+			.stage = GS_GRAPHICS_SHADER_STAGE_FRAGMENT,
+		});
 
 	// Pipeline vertex attributes
 	gs_graphics_vertex_attribute_desc_t vattrs[] = {
@@ -111,6 +119,27 @@ void bsp_map_init(bsp_map_t *map)
 			.raster = {
 				.shader			   = mg_renderer_get_shader("bsp"),
 				.index_buffer_element_size = sizeof(uint32_t),
+				.primitive		   = GS_GRAPHICS_PRIMITIVE_TRIANGLES,
+			},
+			.blend = {
+				.func = GS_GRAPHICS_BLEND_EQUATION_ADD,
+				.src  = GS_GRAPHICS_BLEND_MODE_SRC_ALPHA,
+				.dst  = GS_GRAPHICS_BLEND_MODE_ONE_MINUS_SRC_ALPHA,
+			},
+			.depth = {
+				.func = GS_GRAPHICS_DEPTH_FUNC_LESS,
+			},
+			.layout = {
+				.attrs = vattrs,
+				.size  = sizeof(vattrs),
+			},
+		});
+	map->bsp_graphics_wire_pipe = gs_graphics_pipeline_create(
+		&(gs_graphics_pipeline_desc_t){
+			.raster = {
+				.shader			   = mg_renderer_get_shader("bsp_wireframe"),
+				.index_buffer_element_size = sizeof(uint32_t),
+				.primitive		   = GS_GRAPHICS_PRIMITIVE_LINE_LOOP,
 			},
 			.blend = {
 				.func = GS_GRAPHICS_BLEND_EQUATION_ADD,
@@ -457,6 +486,8 @@ void bsp_map_render_immediate(bsp_map_t *map, gs_immediate_draw_t *gsi, gs_camer
 
 void bsp_map_render(bsp_map_t *map, gs_camera_t *cam, gs_handle(gs_graphics_renderpass_t) rp, gs_command_buffer_t *cb, const gs_vec2 fb)
 {
+	bool wireframe = mg_cvar("r_wireframe")->value.i;
+
 	// Clear desc
 	gs_graphics_clear_desc_t clear = (gs_graphics_clear_desc_t){
 		.actions = &(gs_graphics_clear_action_t){
@@ -511,7 +542,7 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam, gs_handle(gs_graphics_rend
 	gs_graphics_renderpass_begin(cb, rp);
 	gs_graphics_set_viewport(cb, 0, 0, (int32_t)fb.x, (int32_t)fb.y);
 	gs_graphics_clear(cb, &clear);
-	gs_graphics_pipeline_bind(cb, map->bsp_graphics_pipe);
+	gs_graphics_pipeline_bind(cb, wireframe ? map->bsp_graphics_wire_pipe : map->bsp_graphics_pipe);
 	gs_graphics_apply_bindings(cb, &binds);
 
 	// Draw faces
@@ -534,24 +565,62 @@ void bsp_map_render(bsp_map_t *map, gs_camera_t *cam, gs_handle(gs_graphics_rend
 
 		// Face specific uniforms
 		gs_graphics_bind_uniform_desc_t face_uniforms[] = {
-			// TEXTURE
+			// TEXTURE OR COLOR
+			{0},
+			// LIGHTMAP
+			{0},
+		};
+
+		uint8_t uniform_count = wireframe ? 1 : 2;
+
+		if (wireframe)
+		{
+			gs_vec4_t color = gs_v4(0, 0, 0, 1.0);
+			switch (map->faces.data[container[i].index].type)
 			{
+			case BSP_FACE_TYPE_POLYGON:
+				color.y = 1.0;
+				break;
+
+			case BSP_FACE_TYPE_MESH:
+				color.z = 1.0;
+				break;
+
+			case BSP_FACE_TYPE_PATCH:
+				color.x = 1.0;
+				break;
+
+			default:
+				color.x = 0.5;
+				color.y = 0.5;
+				color.z = 0.5;
+			}
+
+			face_uniforms[0] = (gs_graphics_bind_uniform_desc_t){
+				.uniform = map->bsp_graphics_u_color,
+				.data	 = &color,
+				.binding = 0, // FRAGMENT
+			};
+		}
+		else
+		{
+			face_uniforms[0] = (gs_graphics_bind_uniform_desc_t){
 				.uniform = map->bsp_graphics_u_tex,
 				.data	 = texture_index >= 0 ? &map->texture_assets.data[texture_index]->hndl : &map->missing_texture,
 				.binding = 0, // FRAGMENT
-			},
-			// LIGHTMAP
-			{
+			};
+			face_uniforms[1] = (gs_graphics_bind_uniform_desc_t){
 				.uniform = map->bsp_graphics_u_lm,
 				.data	 = lm_index >= 0 ? &map->lightmap_textures.data[lm_index] : &map->missing_lm_texture,
 				.binding = 1, // FRAGMENT
-			},
-		};
+			};
+		}
+
 		// Bind uniforms
 		gs_graphics_bind_desc_t face_binds = {
 			.uniforms = {
 				.desc = face_uniforms,
-				.size = sizeof(face_uniforms),
+				.size = sizeof(gs_graphics_bind_uniform_desc_t) * uniform_count,
 			},
 		};
 		gs_graphics_apply_bindings(cb, &face_binds);
@@ -632,9 +701,11 @@ void bsp_map_free(bsp_map_t *map)
 		gs_graphics_vertex_buffer_destroy(map->bsp_graphics_vbo);
 		gs_graphics_index_buffer_destroy(map->bsp_graphics_ibo);
 		gs_graphics_pipeline_destroy(map->bsp_graphics_pipe);
+		gs_graphics_pipeline_destroy(map->bsp_graphics_wire_pipe);
 		gs_graphics_uniform_destroy(map->bsp_graphics_u_proj);
 		gs_graphics_uniform_destroy(map->bsp_graphics_u_tex);
 		gs_graphics_uniform_destroy(map->bsp_graphics_u_lm);
+		gs_graphics_uniform_destroy(map->bsp_graphics_u_color);
 		gs_dyn_array_free(map->bsp_graphics_index_arr);
 		gs_dyn_array_free(map->bsp_graphics_vert_arr);
 

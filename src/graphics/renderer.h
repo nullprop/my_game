@@ -41,6 +41,7 @@ typedef struct mg_renderer_t
 	bsp_map_t *bsp;
 	gs_slot_array(mg_renderable_t) renderables;
 	gs_handle(gs_graphics_pipeline_t) pipe;
+	gs_handle(gs_graphics_pipeline_t) wire_pipe;
 	gs_handle(gs_graphics_pipeline_t) post_pipe;
 	gs_dyn_array(gs_handle(gs_graphics_shader_t)) shaders;
 	gs_dyn_array(char *) shader_names;
@@ -60,6 +61,7 @@ typedef struct mg_renderer_t
 	gs_handle(gs_graphics_uniform_t) u_view;
 	gs_handle(gs_graphics_uniform_t) u_light;
 	gs_handle(gs_graphics_uniform_t) u_tex;
+	gs_handle(gs_graphics_uniform_t) u_color;
 	gs_handle(gs_graphics_uniform_t) u_barrel_enabled;
 	gs_handle(gs_graphics_uniform_t) u_barrel_strength;
 	gs_handle(gs_graphics_uniform_t) u_barrel_height;

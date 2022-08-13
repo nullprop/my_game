@@ -413,9 +413,11 @@ typedef struct bsp_map_t
 	gs_handle(gs_graphics_vertex_buffer_t) bsp_graphics_vbo;
 	gs_handle(gs_graphics_index_buffer_t) bsp_graphics_ibo;
 	gs_handle(gs_graphics_pipeline_t) bsp_graphics_pipe;
+	gs_handle(gs_graphics_pipeline_t) bsp_graphics_wire_pipe;
 	gs_handle(gs_graphics_uniform_t) bsp_graphics_u_proj;
 	gs_handle(gs_graphics_uniform_t) bsp_graphics_u_tex;
 	gs_handle(gs_graphics_uniform_t) bsp_graphics_u_lm;
+	gs_handle(gs_graphics_uniform_t) bsp_graphics_u_color;
 	gs_dyn_array(uint32_t) bsp_graphics_index_arr;
 	gs_dyn_array(bsp_vert_lump_t) bsp_graphics_vert_arr;
 } bsp_map_t;

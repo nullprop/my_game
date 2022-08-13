@@ -34,6 +34,8 @@ void mg_renderer_init(uint32_t window_handle)
 	_mg_renderer_load_shader("basic_unlit");
 	_mg_renderer_load_shader("bsp");
 	_mg_renderer_load_shader("post");
+	_mg_renderer_load_shader("wireframe");
+	_mg_renderer_load_shader("bsp_wireframe");
 
 	g_renderer->clear_color[0] = 0;
 	g_renderer->clear_color[1] = 0;
@@ -123,6 +125,14 @@ void mg_renderer_init(uint32_t window_handle)
 			},
 			.stage = GS_GRAPHICS_SHADER_STAGE_FRAGMENT,
 		});
+	g_renderer->u_color = gs_graphics_uniform_create(
+		&(gs_graphics_uniform_desc_t){
+			.name	= "u_color",
+			.layout = &(gs_graphics_uniform_layout_desc_t){
+				.type = GS_GRAPHICS_UNIFORM_VEC4,
+			},
+			.stage = GS_GRAPHICS_SHADER_STAGE_FRAGMENT,
+		});
 	g_renderer->u_barrel_enabled = gs_graphics_uniform_create(
 		&(gs_graphics_uniform_desc_t){
 			.name	= "u_barrel_enabled",
@@ -180,6 +190,27 @@ void mg_renderer_init(uint32_t window_handle)
 			.raster = {
 				.shader			   = mg_renderer_get_shader("basic"),
 				.index_buffer_element_size = sizeof(int32_t),
+				.primitive		   = GS_GRAPHICS_PRIMITIVE_TRIANGLES,
+			},
+			.blend = {
+				.func = GS_GRAPHICS_BLEND_EQUATION_ADD,
+				.src  = GS_GRAPHICS_BLEND_MODE_SRC_ALPHA,
+				.dst  = GS_GRAPHICS_BLEND_MODE_ONE_MINUS_SRC_ALPHA,
+			},
+			.depth = {
+				.func = GS_GRAPHICS_DEPTH_FUNC_LESS,
+			},
+			.layout = {
+				.attrs = vattrs,
+				.size  = sizeof(vattrs),
+			},
+		});
+	g_renderer->wire_pipe = gs_graphics_pipeline_create(
+		&(gs_graphics_pipeline_desc_t){
+			.raster = {
+				.shader			   = mg_renderer_get_shader("wireframe"),
+				.index_buffer_element_size = sizeof(int32_t),
+				.primitive		   = GS_GRAPHICS_PRIMITIVE_LINE_LOOP,
 			},
 			.blend = {
 				.func = GS_GRAPHICS_BLEND_EQUATION_ADD,
@@ -291,6 +322,7 @@ void mg_renderer_free()
 	gs_graphics_uniform_destroy(g_renderer->u_view);
 	gs_graphics_uniform_destroy(g_renderer->u_light);
 	gs_graphics_uniform_destroy(g_renderer->u_tex);
+	gs_graphics_uniform_destroy(g_renderer->u_color);
 	gs_graphics_uniform_destroy(g_renderer->u_barrel_enabled);
 	gs_graphics_uniform_destroy(g_renderer->u_barrel_strength);
 	gs_graphics_uniform_destroy(g_renderer->u_barrel_height);
@@ -311,6 +343,7 @@ void mg_renderer_free()
 	// gs_gui_free(&g_renderer->gui);
 	gs_immediate_draw_free(&g_renderer->gui.gsi);
 	gs_graphics_pipeline_destroy(g_renderer->pipe);
+	gs_graphics_pipeline_destroy(g_renderer->wire_pipe);
 	gs_graphics_pipeline_destroy(g_renderer->post_pipe);
 
 	gs_graphics_index_buffer_destroy(g_renderer->screen_ibo);
@@ -447,6 +480,8 @@ void _mg_renderer_renderable_pass()
 {
 	if (gs_slot_array_size(g_renderer->renderables) == 0) return;
 
+	bool wireframe = mg_cvar("r_wireframe")->value.i;
+
 	gs_renderpass renderables_pass = gs_default_val();
 
 	// Uniforms that don't change per renderable
@@ -460,14 +495,15 @@ void _mg_renderer_renderable_pass()
 			.binding = 0, // VERTEX
 		},
 		{0}, // u_view, VERTEX
-		{0}, // u_light, FRAGMENT
+		{0}, // u_light or u_color FRAGMENT
 		{0}, // u_tex, FRAGMENT
 	};
+	uint8_t uniform_count = wireframe ? 3 : 4;
 
 	// Begin render
 	gs_graphics_renderpass_begin(&g_renderer->cb, g_renderer->offscreen_rp);
 	gs_graphics_set_viewport(&g_renderer->cb, 0, 0, (int32_t)g_renderer->fb_size.x, (int32_t)g_renderer->fb_size.y);
-	gs_graphics_pipeline_bind(&g_renderer->cb, g_renderer->pipe);
+	gs_graphics_pipeline_bind(&g_renderer->cb, wireframe ? g_renderer->wire_pipe : g_renderer->pipe);
 
 	if (!g_renderer->offscreen_cleared)
 	{
@@ -501,37 +537,53 @@ void _mg_renderer_renderable_pass()
 			       .binding = 1, // VERTEX
 		       };
 
-		// Light
-		mg_renderer_light_t light = {};
-		if (g_renderer->bsp != NULL && g_renderer->bsp->valid)
+		if (wireframe)
 		{
-			light = bsp_sample_lightvol(g_renderer->bsp, renderable->transform->position);
+			// Color
+			gs_vec4_t color = gs_v4(1.0, 1.0, 1.0, 1.0);
+			uniforms[2]	= (gs_graphics_bind_uniform_desc_t){
+				    .uniform = g_renderer->u_color,
+				    .data    = &color,
+				    .binding = 0, // FRAGMENT
+			    };
 		}
 		else
 		{
-			light = (mg_renderer_light_t){
-				.ambient     = gs_v3(0.4f, 0.4f, 0.4f),
-				.directional = gs_v3(0.8f, 0.8f, 0.8f),
-				.direction   = gs_vec3_norm(gs_v3(0.3f, 0.5f, -0.5f)),
+			// Light
+			mg_renderer_light_t light = {};
+			if (g_renderer->bsp != NULL && g_renderer->bsp->valid)
+			{
+				light = bsp_sample_lightvol(g_renderer->bsp, renderable->transform->position);
+			}
+			else
+			{
+				light = (mg_renderer_light_t){
+					.ambient     = gs_v3(0.4f, 0.4f, 0.4f),
+					.directional = gs_v3(0.8f, 0.8f, 0.8f),
+					.direction   = gs_vec3_norm(gs_v3(0.3f, 0.5f, -0.5f)),
+				};
+			}
+			uniforms[2] = (gs_graphics_bind_uniform_desc_t){
+				.uniform = g_renderer->u_light,
+				.data	 = &light,
+				.binding = 0, // FRAGMENT
 			};
 		}
-		uniforms[2] = (gs_graphics_bind_uniform_desc_t){
-			.uniform = g_renderer->u_light,
-			.data	 = &light,
-			.binding = 0, // FRAGMENT
-		};
 
 		// Draw each surface
 		for (size_t i = 0; i < renderable->model.data->header.num_surfaces; i++)
 		{
 			md3_surface_t surf = renderable->model.data->surfaces[i];
 
-			// Texture
-			uniforms[3] = (gs_graphics_bind_uniform_desc_t){
-				.uniform = g_renderer->u_tex,
-				.data	 = ((surf.textures[0] != NULL && gs_handle_is_valid(surf.textures[0]->hndl)) ? &surf.textures[0]->hndl : &g_renderer->missing_texture),
-				.binding = 1, // FRAGMENT
-			};
+			if (!wireframe)
+			{
+				// Texture
+				uniforms[3] = (gs_graphics_bind_uniform_desc_t){
+					.uniform = g_renderer->u_tex,
+					.data	 = ((surf.textures[0] != NULL && gs_handle_is_valid(surf.textures[0]->hndl)) ? &surf.textures[0]->hndl : &g_renderer->missing_texture),
+					.binding = 1, // FRAGMENT
+				};
+			}
 
 			// Construct binds
 			gs_graphics_bind_desc_t binds = {
@@ -547,7 +599,7 @@ void _mg_renderer_renderable_pass()
 				},
 				.uniforms = {
 					.desc = uniforms,
-					.size = sizeof(uniforms),
+					.size = sizeof(gs_graphics_bind_uniform_desc_t) * uniform_count,
 				},
 			};
 

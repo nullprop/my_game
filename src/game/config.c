@@ -49,6 +49,7 @@ void mg_config_init()
 	mg_cvar_new("r_filter", MG_CONFIG_TYPE_INT, 0);
 	mg_cvar_new("r_mips", MG_CONFIG_TYPE_INT, 0);
 #endif
+	mg_cvar_new("r_wireframe", MG_CONFIG_TYPE_INT, 0);
 
 #ifdef __ANDROID__
 	mg_cvar_new("cl_sensitivity", MG_CONFIG_TYPE_FLOAT, 5.0f);
