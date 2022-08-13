@@ -22,9 +22,15 @@ void mg_ui_manager_init()
 	g_ui_manager = gs_malloc_init(mg_ui_manager_t);
 
 	// Load fonts
+#ifdef __ANDROID__
+	gs_asset_font_load_from_file("./assets/fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_SMALL], 28);
+	gs_asset_font_load_from_file("./assets/fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_MEDIUM], 36);
+	gs_asset_font_load_from_file("./assets/fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_LARGE], 48);
+#else
 	gs_asset_font_load_from_file("./assets/fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_SMALL], 14);
 	gs_asset_font_load_from_file("./assets/fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_MEDIUM], 18);
 	gs_asset_font_load_from_file("./assets/fonts/PixeloidSans.otf", &g_ui_manager->fonts[GUI_FONT_LARGE], 24);
+#endif
 
 	// Default style sheet
 	gs_gui_style_element_t panel_style[] = {
@@ -358,11 +364,16 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 		gs_gui_container_t *cnt = gs_gui_get_current_container(&g_renderer->gui);
 		gs_gui_rect_t next	= {};
 
-#define DRAW_TMP(POS_X, POS_Y)                                                                                                                                             \
-	{                                                                                                                                                                  \
-		gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&cnt->body, fbs.x, fbs.y, POS_X, POS_Y, GS_GUI_LAYOUT_ANCHOR_TOPLEFT), 0);                   \
-		next = gs_gui_layout_next(&g_renderer->gui);                                                                                                               \
-		gs_gui_draw_control_text(&g_renderer->gui, tmp, next, &g_ui_manager->console_style_sheet.styles[GS_GUI_ELEMENT_TEXT][GS_GUI_ELEMENT_STATE_DEFAULT], 0x00); \
+		float tmp_y	      = 5;
+		const float tmp_pad   = 3;
+		gs_gui_style_t *style = &g_ui_manager->console_style_sheet.styles[GS_GUI_ELEMENT_TEXT][GS_GUI_ELEMENT_STATE_DEFAULT];
+		float32_t line_height = gs_asset_font_max_height(style->font);
+#define DRAW_TMP(POS_X, POS_Y)                                                                                                                           \
+	{                                                                                                                                                \
+		gs_gui_layout_set_next(&g_renderer->gui, gs_gui_layout_anchor(&cnt->body, fbs.x, fbs.y, POS_X, POS_Y, GS_GUI_LAYOUT_ANCHOR_TOPLEFT), 0); \
+		next = gs_gui_layout_next(&g_renderer->gui);                                                                                             \
+		gs_gui_draw_control_text(&g_renderer->gui, tmp, next, style, 0x00);                                                                      \
+		tmp_y += line_height + tmp_pad;                                                                                                          \
 	}
 
 		// draw fps
@@ -370,64 +381,64 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 			tmp,
 			"fps: %d",
 			(int)gs_round(1.0f / gs_platform_delta_time()));
-		DRAW_TMP(5, 5)
+		DRAW_TMP(5, tmp_y)
 
 		// draw times
 		sprintf(tmp, "game:");
-		DRAW_TMP(5, 20)
+		DRAW_TMP(5, tmp_y)
 		sprintf(tmp, "update: %.2fms", g_time_manager->update);
-		DRAW_TMP(10, 35)
+		DRAW_TMP(10, tmp_y)
 		sprintf(tmp, "render: %.2fms", g_time_manager->render);
-		DRAW_TMP(10, 50)
+		DRAW_TMP(10, tmp_y)
 
 		sprintf(tmp, "gs:");
-		DRAW_TMP(5, 65)
+		DRAW_TMP(5, tmp_y)
 		sprintf(tmp, "update: %.2fms", gs_platform_time()->update);
-		DRAW_TMP(10, 80)
+		DRAW_TMP(10, tmp_y)
 		sprintf(tmp, "render: %.2fms", gs_platform_time()->render);
-		DRAW_TMP(10, 95)
+		DRAW_TMP(10, tmp_y)
 		sprintf(tmp, "wait: %.2fms", gs_platform_time()->frame - gs_platform_time()->update - gs_platform_time()->render);
-		DRAW_TMP(10, 110)
+		DRAW_TMP(10, tmp_y)
 
 		// draw map stats
 		if (g_renderer->bsp != NULL && g_renderer->bsp->valid)
 		{
 			sprintf(tmp, "map: %s", g_renderer->bsp->name);
-			DRAW_TMP(5, 125)
+			DRAW_TMP(5, tmp_y)
 			sprintf(tmp, "tris: %zu/%zu", g_renderer->bsp->stats.visible_indices / 3, g_renderer->bsp->stats.total_indices / 3);
-			DRAW_TMP(10, 140)
+			DRAW_TMP(10, tmp_y)
 			sprintf(tmp, "faces: %zu/%zu", g_renderer->bsp->stats.visible_faces, g_renderer->bsp->stats.total_faces);
-			DRAW_TMP(10, 155)
+			DRAW_TMP(10, tmp_y)
 			sprintf(tmp, "patches: %zu/%zu", g_renderer->bsp->stats.visible_patches, g_renderer->bsp->stats.total_patches);
-			DRAW_TMP(10, 170)
+			DRAW_TMP(10, tmp_y)
 			sprintf(tmp, "leaf: %zu, cluster: %d", g_renderer->bsp->stats.current_leaf, g_renderer->bsp->leaves.data[g_renderer->bsp->stats.current_leaf].cluster);
-			DRAW_TMP(10, 185)
+			DRAW_TMP(10, tmp_y)
 		}
 
 		// draw player stats
 		if (g_game_manager != NULL && g_game_manager->player != NULL)
 		{
 			sprintf(tmp, "player:");
-			DRAW_TMP(5, 200)
+			DRAW_TMP(5, tmp_y)
 			sprintf(tmp, "pos: [%f, %f, %f]", g_game_manager->player->transform.position.x, g_game_manager->player->transform.position.y, g_game_manager->player->transform.position.z);
-			DRAW_TMP(10, 215)
+			DRAW_TMP(10, tmp_y)
 			sprintf(tmp, "ang: [%f, %f, %f]", g_game_manager->player->yaw, g_game_manager->player->camera.pitch, g_game_manager->player->camera.roll);
-			DRAW_TMP(10, 230)
+			DRAW_TMP(10, tmp_y)
 			sprintf(tmp, "vel: [%f, %f, %f]", g_game_manager->player->velocity.x, g_game_manager->player->velocity.y, g_game_manager->player->velocity.z);
-			DRAW_TMP(10, 245)
+			DRAW_TMP(10, tmp_y)
 			sprintf(tmp, "vel_abs: %f, h: %f", gs_vec3_len(g_game_manager->player->velocity), gs_vec3_len(gs_v3(g_game_manager->player->velocity.x, g_game_manager->player->velocity.y, 0)));
-			DRAW_TMP(10, 260)
+			DRAW_TMP(10, tmp_y)
 		}
 		else if (g_renderer->cam)
 		{
 			// use renderer camera directly
 			sprintf(tmp, "camera:");
-			DRAW_TMP(5, 200)
+			DRAW_TMP(5, tmp_y)
 			sprintf(tmp, "pos: [%f, %f, %f]", g_renderer->cam->transform.position.x, g_renderer->cam->transform.position.y, g_renderer->cam->transform.position.z);
-			DRAW_TMP(10, 215)
+			DRAW_TMP(10, tmp_y)
 			// TODO: yaw/pitch/roll conversion
 			// sprintf(tmp, "ang: [%f, %f, %f]", gs_rad2deg(g_renderer->cam->transform.rotation.x), gs_rad2deg(g_renderer->cam->transform.rotation.y), gs_rad2deg(g_renderer->cam->transform.rotation.z));
-			// DRAW_TMP(10, 230)
+			// DRAW_TMP(10, tmp_y)
 		}
 	}
 	gs_gui_panel_end(&g_renderer->gui);

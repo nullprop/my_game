@@ -102,7 +102,6 @@ mg_player_input_t mg_game_manager_get_input(float dt)
 
 	// Testing
 	input.move.x += 1.0f;
-	g_ui_manager->debug_open = true;
 
 	if (gs_platform_touch_down(0))
 	{

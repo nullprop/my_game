@@ -33,7 +33,11 @@ void mg_config_init()
 	mg_cvar_new("snd_music", MG_CONFIG_TYPE_FLOAT, 1.0f);
 	mg_cvar_new("snd_ambient", MG_CONFIG_TYPE_FLOAT, 1.0f);
 
+#ifdef __ANDROID__
+	mg_cvar_new("r_fov", MG_CONFIG_TYPE_INT, 90);
+#else
 	mg_cvar_new("r_fov", MG_CONFIG_TYPE_INT, 115);
+#endif
 	mg_cvar_new("r_barrel_enabled", MG_CONFIG_TYPE_INT, 1);
 	mg_cvar_new("r_barrel_strength", MG_CONFIG_TYPE_FLOAT, 0.5f);
 	mg_cvar_new("r_barrel_cyl_ratio", MG_CONFIG_TYPE_FLOAT, 1.0f);

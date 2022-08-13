@@ -84,6 +84,10 @@ void app_init()
 		"Lorem ipsum dolor sit amet, consectetur adipiscing elit, \
 	sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
 		-1);
+	
+#ifdef __ANDROID__
+	g_ui_manager->debug_open = true;
+#endif
 }
 
 void app_update()
