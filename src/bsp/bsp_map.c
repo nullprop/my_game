@@ -846,8 +846,10 @@ void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
 			bsp_face_renderable_t face = map->render_faces[idx];
 
 			// Don't add same face multiple times
-			// TODO: this probably has terrible perf,
+			// TODO: this has terrible perf,
 			// use a good set implementation...
+			// TODO: is this even needed?
+			/*
 			cont = 0;
 			for (size_t k = 0; k < gs_dyn_array_size(map->visible_faces); k++)
 			{
@@ -858,6 +860,7 @@ void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
 				}
 			}
 			if (cont) continue;
+			*/
 
 			// TODO billboards
 			if (face.type == BSP_FACE_TYPE_BILLBOARD)
@@ -970,7 +973,7 @@ mg_renderer_light_t bsp_sample_lightvol(bsp_map_t *map, gs_vec3 position)
 
 	// How many volumes to sample in each direction on all axis.
 	// Total volumes = (2 * samples_xy + 1)^2 * (2 * samples_z + 1)
-	int32_t samples_xy = 2;
+	int32_t samples_xy = 1;
 	int32_t samples_z  = 1;
 
 	for (int32_t x = -64 * samples_xy; x < 64 * samples_xy + 1; x += 64)
