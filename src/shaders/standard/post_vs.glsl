@@ -1,5 +1,5 @@
 /*================================================================
-	* shaders/post_vs.glsl
+	* shaders/standard/post_vs.glsl
 	*
 	* Copyright (c) 2021 Lauri Räsänen
 	* ================================

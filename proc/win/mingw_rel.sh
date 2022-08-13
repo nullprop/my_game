@@ -7,7 +7,7 @@ cd bin
 
 # Copy assets
 cp ../assets/ ./ -r
-cp ../src/shaders ./assets/ -r
+cp ../src/shaders/standard ./assets/shaders -r
 
 flags=(
 	-std=gnu99 -w -O3

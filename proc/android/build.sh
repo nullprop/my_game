@@ -14,4 +14,4 @@ cd jni
 cd ..
 cp obj/local ~/AndroidStudioProjects/NativeTest/app/src/main/jniLibs -r
 cp assets ~/AndroidStudioProjects/NativeTest/app/src/main/assets -r
-cp src/shaders ~/AndroidStudioProjects/NativeTest/app/src/main/assets/ -r
+cp src/shaders/mobile ~/AndroidStudioProjects/NativeTest/app/src/main/assets/shaders -r

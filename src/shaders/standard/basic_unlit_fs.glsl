@@ -1,5 +1,5 @@
 /*================================================================
-	* shaders/basic_unlit_fs.glsl
+	* shaders/standard/basic_unlit_fs.glsl
 	*
 	* Copyright (c) 2021 Lauri Räsänen
 	* ================================

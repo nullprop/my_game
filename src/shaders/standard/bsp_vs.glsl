@@ -1,5 +1,5 @@
 /*================================================================
-	* shaders/bsp_vs.glsl
+	* shaders/standard/bsp_vs.glsl
 	*
 	* Copyright (c) 2021 Lauri Räsänen
 	* ================================

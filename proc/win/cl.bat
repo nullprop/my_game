@@ -46,5 +46,5 @@ if %ERRORLEVEL% EQU 0 (
     echo Copying assets:
     robocopy .\assets .\bin /E /NFL /NDL /NJH /NP
     echo Copying shaders:
-    robocopy .\src\shaders .\bin\shaders /E /NFL /NDL /NJH /NP
+    robocopy .\src\shaders\standard .\bin\shaders /E /NFL /NDL /NJH /NP
 )
