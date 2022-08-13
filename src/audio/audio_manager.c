@@ -70,16 +70,14 @@ void mg_audio_manager_play(char *name, float pitch_var)
 		break;
 	}
 
-	float pitch = 0.0f;
+	float pitch = mg_cvar("cl_timescale")->value.f;
 	if (pitch_var != 0.0f)
 	{
-		pitch = (float)rand_range(-512, 512) * pitch_var / 512.0f;
+		pitch += (float)rand_range(-512, 512) * pitch_var / 512.0f;
 	}
 
 	gs_audio_instance_decl_t data = gs_audio_get_instance_data(asset->instance);
-#ifdef PITCH
-	data.pitch = pitch;
-#endif
+	data.pitch		      = pitch;
 	gs_audio_set_instance_data(asset->instance, data);
 
 	// FIXME: playing instance doesn't work here
@@ -90,11 +88,7 @@ void mg_audio_manager_play(char *name, float pitch_var)
 	else
 	{
 		// gs_audio_play(asset->instance);
-#ifdef PITCH
-		gs_audio_play_source(asset->source, snd_master->value.f * snd_mixer->value.f * asset->volume, pitch);
-#else
-		gs_audio_play_source(asset->source, snd_master->value.f * snd_mixer->value.f * asset->volume);
-#endif
+		gs_audio_play_source_with_pitch(asset->source, snd_master->value.f * snd_mixer->value.f * asset->volume, pitch);
 	}
 }
 
