@@ -24,6 +24,7 @@ todo:
 - fix getting stuck on walls midair
 - fix walking up stairs if hugging wall
 - parse pipelines from files (see gs_parse_*)
+- draw bsp models[1 ->]
 
 done:
 * fix pipeline
