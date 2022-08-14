@@ -26,6 +26,7 @@ typedef struct mg_time_manager_t
 	double models; // seconds
 	double post;   // seconds
 	double ui;     // seconds
+	double submit; // seconds
 
 	double _update_start; // seconds
 	double _update_end;   // seconds
@@ -41,6 +42,8 @@ typedef struct mg_time_manager_t
 	double _post_end;     // seconds
 	double _ui_start;     // seconds
 	double _ui_end;	      // seconds
+	double _submit_start; // seconds
+	double _submit_end;   // seconds
 } mg_time_manager_t;
 
 void mg_time_manager_init();
@@ -60,6 +63,8 @@ void mg_time_manager_post_start();
 void mg_time_manager_post_end();
 void mg_time_manager_ui_start();
 void mg_time_manager_ui_end();
+void mg_time_manager_submit_start();
+void mg_time_manager_submit_end();
 
 extern mg_time_manager_t *g_time_manager;
 

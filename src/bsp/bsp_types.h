@@ -85,6 +85,9 @@ typedef struct bsp_stats_t
 	uint32_t total_indices;
 	uint32_t total_faces;
 	uint32_t total_patches;
+	uint32_t culled_leaves_pvs;
+	uint32_t culled_leaves_frustum;
+	uint32_t visible_leaves;
 	uint32_t visible_vertices;
 	uint32_t visible_indices;
 	uint32_t visible_faces;

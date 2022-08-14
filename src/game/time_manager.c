@@ -108,3 +108,14 @@ void mg_time_manager_ui_end()
 	g_time_manager->_ui_end = gs_platform_elapsed_time() / 1000.0f;
 	g_time_manager->ui	= g_time_manager->_ui_end - g_time_manager->_ui_start;
 }
+
+void mg_time_manager_submit_start()
+{
+	g_time_manager->_submit_start = gs_platform_elapsed_time() / 1000.0f;
+}
+
+void mg_time_manager_submit_end()
+{
+	g_time_manager->_submit_end = gs_platform_elapsed_time() / 1000.0f;
+	g_time_manager->submit	    = g_time_manager->_submit_end - g_time_manager->_submit_start;
+}

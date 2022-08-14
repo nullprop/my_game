@@ -280,7 +280,7 @@ void mg_renderer_update()
 		// Render bsp to offscreen texture
 		if (g_renderer->bsp != NULL && g_renderer->bsp->valid)
 		{
-			bsp_map_update(g_renderer->bsp, g_renderer->cam->transform.position);
+			bsp_map_update(g_renderer->bsp, g_renderer->cam, g_renderer->fb_size);
 			bsp_map_render(g_renderer->bsp, g_renderer->cam, g_renderer->offscreen_rp, &g_renderer->cb, g_renderer->fb_size);
 			g_renderer->offscreen_cleared = true;
 		}
@@ -303,7 +303,9 @@ void mg_renderer_update()
 	mg_ui_manager_render(g_renderer->fb_size, !has_cam);
 
 	// Submit command buffer
+	mg_time_manager_submit_start();
 	gs_graphics_command_buffer_submit(&g_renderer->cb);
+	mg_time_manager_submit_end();
 
 	mg_time_manager_render_end();
 }

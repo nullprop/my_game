@@ -50,7 +50,7 @@ void app_init()
 	camera			   = gs_malloc_init(gs_camera_t);
 	*camera			   = gs_camera_perspective();
 	camera->near_plane	   = 0.1f;
-	camera->far_plane	   = 1000.0f;
+	camera->far_plane	   = 10000.0f;
 	camera->transform.position = gs_v3(0, -50.0f, 0);
 
 	// Init managers, free in app_shutdown if adding here

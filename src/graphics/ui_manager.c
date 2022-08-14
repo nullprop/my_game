@@ -408,6 +408,8 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 		DRAW_TMP(15, tmp_y)
 		sprintf(tmp, "ui: %.2fms", g_time_manager->ui * 1000.0);
 		DRAW_TMP(15, tmp_y)
+		sprintf(tmp, "submit: %.2fms", g_time_manager->submit * 1000.0);
+		DRAW_TMP(15, tmp_y)
 
 		sprintf(tmp, "gs:");
 		DRAW_TMP(5, tmp_y)
@@ -431,6 +433,16 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 			DRAW_TMP(10, tmp_y)
 			sprintf(tmp, "leaf: %zu, cluster: %d", g_renderer->bsp->stats.current_leaf, g_renderer->bsp->leaves.data[g_renderer->bsp->stats.current_leaf].cluster);
 			DRAW_TMP(10, tmp_y)
+			sprintf(tmp, "leaves:");
+			DRAW_TMP(10, tmp_y)
+			sprintf(tmp, "total: %zu", g_renderer->bsp->leaves.count);
+			DRAW_TMP(15, tmp_y)
+			sprintf(tmp, "pvs culled: %zu", g_renderer->bsp->stats.culled_leaves_pvs);
+			DRAW_TMP(15, tmp_y)
+			sprintf(tmp, "frustum culled: %zu", g_renderer->bsp->stats.culled_leaves_frustum);
+			DRAW_TMP(15, tmp_y)
+			sprintf(tmp, "visible: %zu", g_renderer->bsp->stats.visible_leaves);
+			DRAW_TMP(15, tmp_y)
 		}
 
 		// draw player stats

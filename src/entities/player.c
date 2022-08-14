@@ -35,7 +35,7 @@ mg_player_t *mg_player_new()
 		.camera	   = {
 			   .cam = {
 				   .aspect_ratio = (float)vid_width->value.i / vid_height->value.i,
-				   .far_plane	 = 3000.0f,
+				   .far_plane	 = 10000.0f,
 				   .fov		 = mg_cvar("r_fov")->value.i,
 				   .near_plane	 = 0.1f,
 				   .proj_type	 = GS_PROJECTION_TYPE_PERSPECTIVE,
@@ -43,7 +43,7 @@ mg_player_t *mg_player_new()
 		   },
 		.viewmodel_camera = {
 			.aspect_ratio = (float)vid_width->value.i / vid_height->value.i,
-			.far_plane    = 200.0f,
+			.far_plane    = 1000.0f,
 			.fov	      = 60.0f,
 			.near_plane   = 0,
 			.proj_type    = GS_PROJECTION_TYPE_PERSPECTIVE,

@@ -380,20 +380,17 @@ void _bsp_map_create_buffers(bsp_map_t *map)
 		});
 }
 
-void bsp_map_update(bsp_map_t *map, gs_vec3 view_position)
+void bsp_map_update(bsp_map_t *map, gs_camera_t *cam, const gs_vec2 fb)
 {
 	mg_time_manager_vis_start();
 
-	int32_t leaf = _bsp_find_camera_leaf(map, view_position);
-	if (leaf == map->previous_leaf)
+	int32_t leaf = _bsp_find_camera_leaf(map, cam->transform.position);
+	if (leaf != map->previous_leaf)
 	{
-		// Don't calculate visible faces if no change in leaf
-		// TODO: will need to change with frustum culling;
-		// make a potentially visible set?
-		return;
+		// TODO: recalc PVS, move from _bsp_calculate_visible_faces
 	}
 
-	_bsp_calculate_visible_faces(map, leaf);
+	_bsp_calculate_visible_faces(map, leaf, cam, fb);
 	map->previous_leaf = leaf;
 
 	mg_time_manager_vis_end();
@@ -822,13 +819,16 @@ int32_t _bsp_find_camera_leaf(bsp_map_t *map, gs_vec3 view_position)
 	return ~leaf_index;
 }
 
-void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
+void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf, gs_camera_t *cam, const gs_vec2 fb)
 {
-	uint32_t visible_patches  = 0;
-	uint32_t visible_faces	  = 0;
-	uint32_t visible_vertices = 0;
-	uint32_t visible_indices  = 0;
-	int32_t view_cluster	  = map->leaves.data[leaf].cluster;
+	uint32_t culled_leaves_pvs     = 0;
+	uint32_t culled_leaves_frustum = 0;
+	uint32_t visible_leaves	       = 0;
+	uint32_t visible_patches       = 0;
+	uint32_t visible_faces	       = 0;
+	uint32_t visible_vertices      = 0;
+	uint32_t visible_indices       = 0;
+	int32_t view_cluster	       = map->leaves.data[leaf].cluster;
 
 	for (size_t i = 0; i < gs_dyn_array_size(map->render_faces); i++)
 	{
@@ -839,13 +839,28 @@ void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
 	{
 		bsp_leaf_lump_t lump = map->leaves.data[i];
 
+		// TODO:
+		// Store PVS, don't run every frame if leaf doesn't change
 		if (!_bsp_cluster_visible(map, view_cluster, lump.cluster))
 		{
+			culled_leaves_pvs++;
 			continue;
 		}
 
-		// TODO
 		// Frustum culling using lump.mins and lump.maxs
+		gs_mat4 proj	       = mg_camera_get_view_projection(cam, (s32)fb.x, (s32)fb.y);
+		mg_camera_frustum_t fr = mg_camera_get_frustum_planes(proj, true);
+
+		if (!mg_camera_aabb_in_frustum(
+			    fr,
+			    gs_v3(lump.mins[0], lump.mins[1], lump.mins[2]),
+			    gs_v3(lump.maxs[0], lump.maxs[1], lump.maxs[2])))
+		{
+			culled_leaves_frustum++;
+			continue;
+		}
+
+		visible_leaves++;
 
 		// Add faces in this leaf to visible set
 		for (size_t j = 0; j < lump.num_leaf_faces; j++)
@@ -853,6 +868,7 @@ void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
 			int32_t idx		   = map->leaf_faces.data[lump.first_leaf_face + j].face;
 			bsp_face_renderable_t face = map->render_faces[idx];
 
+			// Same face can be in multiple leaves
 			if (face.visible)
 			{
 				continue;
@@ -885,11 +901,14 @@ void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf)
 		}
 	}
 
-	map->stats.visible_vertices = visible_vertices;
-	map->stats.visible_indices  = visible_indices;
-	map->stats.visible_faces    = visible_faces;
-	map->stats.visible_patches  = visible_patches;
-	map->stats.current_leaf	    = leaf;
+	map->stats.culled_leaves_pvs	 = culled_leaves_pvs;
+	map->stats.culled_leaves_frustum = culled_leaves_frustum;
+	map->stats.visible_leaves	 = visible_leaves;
+	map->stats.visible_vertices	 = visible_vertices;
+	map->stats.visible_indices	 = visible_indices;
+	map->stats.visible_faces	 = visible_faces;
+	map->stats.visible_patches	 = visible_patches;
+	map->stats.current_leaf		 = leaf;
 }
 
 bool32_t _bsp_cluster_visible(bsp_map_t *map, int32_t view_cluster, int32_t test_cluster)
@@ -905,9 +924,11 @@ bool32_t _bsp_cluster_visible(bsp_map_t *map, int32_t view_cluster, int32_t test
 		return true;
 	}
 
-	// black magic
-	int32_t idx = view_cluster * map->visdata.size_vecs + (test_cluster >> 3);
-	return (map->visdata.vecs[idx] & (1 << (test_cluster & 7))) != 0;
+	// int32_t idx = test_cluster * map->visdata.size_vecs + view_cluster / 8;
+	// return (map->visdata.vecs[idx] & (1 << (view_cluster % 8))) != 0;
+
+	int32_t idx = test_cluster * map->visdata.size_vecs + (view_cluster >> 3);
+	return (map->visdata.vecs[idx] & (1 << (view_cluster & 7))) != 0;
 }
 
 bsp_lightvol_lump_t bsp_get_lightvol(bsp_map_t *map, gs_vec3 position, gs_vec3 *center)
