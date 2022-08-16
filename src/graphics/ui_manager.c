@@ -421,27 +421,27 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 		DRAW_TMP(10, tmp_y)
 
 		// draw map stats
-		if (g_renderer->bsp != NULL && g_renderer->bsp->valid)
+		if (g_game_manager->map != NULL && g_game_manager->map->valid)
 		{
-			sprintf(tmp, "map: %s", g_renderer->bsp->name);
+			sprintf(tmp, "map: %s", g_game_manager->map->name);
 			DRAW_TMP(5, tmp_y)
-			sprintf(tmp, "tris: %zu/%zu", g_renderer->bsp->stats.visible_indices / 3, g_renderer->bsp->stats.total_indices / 3);
+			sprintf(tmp, "tris: %zu/%zu", g_game_manager->map->stats.visible_indices / 3, g_game_manager->map->stats.total_indices / 3);
 			DRAW_TMP(10, tmp_y)
-			sprintf(tmp, "faces: %zu/%zu", g_renderer->bsp->stats.visible_faces, g_renderer->bsp->stats.total_faces);
+			sprintf(tmp, "faces: %zu/%zu", g_game_manager->map->stats.visible_faces, g_game_manager->map->stats.total_faces);
 			DRAW_TMP(10, tmp_y)
-			sprintf(tmp, "patches: %zu/%zu", g_renderer->bsp->stats.visible_patches, g_renderer->bsp->stats.total_patches);
+			sprintf(tmp, "patches: %zu/%zu", g_game_manager->map->stats.visible_patches, g_game_manager->map->stats.total_patches);
 			DRAW_TMP(10, tmp_y)
-			sprintf(tmp, "leaf: %zu, cluster: %d", g_renderer->bsp->stats.current_leaf, g_renderer->bsp->leaves.data[g_renderer->bsp->stats.current_leaf].cluster);
+			sprintf(tmp, "leaf: %zu, cluster: %d", g_game_manager->map->stats.current_leaf, g_game_manager->map->leaves.data[g_game_manager->map->stats.current_leaf].cluster);
 			DRAW_TMP(10, tmp_y)
 			sprintf(tmp, "leaves:");
 			DRAW_TMP(10, tmp_y)
-			sprintf(tmp, "total: %zu", g_renderer->bsp->leaves.count);
+			sprintf(tmp, "total: %zu", g_game_manager->map->leaves.count);
 			DRAW_TMP(15, tmp_y)
-			sprintf(tmp, "pvs culled: %zu", g_renderer->bsp->stats.culled_leaves_pvs);
+			sprintf(tmp, "pvs culled: %zu", g_game_manager->map->stats.culled_leaves_pvs);
 			DRAW_TMP(15, tmp_y)
-			sprintf(tmp, "frustum culled: %zu", g_renderer->bsp->stats.culled_leaves_frustum);
+			sprintf(tmp, "frustum culled: %zu", g_game_manager->map->stats.culled_leaves_frustum);
 			DRAW_TMP(15, tmp_y)
-			sprintf(tmp, "visible: %zu", g_renderer->bsp->stats.visible_leaves);
+			sprintf(tmp, "visible: %zu", g_game_manager->map->stats.visible_leaves);
 			DRAW_TMP(15, tmp_y)
 		}
 

@@ -71,7 +71,6 @@ void mg_game_manager_load_map(char *filename)
 	if (g_game_manager->map->valid)
 	{
 		bsp_map_init(g_game_manager->map);
-		g_renderer->bsp = g_game_manager->map;
 		mg_game_manager_spawn_player();
 	}
 	else
@@ -79,7 +78,6 @@ void mg_game_manager_load_map(char *filename)
 		mg_println("Failed to load map %s", filename);
 		bsp_map_free(g_game_manager->map);
 		g_game_manager->map = NULL;
-		g_renderer->bsp	    = NULL;
 	}
 }
 

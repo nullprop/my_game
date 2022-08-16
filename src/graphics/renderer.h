@@ -38,7 +38,6 @@ typedef struct mg_renderer_t
 	gs_immediate_draw_t gsi;
 	gs_gui_context_t gui;
 	gs_camera_t *cam;
-	bsp_map_t *bsp;
 	gs_slot_array(mg_renderable_t) renderables;
 	gs_handle(gs_graphics_pipeline_t) pipe;
 	gs_handle(gs_graphics_pipeline_t) wire_pipe;
