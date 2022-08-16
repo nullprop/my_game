@@ -59,6 +59,12 @@ void mg_game_manager_update()
 
 void mg_game_manager_load_map(char *filename)
 {
+	if (!gs_platform_file_exists(filename))
+	{
+		mg_println("mg_game_manager_load_map() failed: file not found '%s'", filename);
+		return false;
+	}
+
 	if (g_game_manager->map != NULL)
 	{
 		bsp_map_free(g_game_manager->map);
