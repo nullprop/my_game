@@ -81,7 +81,7 @@ static inline mg_camera_frustum_t mg_camera_get_frustum_planes(const gs_mat4 mvp
 		{
 			// invSqrt(dot(plane))
 			float length = 1.0 / sqrt(fr.planes[i].x * fr.planes[i].x + fr.planes[i].y * fr.planes[i].y + fr.planes[i].z * fr.planes[i].z);
-			fr.planes[i].x *= length;
+			fr.planes[i] = gs_vec4_scale(fr.planes[i], length);
 		}
 	}
 
