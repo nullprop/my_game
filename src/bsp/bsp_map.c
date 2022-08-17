@@ -849,7 +849,7 @@ void _bsp_calculate_visible_faces(bsp_map_t *map, int32_t leaf, gs_camera_t *cam
 
 		// Frustum culling using lump.mins and lump.maxs
 		gs_mat4 proj	       = mg_camera_get_view_projection(cam, (s32)fb.x, (s32)fb.y);
-		mg_camera_frustum_t fr = mg_camera_get_frustum_planes(proj, true);
+		mg_camera_frustum_t fr = mg_camera_get_frustum_planes(proj, false);
 
 		if (!mg_camera_aabb_in_frustum(
 			    fr,
