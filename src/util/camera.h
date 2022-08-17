@@ -15,6 +15,12 @@
 
 #include "transform.h"
 
+#ifdef WIN32
+// stupid...
+#undef near
+#undef far
+#endif
+
 typedef struct mg_camera_frustum_t
 {
 	union
