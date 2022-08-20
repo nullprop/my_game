@@ -4,9 +4,6 @@ todo:
 - enemies
 - menu, options
 - save/load system
-- potentially visible leaves
-  - frustum cull potential leaves
-  - visible faces
 - don't tesselate patch on axis with no curve
 - demos
 - demo rendering to video
@@ -25,6 +22,7 @@ todo:
 - fix walking up stairs if hugging wall
 - parse pipelines from files (see gs_parse_*)
 - draw bsp models[1 ->]
+- frustum cull models
 
 done:
 * fix pipeline
@@ -53,3 +51,4 @@ done:
 * android build
 * time manager
 * wireframe rendering toggle
+* frustum cull bsp leaves
