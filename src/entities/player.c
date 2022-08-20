@@ -48,16 +48,19 @@ mg_player_t *mg_player_new()
 			.near_plane   = 0,
 			.proj_type    = GS_PROJECTION_TYPE_PERSPECTIVE,
 		},
-		.health		     = 100,
-		.eye_pos	     = gs_v3(0, 0, MG_PLAYER_HEIGHT - MG_PLAYER_EYE_OFFSET),
-		.mins		     = gs_v3(-MG_PLAYER_HALF_WIDTH, -MG_PLAYER_HALF_WIDTH, 0),
-		.maxs		     = gs_v3(MG_PLAYER_HALF_WIDTH, MG_PLAYER_HALF_WIDTH, MG_PLAYER_HEIGHT),
-		.viewmodel_transform = gs_vqs_default(),
-		.last_ground_time    = 0,
+		.health		  = 100,
+		.eye_pos	  = gs_v3(0, 0, MG_PLAYER_HEIGHT - MG_PLAYER_EYE_OFFSET),
+		.mins		  = gs_v3(-MG_PLAYER_HALF_WIDTH, -MG_PLAYER_HALF_WIDTH, 0),
+		.maxs		  = gs_v3(MG_PLAYER_HALF_WIDTH, MG_PLAYER_HALF_WIDTH, MG_PLAYER_HEIGHT),
+		.last_ground_time = 0,
+		.weapon_current	  = -1,
 	};
 
-	// mg_model_t *model = mg_model_manager_find("Suzanne/glTF/suzanne.gltf");
-	// player->viewmodel_handle = mg_renderer_create_renderable(*model, &player->viewmodel_transform);
+	for (size_t i = 0; i < MG_WEAPON_COUNT; i++)
+	{
+		player->weapons[i] = mg_weapon_create(i);
+		mg_renderer_set_hidden(player->weapons[i]->renderable_id, true);
+	}
 
 	_mg_player_camera_update(player);
 
@@ -66,7 +69,11 @@ mg_player_t *mg_player_new()
 
 void mg_player_free(mg_player_t *player)
 {
-	// mg_renderer_remove_renderable(player->viewmodel_handle);
+	for (size_t i = 0; i < MG_WEAPON_COUNT; i++)
+	{
+		mg_weapon_free(player->weapons[i]);
+	}
+
 	gs_free(player);
 }
 
@@ -182,6 +189,32 @@ void mg_player_update(mg_player_t *player)
 		player->transform.position = player->last_valid_pos;
 		player->velocity	   = gs_v3(0, 0, 0);
 	}
+
+	if (player->wish_shoot)
+	{
+		_mg_player_shoot(player);
+	}
+}
+
+void mg_player_switch_weapon(mg_player_t *player, int32_t slot)
+{
+	if (slot >= MG_WEAPON_COUNT)
+	{
+		gs_println("WARN: mg_player_switch_weapon: slot %d higher than max %d", slot, MG_WEAPON_COUNT - 1);
+		return;
+	}
+
+	if (player->weapon_current >= 0)
+	{
+		mg_renderer_set_hidden(player->weapons[player->weapon_current]->renderable_id, true);
+	}
+
+	player->weapon_current = slot;
+
+	if (player->weapon_current >= 0)
+	{
+		mg_renderer_set_hidden(player->weapons[player->weapon_current]->renderable_id, false);
+	}
 }
 
 void _mg_player_do_jump(mg_player_t *player)
@@ -241,13 +274,23 @@ void _mg_player_camera_update(mg_player_t *player)
 		},
 		&player->transform);
 
-	player->viewmodel_transform = gs_vqs_absolute_transform(
-		&(gs_vqs){
-			.position = gs_v3(0, 15, -10),
-			.rotation = gs_quat_angle_axis(gs_deg2rad(90), MG_AXIS_RIGHT),
-			.scale	  = gs_v3(4.0f, 4.0f, 4.0f),
-		},
-		&player->camera.cam.transform);
+	if (player->weapon_current >= 0)
+	{
+		player->weapons[player->weapon_current]->transform = gs_vqs_absolute_transform(
+			&(gs_vqs){
+				.position = gs_v3(
+					mg_cvar("r_viewmodel_pos_x")->value.f,
+					mg_cvar("r_viewmodel_pos_y")->value.f,
+					mg_cvar("r_viewmodel_pos_z")->value.f),
+				// TODO: check orientation
+				.rotation = gs_quat_angle_axis(gs_deg2rad(90), MG_AXIS_RIGHT),
+				.scale	  = gs_v3(
+					   mg_cvar("r_viewmodel_scale_x")->value.f,
+					   mg_cvar("r_viewmodel_scale_y")->value.f,
+					   mg_cvar("r_viewmodel_scale_z")->value.f),
+			},
+			&player->camera.cam.transform);
+	}
 }
 
 // Can always crouch
@@ -426,4 +469,23 @@ void _mg_player_unstuck(mg_player_t *player)
 			}
 		}
 	}
+}
+
+void _mg_player_shoot(mg_player_t *player)
+{
+	if (player->weapon_current < 0 || player->weapon_current >= MG_WEAPON_COUNT)
+	{
+		return;
+	}
+
+	mg_weapon_t *weapon = player->weapons[player->weapon_current];
+
+	if (weapon->ammo_current <= 0)
+	{
+		return;
+	}
+
+	weapon->ammo_current--;
+
+	// TODO
 }

@@ -38,7 +38,7 @@ void mg_model_manager_free()
 	g_model_manager = NULL;
 }
 
-mg_model_t *mg_model_manager_find(char *filename)
+mg_model_t *mg_model_manager_find(const char *filename)
 {
 	for (size_t i = 0; i < gs_dyn_array_size(g_model_manager->models); i++)
 	{
@@ -52,7 +52,27 @@ mg_model_t *mg_model_manager_find(char *filename)
 	return NULL;
 }
 
-bool _mg_model_manager_load(char *filename, char *shader)
+mg_model_t *mg_model_manager_find_or_load(const char *filename, const char *shader)
+{
+	for (size_t i = 0; i < gs_dyn_array_size(g_model_manager->models); i++)
+	{
+		if (strcmp(filename, g_model_manager->models[i].filename) == 0)
+		{
+			return &g_model_manager->models[i];
+		}
+	}
+
+	if (_mg_model_manager_load(filename, shader))
+	{
+		return &gs_dyn_array_back(g_model_manager->models);
+	}
+
+	mg_println("WARN: mg_model_manager_find_or_load invalid model %s", filename);
+
+	return NULL;
+}
+
+bool _mg_model_manager_load(const char *filename, const char *shader)
 {
 	char *path = mg_append_string("assets/models/", filename);
 

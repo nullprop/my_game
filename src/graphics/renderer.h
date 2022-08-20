@@ -24,6 +24,7 @@
 // Renderable instance of a model
 typedef struct mg_renderable_t
 {
+	bool hidden;
 	gs_vqs *transform;
 	gs_mat4 u_view;
 	mg_model_t model;
@@ -78,6 +79,7 @@ void mg_renderer_remove_renderable(uint32_t renderable_id);
 mg_renderable_t *mg_renderer_get_renderable(uint32_t renderable_id);
 gs_handle(gs_graphics_shader_t) mg_renderer_get_shader(char *name);
 bool32_t mg_renderer_play_animation(uint32_t id, char *name);
+void mg_renderer_set_hidden(uint32_t id, bool hidden);
 void _mg_renderer_resize(const gs_vec2 fb);
 void _mg_renderer_renderable_pass();
 void _mg_renderer_post_pass();

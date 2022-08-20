@@ -28,8 +28,9 @@ typedef struct mg_model_manager_t
 
 void mg_model_manager_init();
 void mg_model_manager_free();
-mg_model_t *mg_model_manager_find(char *filename);
-bool _mg_model_manager_load(char *filename, char *shader);
+mg_model_t *mg_model_manager_find(const char *filename);
+mg_model_t *mg_model_manager_find_or_load(const char *filename, const char *shader);
+bool _mg_model_manager_load(const char *filename, const char *shader);
 
 extern mg_model_manager_t *g_model_manager;
 

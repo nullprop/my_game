@@ -123,6 +123,9 @@ mg_player_input_t mg_game_manager_get_input()
 
 	input.delta_aim = gs_vec2_scale(gs_platform_mouse_deltav(), mg_cvar("cl_sensitivity")->value.f * 0.022f);
 
+	f32 scroll_x, scroll_y;
+	gs_platform_mouse_wheel(&scroll_x, &scroll_y);
+
 	if (gs_platform_key_down(GS_KEYCODE_UP))
 		input.delta_aim.y -= 150.0f * dt;
 	if (gs_platform_key_down(GS_KEYCODE_DOWN))
@@ -145,6 +148,47 @@ mg_player_input_t mg_game_manager_get_input()
 		input.jump = true;
 	if (gs_platform_key_down(GS_KEYCODE_LEFT_CONTROL))
 		input.crouch = true;
+
+	if (gs_platform_key_down(GS_MOUSE_LBUTTON))
+		input.shoot = true;
+
+	input.wish_slot = -1;
+
+	if (gs_platform_key_pressed(GS_KEYCODE_1))
+		input.wish_slot = 0;
+
+	if (gs_platform_key_pressed(GS_KEYCODE_2))
+		input.wish_slot = 1;
+
+	if (gs_platform_key_pressed(GS_KEYCODE_3))
+		input.wish_slot = 2;
+
+	if (gs_platform_key_pressed(GS_KEYCODE_4))
+		input.wish_slot = 3;
+
+	if (gs_platform_key_pressed(GS_KEYCODE_5))
+		input.wish_slot = 4;
+
+	if (gs_platform_key_pressed(GS_KEYCODE_6))
+		input.wish_slot = 5;
+
+	if (gs_platform_key_pressed(GS_KEYCODE_7))
+		input.wish_slot = 6;
+
+	if (gs_platform_key_pressed(GS_KEYCODE_8))
+		input.wish_slot = 7;
+
+	if (gs_platform_key_pressed(GS_KEYCODE_9))
+		input.wish_slot = 8;
+
+	if (gs_platform_key_pressed(GS_KEYCODE_0))
+		input.wish_slot = 9;
+
+	// TODO: weapon scroll
+	// if (scroll_y > 0)
+	// 	...
+	// else if (scroll_y < 0)
+	// 	...
 
 	return input;
 }
@@ -178,6 +222,12 @@ void mg_game_manager_input_alive()
 	// Actions
 	g_game_manager->player->wish_jump   = input.jump;
 	g_game_manager->player->wish_crouch = input.crouch;
+	g_game_manager->player->wish_shoot  = input.shoot;
+
+	if (input.wish_slot >= 0)
+	{
+		mg_player_switch_weapon(g_game_manager->player, input.wish_slot);
+	}
 
 	// TODO: platform
 	if (gs_platform_key_pressed(GS_KEYCODE_ESC))

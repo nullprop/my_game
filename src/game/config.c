@@ -51,6 +51,13 @@ void mg_config_init()
 #endif
 	mg_cvar_new("r_wireframe", MG_CONFIG_TYPE_INT, 0);
 
+	mg_cvar_new("r_viewmodel_pos_x", MG_CONFIG_TYPE_FLOAT, 0.0f);
+	mg_cvar_new("r_viewmodel_pos_y", MG_CONFIG_TYPE_FLOAT, 15.0f);
+	mg_cvar_new("r_viewmodel_pos_z", MG_CONFIG_TYPE_FLOAT, -10.0f);
+	mg_cvar_new("r_viewmodel_scale_x", MG_CONFIG_TYPE_FLOAT, 1.0f);
+	mg_cvar_new("r_viewmodel_scale_y", MG_CONFIG_TYPE_FLOAT, 1.0f);
+	mg_cvar_new("r_viewmodel_scale_z", MG_CONFIG_TYPE_FLOAT, 1.0f);
+
 #ifdef __ANDROID__
 	mg_cvar_new("cl_sensitivity", MG_CONFIG_TYPE_FLOAT, 5.0f);
 #else

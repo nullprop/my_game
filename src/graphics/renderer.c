@@ -442,6 +442,17 @@ bool32_t mg_renderer_play_animation(uint32_t id, char *name)
 	return found;
 }
 
+void mg_renderer_set_hidden(uint32_t id, bool hidden)
+{
+	mg_renderable_t *renderable = mg_renderer_get_renderable(id);
+	if (renderable == NULL)
+	{
+		return;
+	}
+
+	renderable->hidden = hidden;
+}
+
 void _mg_renderer_resize(const gs_vec2 fb_size)
 {
 	g_renderer->fb_size = fb_size;
@@ -545,6 +556,11 @@ void _mg_renderer_renderable_pass()
 		gs_slot_array_iter_advance(g_renderer->renderables, it))
 	{
 		mg_renderable_t *renderable = gs_slot_array_iter_getp(g_renderer->renderables, it);
+
+		if (renderable->hidden)
+		{
+			continue;
+		}
 
 		// View matrix
 		renderable->u_view = gs_vqs_to_mat4(renderable->transform);

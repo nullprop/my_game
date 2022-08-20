@@ -13,6 +13,7 @@
 #include <gs/gs.h>
 
 #include "../bsp/bsp_map.h"
+#include "weapon.h"
 
 #define MG_PLAYER_HEIGHT	    64.0f
 #define MG_PLAYER_CROUCH_HEIGHT	    32.0f
@@ -62,21 +63,24 @@ typedef struct mg_player_t
 	bool32_t crouched;
 	bool32_t grounded;
 	bool32_t has_jumped;
+	bool32_t wish_shoot;
 	float32_t crouch_fraction;
 	gs_vec3 last_valid_pos;
-	gs_vqs viewmodel_transform;
-	uint32_t viewmodel_handle;
+	int32_t weapon_current;
+	mg_weapon_t *weapons[MG_WEAPON_COUNT];
 	double last_ground_time;
 } mg_player_t;
 
 mg_player_t *mg_player_new();
 void mg_player_free(mg_player_t *player);
 void mg_player_update(mg_player_t *player);
+void mg_player_switch_weapon(mg_player_t *player, int32_t slot);
 void _mg_player_unstuck(mg_player_t *player);
 void _mg_player_uncrouch(mg_player_t *player, float delta_time);
 void _mg_player_crouch(mg_player_t *player, float delta_time);
 void _mg_player_camera_update(mg_player_t *player);
 void _mg_player_do_jump(mg_player_t *player);
 void _mg_player_check_floor(mg_player_t *player);
+void _mg_player_shoot(mg_player_t *player);
 
 #endif // MG_PLAYER_H

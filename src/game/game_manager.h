@@ -19,6 +19,8 @@ typedef struct mg_player_input_t
 	gs_vec2 move;
 	bool jump;
 	bool crouch;
+	bool shoot;
+	int32_t wish_slot;
 } mg_player_input_t;
 
 void mg_game_manager_init();
