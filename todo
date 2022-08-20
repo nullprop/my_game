@@ -1,7 +1,12 @@
 todo:
 - dynamic lights
-- effects
+- fx
 - enemies
+  * movement
+  - spawn at bsp ents
+  - death
+  - damage player
+  - anims
 - menu, options
 - save/load system
 - don't tesselate patch on axis with no curve
@@ -15,6 +20,8 @@ todo:
 - trenchbroom
 - renderables culling
 - weapons
+  * viewmodels
+  * ammo
   - tracing against bsp & entities utils
 - fix gray lines in text rendering (console, dialogue)
 - better cvar change tracking, clean up main
