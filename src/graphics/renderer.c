@@ -279,7 +279,7 @@ void mg_renderer_update()
 		g_renderer->offscreen_cleared = false;
 
 		// Render bsp to offscreen texture
-		if (g_game_manager->map != NULL && g_game_manager->map->valid)
+		if (g_game_manager != NULL && g_game_manager->map != NULL && g_game_manager->map->valid)
 		{
 			bsp_map_update(g_game_manager->map, g_renderer->cam, g_renderer->fb_size);
 			bsp_map_render(g_game_manager->map, g_renderer->cam, g_renderer->offscreen_rp, &g_renderer->cb, g_renderer->fb_size);
@@ -585,7 +585,7 @@ void _mg_renderer_renderable_pass()
 		else
 		{
 			// Light
-			if (g_game_manager->map != NULL && g_game_manager->map->valid)
+			if (g_game_manager != NULL && g_game_manager->map != NULL && g_game_manager->map->valid)
 			{
 				light = bsp_sample_lightvol(g_game_manager->map, renderable->transform->position);
 				// bsp_lightvol_lump_t lump = bsp_get_lightvol(g_game_manager->map, renderable->transform->position, NULL);
