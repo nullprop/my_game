@@ -91,6 +91,10 @@ bool mg_load_md3(char *filename, md3_t *model)
 		gs_byte_buffer_read(&buffer, int32_t, &surf->off_verts);
 		gs_byte_buffer_read(&buffer, int32_t, &surf->off_end);
 
+		// not supported, could use missing tex
+		if (surf->num_shaders <= 0)
+			return _mg_load_md3_fail(&buffer, "no shaders in surface");
+
 		// shaders
 		sz		= sizeof(md3_shader_t) * surf->num_shaders;
 		surf->shaders	= gs_malloc(sz);
@@ -176,18 +180,18 @@ bool mg_load_md3(char *filename, md3_t *model)
 	{
 		mg_println("mg_load_md3(): loading animations from '%s'", cfg_path);
 
-		char* file_data = gs_platform_read_file_contents(cfg_path, "r", NULL);
+		char *file_data = gs_platform_read_file_contents(cfg_path, "r", NULL);
 
 		char *line;
 		char *line_ptr;
 		char *token;
 		u8 num_parts = 0;
 		u8 num_line  = 0;
-		line = strtok_r(file_data, "\r\n", &line_ptr);
+		line	     = strtok_r(file_data, "\r\n", &line_ptr);
 		while (line != NULL)
 		{
 			num_line++;
-			//gs_println("line %d: %s", num_line, line);
+			// gs_println("line %d: %s", num_line, line);
 
 			if (strlen(line) < 2)
 			{
@@ -298,9 +302,12 @@ void mg_free_md3(md3_t *model)
 	{
 		gs_graphics_index_buffer_destroy(model->surfaces[i].ibo);
 
-		for (size_t j = 0; j < model->surfaces[i].num_frames; j++)
+		if (model->surfaces[i].vbos != NULL)
 		{
-			gs_graphics_vertex_buffer_destroy(model->surfaces[i].vbos[j]);
+			for (size_t j = 0; j < model->surfaces[i].num_frames; j++)
+			{
+				gs_graphics_vertex_buffer_destroy(model->surfaces[i].vbos[j]);
+			}
 		}
 
 		gs_free(model->surfaces[i].magic);
