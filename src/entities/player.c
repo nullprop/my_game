@@ -282,8 +282,7 @@ void _mg_player_camera_update(mg_player_t *player)
 					mg_cvar("r_viewmodel_pos_x")->value.f,
 					mg_cvar("r_viewmodel_pos_y")->value.f,
 					mg_cvar("r_viewmodel_pos_z")->value.f),
-				// TODO: check orientation
-				.rotation = gs_quat_angle_axis(gs_deg2rad(90), MG_AXIS_RIGHT),
+				.rotation = gs_quat_default(),
 				.scale	  = gs_v3(
 					   mg_cvar("r_viewmodel_scale_x")->value.f,
 					   mg_cvar("r_viewmodel_scale_y")->value.f,
