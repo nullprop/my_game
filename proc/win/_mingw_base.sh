@@ -3,11 +3,11 @@
 # Clean
 rm -rf bin
 mkdir bin
-cd bin
 
 # Copy assets
-cp ../assets/ ./ -r
-cp ../src/shaders/standard ./assets/shaders -r
+./proc/win/copy_assets.sh
+
+cd bin
 
 flags=(
 	-std=gnu99 -w $1
