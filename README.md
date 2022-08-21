@@ -77,7 +77,11 @@ All projects contained in `third_party` are copyright of their respective owners
 
 ### Windows
 
-// TODO
+- Install MingW
+
+```sh
+./proc/win/mingw_dbg.sh
+```
 
 ### Linux
 
@@ -85,7 +89,7 @@ Tested on Ubuntu 22.04.1 LTS (Desktop).
 
 ```sh
 sudo apt install gcc mesa-common-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev libc6-dev-i386
-bash proc/linux/gcc_dbg.sh
+./proc/linux/gcc_dbg.sh
 ```
 
 ## Console
