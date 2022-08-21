@@ -72,6 +72,13 @@ void app_init()
 	testmodel_transform_2->scale	= gs_v3(1.0f, 1.0f, 1.0f);
 	uint32_t id_2			= mg_renderer_create_renderable(*testmodel_2, testmodel_transform_2);
 
+	mg_model_t *testmodel_3		= mg_model_manager_find_or_load("weapons/rocket_launcher.md3", "basic");
+	gs_vqs *testmodel_transform_3	= gs_malloc_init(gs_vqs);
+	testmodel_transform_3->position = gs_v3(660.0f, 680.0f, -10.0f);
+	testmodel_transform_3->rotation = gs_quat_from_euler(0.0f, 0.0f, 0.0f);
+	testmodel_transform_3->scale	= gs_v3(1.0f, 1.0f, 1.0f);
+	uint32_t id_3			= mg_renderer_create_renderable(*testmodel_3, testmodel_transform_3);
+
 	mg_renderer_play_animation(id_1, "TORSO_GESTURE");
 	mg_renderer_play_animation(id_2, "LEGS_WALK");
 	// - - - -

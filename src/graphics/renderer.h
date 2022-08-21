@@ -66,10 +66,15 @@ typedef struct mg_renderer_t
 	gs_handle(gs_graphics_framebuffer_t) offscreen_fbo;
 	gs_handle(gs_graphics_texture_t) offscreen_rt;
 	gs_handle(gs_graphics_texture_t) offscreen_dt;
+	gs_handle(gs_graphics_renderpass_t) viewmodel_rp;
+	gs_handle(gs_graphics_framebuffer_t) viewmodel_fbo;
+	gs_handle(gs_graphics_texture_t) viewmodel_rt;
+	gs_handle(gs_graphics_texture_t) viewmodel_dt;
 	gs_handle(gs_graphics_uniform_t) u_proj;
 	gs_handle(gs_graphics_uniform_t) u_view;
 	gs_handle(gs_graphics_uniform_t) u_light;
 	gs_handle(gs_graphics_uniform_t) u_tex;
+	gs_handle(gs_graphics_uniform_t) u_tex_vm;
 	gs_handle(gs_graphics_uniform_t) u_color;
 	gs_handle(gs_graphics_uniform_t) u_barrel_enabled;
 	gs_handle(gs_graphics_uniform_t) u_barrel_strength;
@@ -78,6 +83,7 @@ typedef struct mg_renderer_t
 	gs_handle(gs_graphics_uniform_t) u_barrel_cyl_ratio;
 	gs_handle(gs_graphics_texture_t) missing_texture;
 	float clear_color[4];
+	float clear_color_overlay[4];
 } mg_renderer_t;
 
 void mg_renderer_init(uint32_t window_handle);

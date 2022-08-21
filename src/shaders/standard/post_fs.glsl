@@ -17,18 +17,26 @@ in vec3 uv;
 in vec2 uv_dot;
 
 uniform sampler2D u_tex;
+uniform sampler2D u_tex_vm;
 
 out vec4 frag_color;
 
 void main()
 {
+	vec4 color1;
+	vec4 color2;
+
 	if (barrel_enabled == 1)
 	{
 		vec3 tex_coord = dot(uv_dot, uv_dot) * vec3(-0.5, -0.5, -1.0) + uv;
-		frag_color = texture2DProj(u_tex, tex_coord);
+		color1 = texture2DProj(u_tex, tex_coord);
+		color2 = texture2DProj(u_tex_vm, tex_coord);
 	}
 	else
 	{
-		frag_color = texture(u_tex, uv.xy);
-	}	
+		color1 = texture(u_tex, uv.xy);
+		color2 = texture(u_tex_vm, uv.xy);
+	}
+
+	frag_color = mix(color1, color2, color2.a);
 }

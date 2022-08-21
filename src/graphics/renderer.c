@@ -43,17 +43,35 @@ void mg_renderer_init(uint32_t window_handle)
 	g_renderer->clear_color[2] = 0;
 	g_renderer->clear_color[3] = 1.0f;
 
+	g_renderer->clear_color_overlay[0] = 0;
+	g_renderer->clear_color_overlay[1] = 0;
+	g_renderer->clear_color_overlay[2] = 0;
+	g_renderer->clear_color_overlay[3] = 0;
+
 	// Create offscreen render objects
 	g_renderer->offscreen_fbo = gs_graphics_framebuffer_create(NULL);
 	g_renderer->offscreen_rt  = gs_handle_invalid(gs_graphics_texture_t);
 	g_renderer->offscreen_dt  = gs_handle_invalid(gs_graphics_texture_t);
+
+	g_renderer->viewmodel_fbo = gs_graphics_framebuffer_create(NULL);
+	g_renderer->viewmodel_rt  = gs_handle_invalid(gs_graphics_texture_t);
+	g_renderer->viewmodel_dt  = gs_handle_invalid(gs_graphics_texture_t);
+
 	_mg_renderer_resize(gs_platform_framebuffer_sizev(gs_platform_main_window()));
+
 	g_renderer->offscreen_rp = gs_graphics_renderpass_create(
 		&(gs_graphics_renderpass_desc_t){
 			.fbo	    = g_renderer->offscreen_fbo,
 			.color	    = &g_renderer->offscreen_rt,
 			.color_size = sizeof(g_renderer->offscreen_rt),
 			.depth	    = g_renderer->offscreen_dt});
+
+	g_renderer->viewmodel_rp = gs_graphics_renderpass_create(
+		&(gs_graphics_renderpass_desc_t){
+			.fbo	    = g_renderer->viewmodel_fbo,
+			.color	    = &g_renderer->viewmodel_rt,
+			.color_size = sizeof(g_renderer->viewmodel_rt),
+			.depth	    = g_renderer->viewmodel_dt});
 
 	// Create buffers for full-screen quad
 	g_renderer->screen_indices = gs_malloc(sizeof(int32_t) * 6);
@@ -121,6 +139,14 @@ void mg_renderer_init(uint32_t window_handle)
 	g_renderer->u_tex = gs_graphics_uniform_create(
 		&(gs_graphics_uniform_desc_t){
 			.name	= "u_tex",
+			.layout = &(gs_graphics_uniform_layout_desc_t){
+				.type = GS_GRAPHICS_UNIFORM_SAMPLER2D,
+			},
+			.stage = GS_GRAPHICS_SHADER_STAGE_FRAGMENT,
+		});
+	g_renderer->u_tex_vm = gs_graphics_uniform_create(
+		&(gs_graphics_uniform_desc_t){
+			.name	= "u_tex_vm",
 			.layout = &(gs_graphics_uniform_layout_desc_t){
 				.type = GS_GRAPHICS_UNIFORM_SAMPLER2D,
 			},
@@ -220,7 +246,7 @@ void mg_renderer_init(uint32_t window_handle)
 				.dst  = GS_GRAPHICS_BLEND_MODE_ONE_MINUS_SRC_ALPHA,
 			},
 			.depth = {
-				.func = GS_GRAPHICS_DEPTH_FUNC_ALWAYS,
+				.func = GS_GRAPHICS_DEPTH_FUNC_LESS,
 			},
 			.layout = {
 				.attrs = vattrs,
@@ -361,6 +387,7 @@ void mg_renderer_free()
 	gs_graphics_uniform_destroy(g_renderer->u_view);
 	gs_graphics_uniform_destroy(g_renderer->u_light);
 	gs_graphics_uniform_destroy(g_renderer->u_tex);
+	gs_graphics_uniform_destroy(g_renderer->u_tex_vm);
 	gs_graphics_uniform_destroy(g_renderer->u_color);
 	gs_graphics_uniform_destroy(g_renderer->u_barrel_enabled);
 	gs_graphics_uniform_destroy(g_renderer->u_barrel_strength);
@@ -369,12 +396,16 @@ void mg_renderer_free()
 	gs_graphics_uniform_destroy(g_renderer->u_barrel_cyl_ratio);
 
 	gs_graphics_renderpass_destroy(g_renderer->offscreen_rp);
+	gs_graphics_renderpass_destroy(g_renderer->viewmodel_rp);
 
 	gs_graphics_framebuffer_destroy(g_renderer->offscreen_fbo);
+	gs_graphics_framebuffer_destroy(g_renderer->viewmodel_fbo);
 
 	gs_graphics_texture_destroy(g_renderer->missing_texture);
 	gs_graphics_texture_destroy(g_renderer->offscreen_rt);
+	gs_graphics_texture_destroy(g_renderer->viewmodel_rt);
 	gs_graphics_texture_destroy(g_renderer->offscreen_dt);
+	gs_graphics_texture_destroy(g_renderer->viewmodel_dt);
 
 	gs_command_buffer_free(&g_renderer->cb);
 	gs_immediate_draw_free(&g_renderer->gsi);
@@ -497,6 +528,7 @@ void _mg_renderer_resize(const gs_vec2 fb_size)
 {
 	g_renderer->fb_size = fb_size;
 
+	// Recreate offscreen render objects
 	if (gs_handle_is_valid(g_renderer->offscreen_rt))
 	{
 		gs_graphics_texture_destroy(g_renderer->offscreen_rt);
@@ -524,6 +556,47 @@ void _mg_renderer_resize(const gs_vec2 fb_size)
 		});
 
 	g_renderer->offscreen_dt = gs_graphics_texture_create(
+		&(gs_graphics_texture_desc_t){
+			.type	    = GS_GRAPHICS_TEXTURE_2D,
+			.width	    = fb_size.x,
+			.height	    = fb_size.y,
+			.format	    = GS_GRAPHICS_TEXTURE_FORMAT_DEPTH32F,
+			.wrap_s	    = GS_GRAPHICS_TEXTURE_WRAP_CLAMP_TO_BORDER,
+			.wrap_t	    = GS_GRAPHICS_TEXTURE_WRAP_CLAMP_TO_BORDER,
+			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.mip_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.num_mips   = 0,
+		});
+
+	// Recreate viewmodel render objects
+	if (gs_handle_is_valid(g_renderer->viewmodel_rt))
+	{
+		gs_graphics_texture_destroy(g_renderer->viewmodel_rt);
+		g_renderer->viewmodel_rt = gs_handle_invalid(gs_graphics_texture_t);
+	}
+
+	if (gs_handle_is_valid(g_renderer->viewmodel_dt))
+	{
+		gs_graphics_texture_destroy(g_renderer->viewmodel_dt);
+		g_renderer->viewmodel_dt = gs_handle_invalid(gs_graphics_texture_t);
+	}
+
+	g_renderer->viewmodel_rt = gs_graphics_texture_create(
+		&(gs_graphics_texture_desc_t){
+			.type	    = GS_GRAPHICS_TEXTURE_2D,
+			.width	    = fb_size.x,
+			.height	    = fb_size.y,
+			.format	    = GS_GRAPHICS_TEXTURE_FORMAT_RGBA8,
+			.wrap_s	    = GS_GRAPHICS_TEXTURE_WRAP_CLAMP_TO_BORDER,
+			.wrap_t	    = GS_GRAPHICS_TEXTURE_WRAP_CLAMP_TO_BORDER,
+			.min_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.mag_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.mip_filter = GS_GRAPHICS_TEXTURE_FILTER_NEAREST,
+			.num_mips   = 0,
+		});
+
+	g_renderer->viewmodel_dt = gs_graphics_texture_create(
 		&(gs_graphics_texture_desc_t){
 			.type	    = GS_GRAPHICS_TEXTURE_2D,
 			.width	    = fb_size.x,
@@ -772,26 +845,22 @@ void _mg_renderer_viewmodel_pass()
 	uint8_t uniform_count = wireframe ? 3 : 4;
 
 	// Begin render
-	gs_graphics_renderpass_begin(&g_renderer->cb, g_renderer->offscreen_rp);
+	gs_graphics_renderpass_begin(&g_renderer->cb, g_renderer->viewmodel_rp);
 	gs_graphics_set_viewport(&g_renderer->cb, 0, 0, (int32_t)g_renderer->fb_size.x, (int32_t)g_renderer->fb_size.y);
 	gs_graphics_pipeline_bind(&g_renderer->cb, wireframe ? g_renderer->wire_pipe : g_renderer->viewmodel_pipe);
 
-	if (!g_renderer->offscreen_cleared)
-	{
-		// Didn't clear in bsp or models pass
-		gs_graphics_clear_desc_t clear = (gs_graphics_clear_desc_t){
-			.actions = &(gs_graphics_clear_action_t){
-				.color = {
-					g_renderer->clear_color[0],
-					g_renderer->clear_color[1],
-					g_renderer->clear_color[2],
-					g_renderer->clear_color[3],
-				},
+	// Always clear, note alpha
+	gs_graphics_clear_desc_t clear = (gs_graphics_clear_desc_t){
+		.actions = &(gs_graphics_clear_action_t){
+			.color = {
+				g_renderer->clear_color_overlay[0],
+				g_renderer->clear_color_overlay[1],
+				g_renderer->clear_color_overlay[2],
+				g_renderer->clear_color_overlay[3],
 			},
-		};
-		gs_graphics_clear(&g_renderer->cb, &clear);
-		g_renderer->offscreen_cleared = true;
-	}
+		},
+	};
+	gs_graphics_clear(&g_renderer->cb, &clear);
 
 	// Draw all viewmodels
 	for (
@@ -962,6 +1031,11 @@ void _mg_renderer_post_pass()
 			.uniform = g_renderer->u_tex,
 			.data	 = &g_renderer->offscreen_rt,
 			.binding = 0, // FRAGMENT
+		},
+		(gs_graphics_bind_uniform_desc_t){
+			.uniform = g_renderer->u_tex_vm,
+			.data	 = &g_renderer->viewmodel_rt,
+			.binding = 1, // FRAGMENT
 		},
 		(gs_graphics_bind_uniform_desc_t){
 			.uniform = g_renderer->u_barrel_enabled,
