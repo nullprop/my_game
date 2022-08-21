@@ -20,6 +20,7 @@ mg_weapon_t *mg_weapon_create(mg_weapon_type type)
 	{
 	case MG_WEAPON_MACHINE_GUN:
 		weapon->model	       = mg_model_manager_find_or_load("weapons/machine_gun.md3", "basic");
+		weapon->view_scale     = gs_v3(1.0f, 1.0f, 1.0f);
 		weapon->uses_ammo      = true;
 		weapon->ammo_type      = MG_AMMO_BULLET;
 		weapon->ammo_current   = 50;
@@ -29,6 +30,7 @@ mg_weapon_t *mg_weapon_create(mg_weapon_type type)
 
 	case MG_WEAPON_ROCKET_LAUNCHER:
 		weapon->model	       = mg_model_manager_find_or_load("weapons/rocket_launcher.md3", "basic");
+		weapon->view_scale     = gs_v3(0.6f, 0.6f, 0.6f);
 		weapon->uses_ammo      = true;
 		weapon->ammo_type      = MG_AMMO_ROCKET;
 		weapon->ammo_current   = 10;

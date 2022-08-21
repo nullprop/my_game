@@ -279,19 +279,20 @@ void _mg_player_camera_update(mg_player_t *player)
 
 	if (player->weapon_current >= 0)
 	{
-		player->weapons[player->weapon_current]->transform = gs_vqs_absolute_transform(
-			&(gs_vqs){
-				.position = gs_v3(
-					mg_cvar("r_viewmodel_pos_x")->value.f,
-					mg_cvar("r_viewmodel_pos_y")->value.f,
-					mg_cvar("r_viewmodel_pos_z")->value.f),
-				.rotation = gs_quat_default(),
-				.scale	  = gs_v3(
-					   mg_cvar("r_viewmodel_scale_x")->value.f,
-					   mg_cvar("r_viewmodel_scale_y")->value.f,
-					   mg_cvar("r_viewmodel_scale_z")->value.f),
-			},
-			&player->camera.cam.transform);
+		mg_weapon_t *weapon = player->weapons[player->weapon_current];
+		weapon->transform   = gs_vqs_absolute_transform(
+			  &(gs_vqs){
+				  .position = gs_v3(
+					  mg_cvar("r_viewmodel_pos_x")->value.f,
+					  mg_cvar("r_viewmodel_pos_y")->value.f,
+					  mg_cvar("r_viewmodel_pos_z")->value.f),
+				  .rotation = gs_quat_default(),
+				  .scale    = gs_v3(
+					     weapon->view_scale.x * mg_cvar("r_viewmodel_scale_x")->value.f,
+					     weapon->view_scale.y * mg_cvar("r_viewmodel_scale_y")->value.f,
+					     weapon->view_scale.z * mg_cvar("r_viewmodel_scale_z")->value.f),
+			  },
+			  &player->camera.cam.transform);
 	}
 }
 

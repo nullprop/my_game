@@ -33,6 +33,7 @@ typedef struct mg_weapon_t
 	mg_weapon_type type;
 	mg_model_t *model;
 	gs_vqs transform;
+	gs_vec3 view_scale;
 	uint32_t renderable_id;
 	bool uses_ammo;
 	mg_ammo_type ammo_type;
