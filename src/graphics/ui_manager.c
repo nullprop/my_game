@@ -404,6 +404,8 @@ void _mg_ui_manager_debug_overlay(gs_vec2 fbs, gs_gui_container_t *root)
 
 		sprintf(tmp, "models: %.2fms", g_time_manager->models * 1000.0);
 		DRAW_TMP(15, tmp_y)
+		sprintf(tmp, "viewmodel: %.2fms", g_time_manager->viewmodel * 1000.0);
+		DRAW_TMP(15, tmp_y)
 		sprintf(tmp, "post: %.2fms", g_time_manager->post * 1000.0);
 		DRAW_TMP(15, tmp_y)
 		sprintf(tmp, "ui: %.2fms", g_time_manager->ui * 1000.0);

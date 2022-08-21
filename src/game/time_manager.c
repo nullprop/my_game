@@ -87,6 +87,17 @@ void mg_time_manager_models_end()
 	g_time_manager->models	    = g_time_manager->_models_end - g_time_manager->_models_start;
 }
 
+void mg_time_manager_viewmodel_start()
+{
+	g_time_manager->_viewmodel_start = gs_platform_elapsed_time() / 1000.0f;
+}
+
+void mg_time_manager_viewmodel_end()
+{
+	g_time_manager->_viewmodel_end = gs_platform_elapsed_time() / 1000.0f;
+	g_time_manager->viewmodel      = g_time_manager->_viewmodel_end - g_time_manager->_viewmodel_start;
+}
+
 void mg_time_manager_post_start()
 {
 	g_time_manager->_post_start = gs_platform_elapsed_time() / 1000.0f;

@@ -21,10 +21,18 @@
 #include "model_manager.h"
 #include "types.h"
 
+typedef enum mg_model_type
+{
+	MG_MODEL_WORLD,
+	MG_MODEL_VIEWMODEL,
+	MG_MODEL_COUNT,
+} mg_model_type;
+
 // Renderable instance of a model
 typedef struct mg_renderable_t
 {
 	bool hidden;
+	mg_model_type type;
 	gs_vqs *transform;
 	gs_mat4 u_view;
 	mg_model_t model;
@@ -41,6 +49,7 @@ typedef struct mg_renderer_t
 	gs_camera_t *cam;
 	gs_slot_array(mg_renderable_t) renderables;
 	gs_handle(gs_graphics_pipeline_t) pipe;
+	gs_handle(gs_graphics_pipeline_t) viewmodel_pipe;
 	gs_handle(gs_graphics_pipeline_t) wire_pipe;
 	gs_handle(gs_graphics_pipeline_t) post_pipe;
 	gs_dyn_array(gs_handle(gs_graphics_shader_t)) shaders;
@@ -80,8 +89,10 @@ mg_renderable_t *mg_renderer_get_renderable(uint32_t renderable_id);
 gs_handle(gs_graphics_shader_t) mg_renderer_get_shader(char *name);
 bool32_t mg_renderer_play_animation(uint32_t id, char *name);
 void mg_renderer_set_hidden(uint32_t id, bool hidden);
+void mg_renderer_set_model_type(uint32_t id, mg_model_type type);
 void _mg_renderer_resize(const gs_vec2 fb);
-void _mg_renderer_renderable_pass();
+void _mg_renderer_models_pass();
+void _mg_renderer_viewmodel_pass();
 void _mg_renderer_post_pass();
 void _mg_renderer_immediate_pass();
 void _mg_renderer_draw_debug_overlay();

@@ -207,6 +207,26 @@ void mg_renderer_init(uint32_t window_handle)
 				.size  = sizeof(vattrs),
 			},
 		});
+	g_renderer->viewmodel_pipe = gs_graphics_pipeline_create(
+		&(gs_graphics_pipeline_desc_t){
+			.raster = {
+				.shader			   = mg_renderer_get_shader("basic"),
+				.index_buffer_element_size = sizeof(int32_t),
+				.primitive		   = GS_GRAPHICS_PRIMITIVE_TRIANGLES,
+			},
+			.blend = {
+				.func = GS_GRAPHICS_BLEND_EQUATION_ADD,
+				.src  = GS_GRAPHICS_BLEND_MODE_SRC_ALPHA,
+				.dst  = GS_GRAPHICS_BLEND_MODE_ONE_MINUS_SRC_ALPHA,
+			},
+			.depth = {
+				.func = GS_GRAPHICS_DEPTH_FUNC_ALWAYS,
+			},
+			.layout = {
+				.attrs = vattrs,
+				.size  = sizeof(vattrs),
+			},
+		});
 	g_renderer->wire_pipe = gs_graphics_pipeline_create(
 		&(gs_graphics_pipeline_desc_t){
 			.raster = {
@@ -287,7 +307,13 @@ void mg_renderer_update()
 		}
 
 		// Render models to offscreen texture
-		_mg_renderer_renderable_pass();
+		_mg_renderer_models_pass();
+
+		// Render viewmodel to offscreen texture
+		if (g_game_manager != NULL && g_game_manager->player != NULL)
+		{
+			_mg_renderer_viewmodel_pass();
+		}
 
 		// Post-process offscreen texture and render to backbuffer.
 		_mg_renderer_post_pass();
@@ -296,6 +322,8 @@ void mg_renderer_update()
 	{
 		mg_time_manager_models_start();
 		mg_time_manager_models_end();
+		mg_time_manager_viewmodel_start();
+		mg_time_manager_viewmodel_end();
 		mg_time_manager_post_start();
 		mg_time_manager_post_end();
 	}
@@ -354,6 +382,7 @@ void mg_renderer_free()
 	// gs_gui_free(&g_renderer->gui);
 	gs_immediate_draw_free(&g_renderer->gui.gsi);
 	gs_graphics_pipeline_destroy(g_renderer->pipe);
+	gs_graphics_pipeline_destroy(g_renderer->viewmodel_pipe);
 	gs_graphics_pipeline_destroy(g_renderer->wire_pipe);
 	gs_graphics_pipeline_destroy(g_renderer->post_pipe);
 
@@ -453,6 +482,17 @@ void mg_renderer_set_hidden(uint32_t id, bool hidden)
 	renderable->hidden = hidden;
 }
 
+void mg_renderer_set_model_type(uint32_t id, mg_model_type type)
+{
+	mg_renderable_t *renderable = mg_renderer_get_renderable(id);
+	if (renderable == NULL)
+	{
+		return;
+	}
+
+	renderable->type = type;
+}
+
 void _mg_renderer_resize(const gs_vec2 fb_size)
 {
 	g_renderer->fb_size = fb_size;
@@ -498,7 +538,7 @@ void _mg_renderer_resize(const gs_vec2 fb_size)
 		});
 }
 
-void _mg_renderer_renderable_pass()
+void _mg_renderer_models_pass()
 {
 	mg_time_manager_models_start();
 
@@ -509,8 +549,6 @@ void _mg_renderer_renderable_pass()
 	}
 
 	bool wireframe = mg_cvar("r_wireframe")->value.i;
-
-	gs_renderpass renderables_pass = gs_default_val();
 
 	// Uniforms that don't change per renderable
 	gs_mat4 u_proj = mg_camera_get_view_projection(g_renderer->cam, (s32)g_renderer->fb_size.x, (s32)g_renderer->fb_size.y);
@@ -547,9 +585,10 @@ void _mg_renderer_renderable_pass()
 			},
 		};
 		gs_graphics_clear(&g_renderer->cb, &clear);
+		g_renderer->offscreen_cleared = true;
 	}
 
-	// Draw all renderables
+	// Draw all world models
 	for (
 		gs_slot_array_iter it = gs_slot_array_iter_new(g_renderer->renderables);
 		gs_slot_array_iter_valid(g_renderer->renderables, it);
@@ -558,6 +597,11 @@ void _mg_renderer_renderable_pass()
 		mg_renderable_t *renderable = gs_slot_array_iter_getp(g_renderer->renderables, it);
 
 		if (renderable->hidden)
+		{
+			continue;
+		}
+
+		if (renderable->type != MG_MODEL_WORLD)
 		{
 			continue;
 		}
@@ -588,14 +632,6 @@ void _mg_renderer_renderable_pass()
 			if (g_game_manager != NULL && g_game_manager->map != NULL && g_game_manager->map->valid)
 			{
 				light = bsp_sample_lightvol(g_game_manager->map, renderable->transform->position);
-				// bsp_lightvol_lump_t lump = bsp_get_lightvol(g_game_manager->map, renderable->transform->position, NULL);
-				// light.directional.x	 = (float)lump.directional[0] / 255.0f;
-				// light.directional.y	 = (float)lump.directional[1] / 255.0f;
-				// light.directional.z	 = (float)lump.directional[2] / 255.0f;
-				// light.ambient.x		 = (float)lump.ambient[0] / 255.0f;
-				// light.ambient.y		 = (float)lump.ambient[1] / 255.0f;
-				// light.ambient.z		 = (float)lump.ambient[2] / 255.0f;
-				// light.direction		 = mg_sphere_to_normal(lump.dir);
 			}
 			else
 			{
@@ -689,7 +725,7 @@ void _mg_renderer_renderable_pass()
 				if (renderable->frame >= renderable->model.data->header.num_frames)
 				{
 					mg_println(
-						"ERR: _mg_renderer_renderable_pass animation '%s' exceeds model '%s' num_frames %d",
+						"ERR: _mg_renderer_models_pass animation '%s' exceeds model '%s' num_frames %d",
 						renderable->current_animation->name,
 						renderable->model.filename,
 						renderable->model.data->header.num_frames);
@@ -703,6 +739,211 @@ void _mg_renderer_renderable_pass()
 	gs_graphics_renderpass_end(&g_renderer->cb);
 
 	mg_time_manager_models_end();
+}
+
+// TODO: this has a lot of duplicate code from models pass,
+// create helpers for common stuff.
+void _mg_renderer_viewmodel_pass()
+{
+	mg_time_manager_viewmodel_start();
+
+	if (gs_slot_array_size(g_renderer->renderables) == 0)
+	{
+		mg_time_manager_viewmodel_end();
+		return;
+	}
+
+	bool wireframe = mg_cvar("r_wireframe")->value.i;
+
+	// Uniforms that don't change per renderable
+	gs_mat4 u_proj = mg_camera_get_view_projection(&g_game_manager->player->viewmodel_camera, (s32)g_renderer->fb_size.x, (s32)g_renderer->fb_size.y);
+
+	// Uniform binds
+	gs_graphics_bind_uniform_desc_t uniforms[] = {
+		{
+			.uniform = g_renderer->u_proj,
+			.data	 = &u_proj,
+			.binding = 0, // VERTEX
+		},
+		{0}, // u_view, VERTEX
+		{0}, // u_light or u_color FRAGMENT
+		{0}, // u_tex, FRAGMENT
+	};
+	uint8_t uniform_count = wireframe ? 3 : 4;
+
+	// Begin render
+	gs_graphics_renderpass_begin(&g_renderer->cb, g_renderer->offscreen_rp);
+	gs_graphics_set_viewport(&g_renderer->cb, 0, 0, (int32_t)g_renderer->fb_size.x, (int32_t)g_renderer->fb_size.y);
+	gs_graphics_pipeline_bind(&g_renderer->cb, wireframe ? g_renderer->wire_pipe : g_renderer->viewmodel_pipe);
+
+	if (!g_renderer->offscreen_cleared)
+	{
+		// Didn't clear in bsp or models pass
+		gs_graphics_clear_desc_t clear = (gs_graphics_clear_desc_t){
+			.actions = &(gs_graphics_clear_action_t){
+				.color = {
+					g_renderer->clear_color[0],
+					g_renderer->clear_color[1],
+					g_renderer->clear_color[2],
+					g_renderer->clear_color[3],
+				},
+			},
+		};
+		gs_graphics_clear(&g_renderer->cb, &clear);
+		g_renderer->offscreen_cleared = true;
+	}
+
+	// Draw all viewmodels
+	for (
+		gs_slot_array_iter it = gs_slot_array_iter_new(g_renderer->renderables);
+		gs_slot_array_iter_valid(g_renderer->renderables, it);
+		gs_slot_array_iter_advance(g_renderer->renderables, it))
+	{
+		mg_renderable_t *renderable = gs_slot_array_iter_getp(g_renderer->renderables, it);
+
+		if (renderable->hidden)
+		{
+			continue;
+		}
+
+		if (renderable->type != MG_MODEL_VIEWMODEL)
+		{
+			continue;
+		}
+
+		// View matrix
+		renderable->u_view = gs_vqs_to_mat4(renderable->transform);
+		uniforms[1]	   = (gs_graphics_bind_uniform_desc_t){
+			       .uniform = g_renderer->u_view,
+			       .data	= &renderable->u_view,
+			       .binding = 1, // VERTEX
+		       };
+
+		gs_vec4_t color		  = gs_v4(1.0, 1.0, 1.0, 1.0);
+		mg_renderer_light_t light = {0};
+
+		if (wireframe)
+		{
+			// Color
+			uniforms[2] = (gs_graphics_bind_uniform_desc_t){
+				.uniform = g_renderer->u_color,
+				.data	 = &color,
+				.binding = 0, // FRAGMENT
+			};
+		}
+		else
+		{
+			// Light
+			if (g_game_manager != NULL && g_game_manager->map != NULL && g_game_manager->map->valid)
+			{
+				light = bsp_sample_lightvol(g_game_manager->map, renderable->transform->position);
+			}
+			else
+			{
+				light = (mg_renderer_light_t){
+					.ambient     = gs_v3(0.4f, 0.4f, 0.4f),
+					.directional = gs_v3(0.8f, 0.8f, 0.8f),
+					.direction   = gs_vec3_norm(gs_v3(0.3f, 0.5f, -0.5f)),
+				};
+			}
+			uniforms[2] = (gs_graphics_bind_uniform_desc_t){
+				.uniform = g_renderer->u_light,
+				.data	 = &light,
+				.binding = 0, // FRAGMENT
+			};
+		}
+
+		// Draw each surface
+		for (size_t i = 0; i < renderable->model.data->header.num_surfaces; i++)
+		{
+			md3_surface_t surf = renderable->model.data->surfaces[i];
+
+			if (!wireframe)
+			{
+				// Texture
+				uniforms[3] = (gs_graphics_bind_uniform_desc_t){
+					.uniform = g_renderer->u_tex,
+					.data	 = ((surf.textures[0] != NULL && gs_handle_is_valid(surf.textures[0]->hndl)) ? &surf.textures[0]->hndl : &g_renderer->missing_texture),
+					.binding = 1, // FRAGMENT
+				};
+			}
+
+			// Construct binds
+			gs_graphics_bind_desc_t binds = {
+				.vertex_buffers = {
+					.desc = &(gs_graphics_bind_vertex_buffer_desc_t){
+						.buffer = surf.vbos[renderable->frame],
+					},
+				},
+				.index_buffers = {
+					.desc = &(gs_graphics_bind_index_buffer_desc_t){
+						.buffer = surf.ibo,
+					},
+				},
+				.uniforms = {
+					.desc = uniforms,
+					.size = sizeof(gs_graphics_bind_uniform_desc_t) * uniform_count,
+				},
+			};
+
+			gs_graphics_apply_bindings(&g_renderer->cb, &binds);
+			gs_graphics_draw(&g_renderer->cb, &(gs_graphics_draw_desc_t){.start = 0, .count = surf.num_tris * 3});
+		}
+
+		// Play animation
+		if (renderable->current_animation != NULL)
+		{
+			double plat_time	= g_time_manager->time;
+			double frame_time	= 1.0f / renderable->current_animation->fps;
+			double since_last_frame = plat_time - renderable->prev_frame_time;
+
+			if (since_last_frame >= frame_time)
+			{
+				renderable->frame++;
+
+				if (since_last_frame >= frame_time * 10)
+				{
+					// Don't fast-forward when missing updates.
+					// Game frozen, paused at breakpoint, etc...
+					renderable->prev_frame_time = plat_time;
+				}
+				else
+				{
+					renderable->prev_frame_time += frame_time;
+				}
+
+				if (renderable->frame >= renderable->current_animation->first_frame + renderable->current_animation->num_frames)
+				{
+					if (renderable->current_animation->loop)
+					{
+						// Reset to first frame
+						renderable->frame = renderable->current_animation->first_frame;
+					}
+					else
+					{
+						// Freeze at final frame
+						renderable->frame = renderable->current_animation->first_frame + renderable->current_animation->num_frames - 1;
+					}
+				}
+
+				// Sanity
+				if (renderable->frame >= renderable->model.data->header.num_frames)
+				{
+					mg_println(
+						"ERR: _mg_renderer_viewmodel_pass animation '%s' exceeds model '%s' num_frames %d",
+						renderable->current_animation->name,
+						renderable->model.filename,
+						renderable->model.data->header.num_frames);
+					renderable->frame	      = 0;
+					renderable->current_animation = NULL;
+				}
+			}
+		}
+	}
+
+	gs_graphics_renderpass_end(&g_renderer->cb);
+
+	mg_time_manager_viewmodel_end();
 }
 
 void _mg_renderer_post_pass()

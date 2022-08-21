@@ -44,8 +44,8 @@ mg_player_t *mg_player_new()
 		.viewmodel_camera = {
 			.aspect_ratio = (float)vid_width->value.i / vid_height->value.i,
 			.far_plane    = 1000.0f,
-			.fov	      = 60.0f,
-			.near_plane   = 0,
+			.fov	      = mg_cvar("r_viewmodel_fov")->value.i,
+			.near_plane   = 0.1f,
 			.proj_type    = GS_PROJECTION_TYPE_PERSPECTIVE,
 		},
 		.health		  = 100,
@@ -60,6 +60,7 @@ mg_player_t *mg_player_new()
 	{
 		player->weapons[i] = mg_weapon_create(i);
 		mg_renderer_set_hidden(player->weapons[i]->renderable_id, true);
+		mg_renderer_set_model_type(player->weapons[i]->renderable_id, MG_MODEL_VIEWMODEL);
 	}
 
 	_mg_player_camera_update(player);
@@ -273,6 +274,8 @@ void _mg_player_camera_update(mg_player_t *player)
 			.scale = gs_v3(1.0f, 1.0f, 1.0f),
 		},
 		&player->transform);
+
+	player->viewmodel_camera.transform = player->camera.cam.transform;
 
 	if (player->weapon_current >= 0)
 	{

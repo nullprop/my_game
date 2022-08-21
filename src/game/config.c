@@ -51,6 +51,7 @@ void mg_config_init()
 #endif
 	mg_cvar_new("r_wireframe", MG_CONFIG_TYPE_INT, 0);
 
+	mg_cvar_new("r_viewmodel_fov", MG_CONFIG_TYPE_INT, 65);
 	mg_cvar_new("r_viewmodel_pos_x", MG_CONFIG_TYPE_FLOAT, 0.0f);
 	mg_cvar_new("r_viewmodel_pos_y", MG_CONFIG_TYPE_FLOAT, 15.0f);
 	mg_cvar_new("r_viewmodel_pos_z", MG_CONFIG_TYPE_FLOAT, -10.0f);
