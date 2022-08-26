@@ -9,11 +9,15 @@
 
 #include "weapon.h"
 #include "../game/console.h"
+#include "../game/time_manager.h"
 #include "../graphics/renderer.h"
+#include "../util/transform.h"
+#include "rocket.h"
 
 mg_weapon_t *mg_weapon_create(mg_weapon_type type)
 {
 	mg_weapon_t *weapon = gs_malloc_init(mg_weapon_t);
+	weapon->type	    = type;
 
 	// TODO: weapon def files
 	switch (type)
@@ -59,4 +63,47 @@ void mg_weapon_free(mg_weapon_t *weapon)
 {
 	mg_renderer_remove_renderable(weapon->renderable_id);
 	gs_free(weapon);
+}
+
+mg_weapon_shoot_result mg_weapon_shoot(mg_weapon_t *weapon, gs_vqs origin)
+{
+	if (weapon->ammo_current <= 0)
+	{
+		return MG_WEAPON_RESULT_NO_AMMO;
+	}
+
+	double time = g_time_manager->time;
+
+	if (time - weapon->last_shot < weapon->shoot_interval)
+	{
+		return MG_WEAPON_RESULT_COOLDOWN;
+	}
+
+	weapon->ammo_current--;
+	weapon->last_shot = time;
+
+	switch (weapon->type)
+	{
+	case MG_WEAPON_MACHINE_GUN:
+		// TODO: trace
+		break;
+
+	case MG_WEAPON_ROCKET_LAUNCHER:
+		mg_rocket_new(gs_vqs_absolute_transform(
+			&(gs_vqs){
+				.position = gs_vec3_scale(MG_AXIS_DOWN, 8.0f),
+				.rotation = gs_quat_default(),
+				.scale	  = gs_v3(1.0f, 1.0f, 1.0f),
+			},
+			&origin));
+		break;
+
+	default:
+		mg_println("mg_weapon_create: unknown weapon type %d", weapon->type);
+		assert(false);
+	}
+
+	// TODO: sound
+
+	return MG_WEAPON_RESULT_SHOT;
 }

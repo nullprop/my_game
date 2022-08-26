@@ -481,14 +481,7 @@ void _mg_player_shoot(mg_player_t *player)
 		return;
 	}
 
-	mg_weapon_t *weapon = player->weapons[player->weapon_current];
-
-	if (weapon->ammo_current <= 0)
-	{
-		return;
-	}
-
-	weapon->ammo_current--;
-
-	// TODO
+	mg_weapon_t *weapon	      = player->weapons[player->weapon_current];
+	mg_weapon_shoot_result result = mg_weapon_shoot(weapon, player->camera.cam.transform);
+	// TODO: shoot anim, out of ammo sound
 }
