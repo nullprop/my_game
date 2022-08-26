@@ -438,7 +438,10 @@ uint32_t mg_renderer_create_renderable(mg_model_t model, gs_vqs *transform)
 		.current_animation = NULL,
 	};
 
-	return gs_slot_array_insert(g_renderer->renderables, renderable);
+	uint32_t id	   = gs_slot_array_insert(g_renderer->renderables, renderable);
+	mg_renderable_t *r = gs_slot_array_getp(g_renderer->renderables, id);
+	r->id		   = id;
+	return id;
 }
 
 void mg_renderer_remove_renderable(uint32_t renderable_id)

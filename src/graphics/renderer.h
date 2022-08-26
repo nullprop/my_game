@@ -31,6 +31,7 @@ typedef enum mg_model_type
 // Renderable instance of a model
 typedef struct mg_renderable_t
 {
+	uint32_t id;
 	bool hidden;
 	mg_model_type type;
 	gs_vqs *transform;
