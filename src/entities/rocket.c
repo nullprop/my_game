@@ -22,6 +22,7 @@ mg_rocket_t *mg_rocket_new(gs_vqs transform)
 	rocket->life_time	     = MG_ROCKET_LIFE;
 	rocket->start_time	     = g_time_manager->time;
 	rocket->hidden		     = true;
+	rocket->trail		     = mg_rocket_trail_new(&rocket->mdl_ent.ent.transform);
 	mg_renderer_set_hidden(rocket->mdl_ent.renderable_id, true);
 	mg_entity_manager_add_entity(rocket, mg_rocket_update, mg_rocket_free);
 	return rocket;
@@ -29,8 +30,14 @@ mg_rocket_t *mg_rocket_new(gs_vqs transform)
 
 void mg_rocket_free(mg_rocket_t *rocket)
 {
+	if (rocket->trail != NULL)
+	{
+		mg_rocket_trail_free(rocket->trail);
+	}
+
 	mg_model_ent_free(&rocket->mdl_ent);
 	gs_free(rocket);
+	rocket = NULL;
 }
 
 void mg_rocket_update(mg_rocket_t *rocket, double dt)
@@ -78,12 +85,13 @@ void mg_rocket_update(mg_rocket_t *rocket, double dt)
 	// TODO: trace against entities
 
 	rocket->mdl_ent.ent.transform.position = new_pos;
+
 	// TODO: travel sound at pos
-	// TODO: trail fx
 }
 
 void _mg_rocket_remove(mg_rocket_t *rocket)
 {
+	mg_rocket_trail_remove(rocket->trail);
 	mg_entity_manager_remove_entity(rocket->mdl_ent.ent.id);
 	mg_rocket_free(rocket);
 }

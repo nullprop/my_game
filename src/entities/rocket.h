@@ -10,10 +10,11 @@
 #ifndef MG_ROCKET_H
 #define MG_ROCKET_H
 
+#include "../fx/rocket_trail.h"
 #include "entity.h"
 
-#define MG_ROCKET_SPEED 800.0
-#define MG_ROCKET_LIFE	10.0
+#define MG_ROCKET_SPEED	    800.0
+#define MG_ROCKET_LIFE	    10.0
 #define MG_ROCKET_HIDE_TIME 0.025
 
 typedef struct mg_rocket_t
@@ -22,6 +23,7 @@ typedef struct mg_rocket_t
 	bool hidden;
 	double life_time;
 	double start_time;
+	mg_rocket_trail_t *trail;
 } mg_rocket_t;
 
 mg_rocket_t *mg_rocket_new(gs_vqs transform);
