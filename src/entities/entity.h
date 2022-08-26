@@ -15,6 +15,42 @@
 
 #include "../bsp/bsp_trace.h"
 #include "../game/game_manager.h"
+#include "../graphics/renderer.h"
+
+typedef struct mg_entity_t
+{
+	uint32_t id;
+	gs_vqs transform;
+	gs_vec3 velocity;
+	gs_vec3 mins;
+	gs_vec3 maxs;
+} mg_entity_t;
+
+typedef struct mg_model_entity_t
+{
+	mg_entity_t ent;
+	mg_model_t *model;
+	uint32_t renderable_id;
+} mg_model_entity_t;
+
+static inline void mg_ent_init(mg_entity_t *ent, gs_vqs transform)
+{
+	ent->transform = transform;
+}
+
+static inline bool mg_model_ent_init(mg_model_entity_t *ent, gs_vqs transform, char *modelpath, char *shader)
+{
+	mg_ent_init(&ent->ent, transform);
+	ent->model = mg_model_manager_find_or_load(modelpath, shader);
+	if (ent->model == NULL) return false;
+	ent->renderable_id = mg_renderer_create_renderable(*ent->model, &ent->ent.transform);
+	return true;
+}
+
+static inline void mg_model_ent_free(mg_model_entity_t *ent)
+{
+	mg_renderer_remove_renderable(ent->renderable_id);
+}
 
 /**
  * Apply friction to entity.
