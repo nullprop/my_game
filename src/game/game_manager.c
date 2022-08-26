@@ -149,7 +149,7 @@ mg_player_input_t mg_game_manager_get_input()
 	if (gs_platform_key_down(GS_KEYCODE_LEFT_CONTROL))
 		input.crouch = true;
 
-	if (gs_platform_key_down(GS_MOUSE_LBUTTON))
+	if (gs_platform_mouse_down(GS_MOUSE_LBUTTON))
 		input.shoot = true;
 
 	input.wish_slot = -1;
