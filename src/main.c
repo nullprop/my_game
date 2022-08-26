@@ -17,6 +17,7 @@
 #include "audio/audio_manager.h"
 #include "bsp/bsp_loader.h"
 #include "bsp/bsp_map.h"
+#include "entities/entity_manager.h"
 #include "entities/player.h"
 #include "game/config.h"
 #include "game/console.h"
@@ -36,6 +37,7 @@ void app_init()
 	mg_texture_manager_init();
 	mg_model_manager_init();
 	mg_renderer_init(gs_platform_main_window());
+	mg_entity_manager_init();
 	mg_ui_manager_init();
 	mg_game_manager_init();
 
@@ -157,6 +159,8 @@ void app_update()
 #endif
 
 	mg_game_manager_update();
+	mg_entity_manager_update();
+
 	mg_time_manager_update_end();
 
 	mg_renderer_update();
@@ -165,6 +169,7 @@ void app_update()
 void app_shutdown()
 {
 	mg_game_manager_free();
+	mg_entity_manager_free();
 	mg_renderer_free();
 	mg_ui_manager_free();
 	mg_model_manager_free();
