@@ -219,6 +219,8 @@ void mg_renderer_init(uint32_t window_handle)
 				.shader			   = mg_renderer_get_shader("basic"),
 				.index_buffer_element_size = sizeof(int32_t),
 				.primitive		   = GS_GRAPHICS_PRIMITIVE_TRIANGLES,
+				.face_culling		   = GS_GRAPHICS_FACE_CULLING_BACK,
+				.winding_order		   = GS_GRAPHICS_WINDING_ORDER_CW,
 			},
 			.blend = {
 				.func = GS_GRAPHICS_BLEND_EQUATION_ADD,
@@ -239,6 +241,8 @@ void mg_renderer_init(uint32_t window_handle)
 				.shader			   = mg_renderer_get_shader("basic"),
 				.index_buffer_element_size = sizeof(int32_t),
 				.primitive		   = GS_GRAPHICS_PRIMITIVE_TRIANGLES,
+				.face_culling		   = GS_GRAPHICS_FACE_CULLING_BACK,
+				.winding_order		   = GS_GRAPHICS_WINDING_ORDER_CW,
 			},
 			.blend = {
 				.func = GS_GRAPHICS_BLEND_EQUATION_ADD,

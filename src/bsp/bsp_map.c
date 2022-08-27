@@ -121,6 +121,8 @@ void bsp_map_init(bsp_map_t *map)
 				.shader			   = mg_renderer_get_shader("bsp"),
 				.index_buffer_element_size = sizeof(uint32_t),
 				.primitive		   = GS_GRAPHICS_PRIMITIVE_TRIANGLES,
+				.face_culling		   = GS_GRAPHICS_FACE_CULLING_BACK,
+				.winding_order		   = GS_GRAPHICS_WINDING_ORDER_CW,
 			},
 			.blend = {
 				.func = GS_GRAPHICS_BLEND_EQUATION_ADD,
