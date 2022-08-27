@@ -276,6 +276,8 @@ bool mg_load_md3(char *filename, md3_t *model)
 				continue;
 			}
 
+			mg_println("  name: %s, fs: %d, fn: %d, fps: %d, loop: %d", anim.name, anim.first_frame, anim.num_frames, anim.fps, anim.loop);
+
 			gs_dyn_array_push(model->animations, anim);
 			line = strtok_r(NULL, "\r\n", &line_ptr);
 		}
